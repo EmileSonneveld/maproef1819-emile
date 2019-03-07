@@ -2,22 +2,95 @@ import java.util
 
 import scala.meta.Defn._
 import scala.meta._
-import java.io.File
+import java.io.{File, FileWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.nio.charset.StandardCharsets
-import java.text.DecimalFormat
+import java.text._
+import java.util.Calendar
 
+import org.scalameta.tests.typecheckError.Options
+
+import scala.language.postfixOps
+import sys.process._
 
 object main extends App {
 
   def getProjectName(path: Path): String = {
     var tmp = path.toString
     tmp = tmp.replace("C:\\Users\\emill\\dev\\", "")
-    var firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))
+    val firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))
     return tmp.substring(0, firstSlah)
   }
 
-  def doStatsForProject(projectPath: File) {
+  def getCommitHashesFromLog(logString: String): Iterator[String] = {
+    val re = """commit ([\w]+)""".r
+    re.findAllIn(logString).map(x => x.substring(7))
+  }
+
+  def getGitTopLevel(path: File) = {
+    execCommand("cd " + path + " && git rev-parse --show-toplevel").trim
+  }
+
+  def execCommand(command: String): String = {
+    println("> " + command)
+    return ("cmd /C " + command) !!
+  }
+
+  def goTroughAllCommits(projectPath: File): Any = {
+    //execCommand("cd " + projectPath)
+    //System.setProperty("user.dir", projectPath.getAbsolutePath)
+    var gitTopLevel = getGitTopLevel(projectPath)
+
+    execCommand("cd " + gitTopLevel + " && git checkout master")
+    val hashes = getCommitHashesFromLog(execCommand("cd " + gitTopLevel + " && git log"))
+    for (hash <- hashes) {
+      execCommand("cd " + gitTopLevel + " && git clean -f")
+      execCommand("cd " + gitTopLevel + " && git checkout " + hash)
+      println(hash)
+      doStatsForProject(projectPath, hash)
+      //return
+    }
+  }
+
+  def replaceTemplatesInString(file: String, commitStats: CommitStats, projectName: String): String = {
+    var svg = file
+    val nop = commitStats.nop_set.size
+    val noc = commitStats.noc_set.size
+    val nom = commitStats.nom_set.size
+    val loc = commitStats.loc
+
+    svg = svg.replaceAll("%PROJECT%", projectName)
+
+    svg = svg.replaceAll("%NOP%", nop.toString)
+    svg = svg.replaceAll("%NOC%", noc.toString)
+    svg = svg.replaceAll("%NOM%", nom.toString)
+    svg = svg.replaceAll("%LOC%", loc.toString)
+
+    val df = new DecimalFormat(".##")
+    svg = svg.replaceAll("%NOC/NOP%", df.format(noc.toDouble / nop))
+    svg = svg.replaceAll("%NOM/NOC%", df.format(nom.toDouble / noc))
+    svg = svg.replaceAll("%LOC/NOM%", df.format(loc.toDouble / nom))
+
+    return svg
+  }
+
+  def logToCsv(commitStats: CommitStats, projectName: String) = {
+    val nop = commitStats.nop_set.size
+    val noc = commitStats.noc_set.size
+    val nom = commitStats.nom_set.size
+    val loc = commitStats.loc
+
+    val timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance.getTime)
+    var str = projectName + ", " + commitStats.commitHash + ", " + nop + ", " + noc + ", " + nom + ", " + loc + ", " + timeStamp + "\n"
+    val fw = new FileWriter("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv", true)
+    try {
+      fw.write(str)
+    }
+    finally fw.close()
+  }
+
+  def doStatsForProject(projectPath: File, commitHash: String) {
+
     def recursiveListFiles(f: File): Array[File] = {
       val these = f.listFiles()
       these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
@@ -25,10 +98,8 @@ object main extends App {
 
     val scalaFiles = recursiveListFiles(projectPath)
 
-    var nop_set = Set[String]()
-    var noc_set = Set[String]()
-    var nom_set = Set[String]()
-    var loc = 0
+    val commitStats = new CommitStats
+    commitStats.commitHash = commitHash
 
     def consumeFile(path: Path) = {
 
@@ -43,7 +114,7 @@ object main extends App {
         case q: Pkg => q.name
 
       }
-      packageCollection.foreach(x => nop_set += x.toString)
+      packageCollection.foreach(x => commitStats.nop_set += x.toString)
       //println(packageCollection)
 
       //println(exampleTree)
@@ -51,23 +122,23 @@ object main extends App {
         case q: Defn.Class => q.name
         case q: Defn.Object => q.name
       }
-      classCollection.foreach(x => noc_set += x.toString)
+      classCollection.foreach(x => commitStats.noc_set += x.toString)
       //println(classCollection)
 
       val functionCollection = exampleTree.collect {
         case q: Defn.Def => q.name
 
       }
-      functionCollection.foreach(x => nom_set += x.toString)
+      functionCollection.foreach(x => commitStats.nom_set += x.toString)
       //println(functionCollection)
 
-      loc += exampleTree.toString.count(x => (x == '\n'))
+      commitStats.loc += exampleTree.toString.count(x => (x == '\n'))
     }
 
 
     for (f <- scalaFiles) {
       if (f.toString.endsWith(".scala")) {
-        println(f)
+        //println(f)
 
         //val path = java.nio.file.Paths.get(f)
         consumeFile(f.toPath)
@@ -75,31 +146,18 @@ object main extends App {
     }
 
     val projectName = getProjectName(projectPath.toPath)
-    var nop = nop_set.size
-    var noc = noc_set.size
-    var nom = nom_set.size
 
-    {
-      val filename = "..\\svg\\pyramid.svg"
-      var svg = scala.io.Source.fromFile(filename).getLines.mkString("\n")
-      svg = svg.replaceAll("%PROJECT%", projectName)
+    val filename = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid.svg"
+    var svg = scala.io.Source.fromFile(filename).getLines.mkString("\n")
 
-      svg = svg.replaceAll("%NOP%", nop.toString)
-      svg = svg.replaceAll("%NOC%", noc.toString)
-      svg = svg.replaceAll("%NOM%", nom.toString)
-      svg = svg.replaceAll("%LOC%", loc.toString)
+    svg = replaceTemplatesInString(svg, commitStats, projectName)
+    Files.write(Paths.get("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid_" + projectName + ".svg"),
+      svg.getBytes(StandardCharsets.UTF_8))
 
-      val df = new DecimalFormat(".##")
-      svg = svg.replaceAll("%NOC/NOP%", df.format(noc.toDouble / nop))
-      svg = svg.replaceAll("%NOM/NOC%", df.format(nom.toDouble / noc))
-      svg = svg.replaceAll("%LOC/NOM%", df.format(loc.toDouble / nom))
-
-
-      Files.write(Paths.get("..\\svg\\pyramid_" + projectName + ".svg"), svg.getBytes(StandardCharsets.UTF_8))
-    }
+    logToCsv(commitStats, projectName)
   }
 
-  doStatsForProject(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
-  doStatsForProject(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
-  doStatsForProject(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
+  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
+  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
+  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
 }
