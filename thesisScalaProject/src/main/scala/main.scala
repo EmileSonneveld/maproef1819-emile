@@ -9,7 +9,10 @@ import java.text._
 import java.util.Calendar
 
 import org.scalameta.tests.typecheckError.Options
+import zamblauskas.csv.parser._
+import zamblauskas.functional._
 
+import scala.collection.immutable
 import scala.language.postfixOps
 import sys.process._
 
@@ -36,18 +39,41 @@ object main extends App {
     return ("cmd /C " + command) !!
   }
 
+  def parseCsvFromFile(file: File): immutable.Seq[Array[String]] = {
+
+    var result = List[Array[String]]()
+    if (file.exists) {
+      val bufferedSource = scala.io.Source.fromFile(file)
+      for (line <- bufferedSource.getLines) {
+        val cols: Array[String] = line.split(",").map(_.trim)
+        result = cols :: result
+
+        println(s"${cols(0)}|${cols(1)}|${cols(2)}|${cols(3)}")
+      }
+      bufferedSource.close
+    }
+    return result
+  }
+
   def goTroughAllCommits(projectPath: File): Any = {
     //execCommand("cd " + projectPath)
     //System.setProperty("user.dir", projectPath.getAbsolutePath)
     var gitTopLevel = getGitTopLevel(projectPath)
 
+    val projectName = getProjectName(projectPath.toPath)
+    val result = parseCsvFromFile(new File("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv"))
+    val hashesFromSvg: Seq[String] = result.map(x => x(1))
+
     execCommand("cd " + gitTopLevel + " && git checkout master")
-    val hashes = getCommitHashesFromLog(execCommand("cd " + gitTopLevel + " && git log"))
+    val hashes = getCommitHashesFromLog(execCommand("cd " + gitTopLevel + " && git log --format=\"commit %H\""))
     for (hash <- hashes) {
-      execCommand("cd " + gitTopLevel + " && git clean -f")
-      execCommand("cd " + gitTopLevel + " && git checkout " + hash)
-      println(hash)
-      doStatsForProject(projectPath, hash)
+      if (!hashesFromSvg.contains(hash)) {
+        execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
+        execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
+        execCommand("cd " + gitTopLevel + " && git checkout " + hash)
+        println(hash)
+        doStatsForProject(projectPath, projectName, hash)
+      }
       //return
     }
   }
@@ -89,7 +115,7 @@ object main extends App {
     finally fw.close()
   }
 
-  def doStatsForProject(projectPath: File, commitHash: String) {
+  def doStatsForProject(projectPath: File, projectName: String, commitHash: String) {
 
     def recursiveListFiles(f: File): Array[File] = {
       val these = f.listFiles()
@@ -145,19 +171,19 @@ object main extends App {
       }
     }
 
-    val projectName = getProjectName(projectPath.toPath)
 
-    val filename = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid.svg"
+    /*val filename = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid.svg"
     var svg = scala.io.Source.fromFile(filename).getLines.mkString("\n")
 
     svg = replaceTemplatesInString(svg, commitStats, projectName)
     Files.write(Paths.get("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid_" + projectName + ".svg"),
       svg.getBytes(StandardCharsets.UTF_8))
+    */
 
     logToCsv(commitStats, projectName)
   }
 
   //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
-  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
+  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
   goTroughAllCommits(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
 }
