@@ -9,8 +9,8 @@ import java.text._
 import java.util.Calendar
 
 import org.scalameta.tests.typecheckError.Options
-import zamblauskas.csv.parser._
-import zamblauskas.functional._
+//import zamblauskas.csv.parser._
+//import zamblauskas.functional._
 
 import scala.collection.immutable
 import scala.language.postfixOps
@@ -48,7 +48,7 @@ object main extends App {
         val cols: Array[String] = line.split(",").map(_.trim)
         result = cols :: result
 
-        println(s"${cols(0)}|${cols(1)}|${cols(2)}|${cols(3)}")
+        //println(s"${cols(0)}|${cols(1)}|${cols(2)}|${cols(3)}")
       }
       bufferedSource.close
     }
@@ -64,18 +64,56 @@ object main extends App {
     val result = parseCsvFromFile(new File("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv"))
     val hashesFromSvg: Seq[String] = result.map(x => x(1))
 
-    execCommand("cd " + gitTopLevel + " && git checkout master")
+    execCommand("cd " + gitTopLevel + " && git reset .")
+    clearGitRepo(new File(gitTopLevel))
+    //execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
+    //execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
+    //execCommand("cd " + gitTopLevel + " && git checkout master") // To get the full commit list from the beginning
+
+
     val hashes = getCommitHashesFromLog(execCommand("cd " + gitTopLevel + " && git log --format=\"commit %H\""))
     for (hash <- hashes) {
-      if (!hashesFromSvg.contains(hash)) {
-        execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
-        execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
-        execCommand("cd " + gitTopLevel + " && git checkout " + hash)
-        println(hash)
-        doStatsForProject(projectPath, projectName, hash)
+      try {
+        if (!hashesFromSvg.contains(hash)) {
+          execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
+          execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
+          execCommand("cd " + gitTopLevel + " && git checkout " + hash)
+          println(hash)
+          doStatsForProject(projectPath, projectName, hash)
+        }
+      } catch {
+        case x: Throwable => {
+          println("Exception while calculating stats. Manually delete all files and start again, plz.")
+          var commitStats = new CommitStats
+          commitStats.commitHash = hash
+          logToCsv(commitStats, projectName) // Add empty line to avoid calculating this commit in the future
+          clearGitRepo(new File(gitTopLevel))
+        }
       }
       //return
     }
+  }
+
+  // In case of complicated git mistakes
+  def deleteRecursively(file: File): Unit = {
+    if (file.isDirectory)
+      file.listFiles.foreach(deleteRecursively)
+    if (file.exists && !file.delete)
+      throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
+  }
+
+  def clearGitRepo(gitTopLevel: File) = {
+    val filesAndFolders: Array[File] = gitTopLevel.listFiles //isFile to find files
+    for (f <- filesAndFolders) {
+      println(f)
+      if (!f.getAbsolutePath.contains(".git")) {
+        println("deleting this.")
+        //f.delete()
+        deleteRecursively(f)
+      }
+    }
+    execCommand("cd " + gitTopLevel + " && git checkout master")
+    execCommand("cd " + gitTopLevel + " && git checkout .")
   }
 
   def replaceTemplatesInString(file: String, commitStats: CommitStats, projectName: String): String = {
@@ -183,7 +221,7 @@ object main extends App {
     logToCsv(commitStats, projectName)
   }
 
-  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
+  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
   //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
-  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
+  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
 }
