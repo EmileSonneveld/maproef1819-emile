@@ -9,6 +9,7 @@ import java.text._
 import java.util.Calendar
 
 import org.scalameta.tests.typecheckError.Options
+import scalafix.{CfgPerMethod, SemanticDB}
 //import zamblauskas.csv.parser._
 //import zamblauskas.functional._
 
@@ -143,9 +144,10 @@ object main extends App {
     val noc = commitStats.noc_set.size
     val nom = commitStats.nom_set.size
     val loc = commitStats.loc
-
+    val avg_cc = commitStats.cc_set.sum / commitStats.cc_set.size
     val timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance.getTime)
-    var str = projectName + ", " + commitStats.commitHash + ", " + nop + ", " + noc + ", " + nom + ", " + loc + ", " + timeStamp + "\n"
+
+    var str = projectName + ", " + commitStats.commitHash + ", " + nop + ", " + noc + ", " + nom + ", " + loc + ", " + avg_cc + ", " + timeStamp + "\n"
     val fw = new FileWriter("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv", true)
     try {
       fw.write(str)
@@ -160,18 +162,12 @@ object main extends App {
       these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
     }
 
-    val scalaFiles = recursiveListFiles(projectPath)
+    //val scalaFiles = recursiveListFiles(projectPath)
 
     val commitStats = new CommitStats
     commitStats.commitHash = commitHash
 
-    def consumeFile(path: Path) = {
-
-
-      val bytes = java.nio.file.Files.readAllBytes(path)
-      val text = new String(bytes, "UTF-8")
-      val input = Input.VirtualFile(path.toString, text)
-      val exampleTree = input.parse[Source].get
+    def consumeFile(exampleTree: Tree) = {
 
 
       val packageCollection = exampleTree.collect {
@@ -196,16 +192,50 @@ object main extends App {
       functionCollection.foreach(x => commitStats.nom_set += x.toString)
       //println(functionCollection)
 
-      commitStats.loc += exampleTree.toString.count(x => (x == '\n'))
+      commitStats.loc += exampleTree.toString.count(x => x == '\n')
     }
 
+    /*
+        for (f <- scalaFiles) {
+          if (f.toString.endsWith(".scala")) {
+            //println(f)
 
-    for (f <- scalaFiles) {
-      if (f.toString.endsWith(".scala")) {
-        //println(f)
+          val bytes = java.nio.file.Files.readAllBytes(path)
+          val text = new String(bytes, "UTF-8")
+          val input = Input.VirtualFile(path.toString, text)
+          val exampleTree = input.parse[Source].get
 
-        //val path = java.nio.file.Paths.get(f)
-        consumeFile(f.toPath)
+            //val path = java.nio.file.Paths.get(f)
+            consumeFile(f.toPath)
+          }
+        }*/
+
+    var scalaRoot = projectPath.getAbsolutePath.replace("\\", "/")
+    if (!scalaRoot.endsWith("/")) scalaRoot += "/"
+    if (scalaRoot.endsWith("src/main/"))
+      scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/".length)
+
+    val semanticDB = new SemanticDB(new File(scalaRoot))
+    val documents = semanticDB.documents
+
+    //var totalCC = 0
+    //var totalMethods = 0
+    for (main_doc <- documents) {
+      println("\n Doc: " + main_doc.tdoc.uri)
+      val doc = semanticDB.reload(main_doc.tdoc.uri)
+
+      consumeFile(doc.sdoc.tree)
+
+      println("Generating CFGs...")
+
+      val methodMap = CfgPerMethod.compute(doc)
+
+      for (pair <- methodMap) {
+        val CC = CfgPerMethod.calculateCC(pair._2)
+        println(pair._1 + ": CC= " + CC)
+        //totalCC += CC
+        commitStats.cc_set += CC
+        //totalMethods += 1
       }
     }
 
@@ -221,7 +251,8 @@ object main extends App {
     logToCsv(commitStats, projectName)
   }
 
-  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
+  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main"))
+  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
   //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
   //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
 }
