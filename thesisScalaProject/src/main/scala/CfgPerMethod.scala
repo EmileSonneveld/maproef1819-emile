@@ -49,8 +49,10 @@ object CfgPerMethod {
     sb.toString()
   }
 
-  def compute(doc: DocumentTuple): mutable.Map[String, ArrayBuffer[DirectedGraphNode]] = {
-    val sdoc: SemanticDocument = doc.sdoc
+  def compute(tree:Tree): mutable.Map[String, ArrayBuffer[DirectedGraphNode]] = {
+    println("Generating CFGs...")
+
+    //val sdoc: SemanticDocument = doc.sdoc
     val methodMap = mutable.Map.empty[String, ArrayBuffer[DirectedGraphNode]]
 
     var nodeNr = 1
@@ -168,7 +170,7 @@ object CfgPerMethod {
       }
     }
 
-    sdoc.tree.collect {
+    tree.collect {
       case d@Defn.Def(_, name, _, _, _, body) =>
         doMethod(d)
     }

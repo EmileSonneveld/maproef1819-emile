@@ -1,21 +1,13 @@
-import java.util
-
-import scala.meta.Defn._
-import scala.meta._
 import java.io.{File, FileWriter}
-import java.nio.file.{Files, Path, Paths}
-import java.nio.charset.StandardCharsets
+import java.nio.file.Path
 import java.text._
 import java.util.Calendar
 
-import org.scalameta.tests.typecheckError.Options
-import scalafix.{CfgPerMethod, SemanticDB}
-//import zamblauskas.csv.parser._
-//import zamblauskas.functional._
+import scalafix.CfgPerMethod
 
-import scala.collection.immutable
 import scala.language.postfixOps
-import sys.process._
+import scala.meta._
+import scala.sys.process._
 
 object main extends App {
 
@@ -40,21 +32,6 @@ object main extends App {
     return ("cmd /C " + command) !!
   }
 
-  def parseCsvFromFile(file: File): immutable.Seq[Array[String]] = {
-
-    var result = List[Array[String]]()
-    if (file.exists) {
-      val bufferedSource = scala.io.Source.fromFile(file)
-      for (line <- bufferedSource.getLines) {
-        val cols: Array[String] = line.split(",").map(_.trim)
-        result = cols :: result
-
-        //println(s"${cols(0)}|${cols(1)}|${cols(2)}|${cols(3)}")
-      }
-      bufferedSource.close
-    }
-    return result
-  }
 
   def goTroughAllCommits(projectPath: File): Any = {
     //execCommand("cd " + projectPath)
@@ -62,7 +39,7 @@ object main extends App {
     var gitTopLevel = getGitTopLevel(projectPath)
 
     val projectName = getProjectName(projectPath.toPath)
-    val result = parseCsvFromFile(new File("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv"))
+    val result = Utils.parseCsvFromFile(new File("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv"))
     val hashesFromSvg: Seq[String] = result.map(x => x(1))
 
     execCommand("cd " + gitTopLevel + " && git reset .")
@@ -162,83 +139,80 @@ object main extends App {
       these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
     }
 
-    //val scalaFiles = recursiveListFiles(projectPath)
+    val scalaFiles = recursiveListFiles(projectPath)
 
     val commitStats = new CommitStats
     commitStats.commitHash = commitHash
 
     def consumeFile(exampleTree: Tree) = {
 
-
       val packageCollection = exampleTree.collect {
         case q: Pkg => q.name
-
       }
       packageCollection.foreach(x => commitStats.nop_set += x.toString)
-      //println(packageCollection)
 
-      //println(exampleTree)
       val classCollection = exampleTree.collect {
         case q: Defn.Class => q.name
         case q: Defn.Object => q.name
       }
       classCollection.foreach(x => commitStats.noc_set += x.toString)
-      //println(classCollection)
 
       val functionCollection = exampleTree.collect {
         case q: Defn.Def => q.name
 
       }
       functionCollection.foreach(x => commitStats.nom_set += x.toString)
-      //println(functionCollection)
 
       commitStats.loc += exampleTree.toString.count(x => x == '\n')
     }
 
-    /*
-        for (f <- scalaFiles) {
-          if (f.toString.endsWith(".scala")) {
-            //println(f)
 
-          val bytes = java.nio.file.Files.readAllBytes(path)
-          val text = new String(bytes, "UTF-8")
-          val input = Input.VirtualFile(path.toString, text)
-          val exampleTree = input.parse[Source].get
+    for (f <- scalaFiles) {
+      if (f.toString.endsWith(".scala")) {
+        //println(f)
 
-            //val path = java.nio.file.Paths.get(f)
-            consumeFile(f.toPath)
-          }
-        }*/
+        val bytes = java.nio.file.Files.readAllBytes(f.toPath)
+        val text = new String(bytes, "UTF-8")
+        val input = Input.VirtualFile(f.toString, text)
+        val exampleTree = input.parse[Source].get
 
-    var scalaRoot = projectPath.getAbsolutePath.replace("\\", "/")
-    if (!scalaRoot.endsWith("/")) scalaRoot += "/"
-    if (scalaRoot.endsWith("src/main/"))
-      scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/".length)
+        consumeFile(exampleTree)
 
-    val semanticDB = new SemanticDB(new File(scalaRoot))
-    val documents = semanticDB.documents
+        val methodMap = CfgPerMethod.compute(exampleTree)
 
-    //var totalCC = 0
-    //var totalMethods = 0
-    for (main_doc <- documents) {
-      println("\n Doc: " + main_doc.tdoc.uri)
-      val doc = semanticDB.reload(main_doc.tdoc.uri)
-
-      consumeFile(doc.sdoc.tree)
-
-      println("Generating CFGs...")
-
-      val methodMap = CfgPerMethod.compute(doc)
-
-      for (pair <- methodMap) {
-        val CC = CfgPerMethod.calculateCC(pair._2)
-        println(pair._1 + ": CC= " + CC)
-        //totalCC += CC
-        commitStats.cc_set += CC
-        //totalMethods += 1
+        for (pair <- methodMap) {
+          val CC = CfgPerMethod.calculateCC(pair._2)
+          println(pair._1 + ": CC= " + CC)
+          commitStats.cc_set += CC
+        }
       }
     }
+    /*
+        var scalaRoot = projectPath.getAbsolutePath.replace("\\", "/")
+        if (!scalaRoot.endsWith("/")) scalaRoot += "/"
+        if (scalaRoot.endsWith("src/main/"))
+          scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/".length)
 
+        //execCommand("cd " + getGitTopLevel(new File(scalaRoot)) + " && sbt semanticdb").trim
+
+        val semanticDB = new SemanticDB(new File(scalaRoot))
+        val documents = semanticDB.documents
+
+        for (main_doc <- documents) {
+          println("\n Doc: " + main_doc.tdoc.uri)
+          val doc = semanticDB.reload(main_doc.tdoc.uri)
+
+          consumeFile(doc.sdoc.tree)
+
+          val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
+
+          for (pair <- methodMap) {
+            val CC = CfgPerMethod.calculateCC(pair._2)
+            println(pair._1 + ": CC= " + CC)
+            commitStats.cc_set += CC
+          }
+        }
+    */
 
     /*val filename = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid.svg"
     var svg = scala.io.Source.fromFile(filename).getLines.mkString("\n")
@@ -251,8 +225,8 @@ object main extends App {
     logToCsv(commitStats, projectName)
   }
 
-  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main"))
-  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
+  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main"))
+  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
   //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
   //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
 }
