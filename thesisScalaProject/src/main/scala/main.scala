@@ -1,5 +1,6 @@
 import java.io.{File, FileWriter}
-import java.nio.file.Path
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths}
 import java.text._
 import java.util.Calendar
 
@@ -34,8 +35,6 @@ object main extends App {
 
 
   def goTroughAllCommits(projectPath: File): Any = {
-    //execCommand("cd " + projectPath)
-    //System.setProperty("user.dir", projectPath.getAbsolutePath)
     var gitTopLevel = getGitTopLevel(projectPath)
 
     val projectName = getProjectName(projectPath.toPath)
@@ -44,9 +43,6 @@ object main extends App {
 
     execCommand("cd " + gitTopLevel + " && git reset .")
     clearGitRepo(new File(gitTopLevel))
-    //execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
-    //execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
-    //execCommand("cd " + gitTopLevel + " && git checkout master") // To get the full commit list from the beginning
 
 
     val hashes = getCommitHashesFromLog(execCommand("cd " + gitTopLevel + " && git log --format=\"commit %H\""))
@@ -100,6 +96,7 @@ object main extends App {
     val noc = commitStats.noc_set.size
     val nom = commitStats.nom_set.size
     val loc = commitStats.loc
+    val cc = commitStats.cc_set.sum
 
     svg = svg.replaceAll("%PROJECT%", projectName)
 
@@ -107,11 +104,15 @@ object main extends App {
     svg = svg.replaceAll("%NOC%", noc.toString)
     svg = svg.replaceAll("%NOM%", nom.toString)
     svg = svg.replaceAll("%LOC%", loc.toString)
+    svg = svg.replaceAll("%CYCLO%", cc.toString)
+    //svg = svg.replaceAll("%FANOUT%", commitStats.fanout.toString)
 
     val df = new DecimalFormat(".##")
     svg = svg.replaceAll("%NOC/NOP%", df.format(noc.toDouble / nop))
     svg = svg.replaceAll("%NOM/NOC%", df.format(nom.toDouble / noc))
     svg = svg.replaceAll("%LOC/NOM%", df.format(loc.toDouble / nom))
+    svg = svg.replaceAll("%CYCLO/LOC%", df.format(cc.toDouble / loc))
+    //svg = svg.replaceAll("%FANOUT/CALLS%", df.format(commitStats.fanout.toDouble / commitStats.calls))
 
     return svg
   }
@@ -156,6 +157,11 @@ object main extends App {
         case q: Defn.Object => q.name
       }
       classCollection.foreach(x => commitStats.noc_set += x.toString)
+
+      val applysForFanout = exampleTree.collect {
+        case q: Term.Apply => q.toString()
+      }
+      commitStats.fanout = applysForFanout.length
 
       val functionCollection = exampleTree.collect {
         case q: Defn.Def => q.name
@@ -214,13 +220,13 @@ object main extends App {
         }
     */
 
-    /*val filename = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid.svg"
+    val filename = "..\\svg\\pyramid.svg"
     var svg = scala.io.Source.fromFile(filename).getLines.mkString("\n")
 
     svg = replaceTemplatesInString(svg, commitStats, projectName)
-    Files.write(Paths.get("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\maproef1819-emile\\svg\\pyramid_" + projectName + ".svg"),
+    Files.write(Paths.get("..\\svg\\pyramid_" + projectName + ".svg"),
       svg.getBytes(StandardCharsets.UTF_8))
-    */
+
 
     logToCsv(commitStats, projectName)
   }
