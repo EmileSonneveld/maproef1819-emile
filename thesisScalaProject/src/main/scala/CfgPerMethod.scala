@@ -49,7 +49,7 @@ object CfgPerMethod {
     sb.toString()
   }
 
-  def compute(tree:Tree): mutable.Map[String, ArrayBuffer[DirectedGraphNode]] = {
+  def compute(tree: Tree): mutable.Map[String, ArrayBuffer[DirectedGraphNode]] = {
     println("Generating CFGs...")
 
     //val sdoc: SemanticDocument = doc.sdoc
@@ -100,6 +100,9 @@ object CfgPerMethod {
           case t: scala.meta.Lit => {
             clickNewNode(t.toString())
           }
+          case t: Term.Throw => {
+            clickNewNode(t.toString())
+          }
           case t@Term.PartialFunction(cases) => {
             clickNewNode(t.toString()) // TODO: Exapnd
           }
@@ -123,6 +126,16 @@ object CfgPerMethod {
             val prevLast = lastNode
             lastNode = doBlock(nodes, lastNode, returnPointsToThis, scala.List[scala.meta.Stat](term))
             lastNode.linksTo += prevLast
+          }
+          case t@Term.Try(term, cases, terms) => {
+            clickNewNode("BEGIN TRY")
+
+            val after = newNode(nodes, "AFTER TRY")
+            doBlock(nodes, lastNode, returnPointsToThis, List(term)).linksTo += after
+            for (c <- cases) {
+              doBlock(nodes, lastNode, returnPointsToThis, scala.List[scala.meta.Stat](c.body)).linksTo += after
+            }
+            lastNode = after
           }
 
           case defnVar@Defn.Var(_, _, _, Some(rhs)) =>
@@ -174,7 +187,7 @@ object CfgPerMethod {
       case d@Defn.Def(_, name, _, _, _, body) =>
         doMethod(d)
     }
-    //println("\n\n" + nodesToGraphViz())
+    //println("\n\n" + nodesToGraphViz(methodMap))
     methodMap
   }
 }
