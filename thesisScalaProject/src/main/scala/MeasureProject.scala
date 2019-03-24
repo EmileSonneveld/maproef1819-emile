@@ -40,30 +40,44 @@ object MeasureProject {
     svg = svg.replaceAll("%CALLS/NOM%", df.format(commitStats.calls.toDouble / nom))
     //svg = svg.replaceAll("%FANOUT/CALLS%", df.format(commitStats.fanout.toDouble / commitStats.calls))
 
-    //val xml = XML.loadString(svg)
+    val xml = XML.loadString(svg)
+
+    val redStr = "fill:#ff2700;"
+    val greenStr = "fill:#008f00;"
+    val blueStr = "fill:#0091ff;"
+
+    def searchNodeWithLabelAttribute(el: Node, label: String): Option[Node] = {
+      val childs: Seq[Node] = el.nonEmptyChildren
+      for (c <- childs) {
+        var opt = c.attribute("http://www.inkscape.org/namespaces/inkscape", "label")
+        if (opt.isDefined
+          && opt.get.head.text == label)
+          return Some(c)
+        val cRes = searchNodeWithLabelAttribute(c, label)
+        if (cRes.isDefined)
+          return cRes
+      }
+      None
+    }
+
+    //def addAttributeToNode(n: Elem, attribute: Attribute) = n % attribute
+    //val attributeAdded = addAttributeToNode(<email>none@one.com</email>, Attribute(None, "primary", Text("true"), Null))
     //
-    //val redStr = "fill:#ff2700;"
-    //val greenStr = "fill:#008f00;"
-    //val blueStr = "fill:#0091ff;"
-    //
-    //def searchNodeWithLabelAttribute(el: Node, label: String): Option[Node] = {
-    //  val childs: Seq[Node] = el.nonEmptyChildren
-    //  for (c <- childs) {
-    //    var opt = c.attribute("http://www.inkscape.org/namespaces/inkscape", "label")
-    //    if (opt.isDefined
-    //      && opt.get.head.text == label)
-    //      return Some(c)
-    //    val cRes = searchNodeWithLabelAttribute(c, label)
-    //    if (cRes.isDefined)
-    //      return cRes
-    //  }
-    //  None
+    //def styleForLabel(label:String) = {
+    //  val node = searchNodeWithLabelAttribute(xml, "bg_CycloPerLoc").get
+    //  node % Attribute(None, "primary", Text("true"), Null)
+    //  node.attribute("style").get.head
     //}
+    //{
+    //  val attr = styleForLabel("bg_CycloPerLoc")
+    //  if(cc.toDouble / loc < 0.16)
+    //    attr.text = attr.text.replace(greenStr, blueStr)
+    //  else if(cc.toDouble / loc >0.24)
+    //    attr.text = attr.text.replace(greenStr, redStr)
     //
-    //val node = searchNodeWithLabelAttribute(xml, "bg_NocPerNop")
-    //var attr = node.get.attribute("http://www.inkscape.org/namespaces/inkscape", "label").get.head
-    //val newStr = xml.toString()
-    return svg
+    //}
+
+    return xml.toString()
   }
 
   def consumeFile(commitStats: CommitStats, exampleTree: Tree) = {
