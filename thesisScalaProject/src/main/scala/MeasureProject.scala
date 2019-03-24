@@ -1,16 +1,11 @@
-import java.io.{File, FileWriter}
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
+import java.io.File
 import java.text._
-import java.util.Calendar
 
 import scalafix.CfgPerMethod
 
-import scala.collection.mutable.ArrayBuffer
 import scala.language.postfixOps
 import scala.meta._
-import scala.sys.process._
-import scala.xml._
+//import scala.xml._
 
 object MeasureProject {
 
@@ -40,44 +35,38 @@ object MeasureProject {
     svg = svg.replaceAll("%CALLS/NOM%", df.format(commitStats.calls.toDouble / nom))
     //svg = svg.replaceAll("%FANOUT/CALLS%", df.format(commitStats.fanout.toDouble / commitStats.calls))
 
-    val xml = XML.loadString(svg)
 
     val redStr = "fill:#ff2700;"
     val greenStr = "fill:#008f00;"
     val blueStr = "fill:#0091ff;"
 
-    def searchNodeWithLabelAttribute(el: Node, label: String): Option[Node] = {
-      val childs: Seq[Node] = el.nonEmptyChildren
-      for (c <- childs) {
-        var opt = c.attribute("http://www.inkscape.org/namespaces/inkscape", "label")
-        if (opt.isDefined
-          && opt.get.head.text == label)
-          return Some(c)
-        val cRes = searchNodeWithLabelAttribute(c, label)
-        if (cRes.isDefined)
-          return cRes
-      }
-      None
+    var doc = XmlUtil.parseXmlFromString(svg)
+
+    // Based on statistical foundinfs in java
+    {
+      val attr = XmlUtil.xpathGetNode(doc, "//rect[@label=\"bg_CycloPerLoc\"]/@style").get
+      if (cc.toDouble / loc < 0.16)
+        attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
+      else if (cc.toDouble / loc > 0.24)
+        attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
+    }
+    {
+      val attr = XmlUtil.xpathGetNode(doc, "//rect[@label=\"bg_NomPerNoc\"]/@style").get
+      if (nom.toDouble / noc < 4)
+        attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
+      else if (nom.toDouble / noc > 10)
+        attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
+    }
+    {
+      val attr = XmlUtil.xpathGetNode(doc, "//rect[@label=\"bg_LocPerNom\"]/@style").get
+      if (loc.toDouble / nom < 7)
+        attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
+      else if (loc.toDouble / nom > 13)
+        attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
     }
 
-    //def addAttributeToNode(n: Elem, attribute: Attribute) = n % attribute
-    //val attributeAdded = addAttributeToNode(<email>none@one.com</email>, Attribute(None, "primary", Text("true"), Null))
-    //
-    //def styleForLabel(label:String) = {
-    //  val node = searchNodeWithLabelAttribute(xml, "bg_CycloPerLoc").get
-    //  node % Attribute(None, "primary", Text("true"), Null)
-    //  node.attribute("style").get.head
-    //}
-    //{
-    //  val attr = styleForLabel("bg_CycloPerLoc")
-    //  if(cc.toDouble / loc < 0.16)
-    //    attr.text = attr.text.replace(greenStr, blueStr)
-    //  else if(cc.toDouble / loc >0.24)
-    //    attr.text = attr.text.replace(greenStr, redStr)
-    //
-    //}
 
-    return xml.toString()
+    return XmlUtil.documentToString(doc)
   }
 
   def consumeFile(commitStats: CommitStats, exampleTree: Tree) = {

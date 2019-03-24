@@ -582,30 +582,5 @@
          x="182.80576"
          y="171.55717"
          style="fill:#ffffff;fill-opacity:1;stroke-width:0.26458332">%CALLS/NOM%</tspan></text>
-    <image
-       sodipodi:absref="C:\Users\emill\dev\maproef1819-emile\svg\piramid.png"
-       xlink:href="piramid.png"
-       width="211.66667"
-       height="78.845833"
-       preserveAspectRatio="none"
-       id="image4641"
-       x="16.843376"
-       y="212.94307" />
-    <rect
-       style="fill:#ff2700;fill-opacity:1;stroke-width:0.26458332"
-       id="rect4644"
-       width="73.23185"
-       height="10.958051"
-       x="140.3165"
-       y="206.39563"
-       inkscape:label="red" />
-    <rect
-       style="fill:#0091ff;fill-opacity:1;stroke-width:0.26458332"
-       id="rect4646"
-       width="17.372519"
-       height="6.9490075"
-       x="115.72771"
-       y="207.99925"
-       inkscape:label="blue" />
   </g>
 </svg>
