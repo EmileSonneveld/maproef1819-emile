@@ -23,7 +23,8 @@ object CfgPerMethod {
     E - V + 2 * P
   }
 
-  def nodesToGraphViz(methodMap: Map[String, ArrayBuffer[DirectedGraphNode]]): String = {
+  def MethodMapToGraphViz(methodMap: Map[String, ArrayBuffer[DirectedGraphNode]]): String = {
+
     var sb = new StringBuilder()
     sb ++= "# You can visualise this file here: http://webgraphviz.com\n"
     sb ++= "digraph {\n"
@@ -31,27 +32,46 @@ object CfgPerMethod {
 
     for (nodes <- methodMap.values) {
       sb ++= "\n"
-      for (node <- nodes) {
-        // node.nodeId + " " +
-        val n1 = node.debugString
-          .replace("\\", "\\\\") // escape escaper
-          .replace("\"", "\\\"")
-          .replace("\n", "\\n")
-          .replace("\r", "")
-        //if (node.linksTo.length == 0)
-        sb ++= "	\"" + node.nodeId + "\" [label=\"" + n1 + "\"]\n"
-        for (next <- node.linksTo) {
-          //val n2 = next.debugString.replace("\"", "\\\"")
-          sb ++= "	\"" + node.nodeId + "\"->\"" + next.nodeId + "\"\n"
-        }
-      }
+      sb ++= methodToGraphviz(nodes)
     }
+
     sb ++= "}\n"
     sb.toString()
   }
 
+  def nodesToGraphViz(nodes: ArrayBuffer[DirectedGraphNode]): String = {
+    var sb = new StringBuilder()
+    sb ++= "# You can visualise this file here: http://webgraphviz.com\n"
+    sb ++= "digraph {\n"
+    sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
+
+    sb ++= methodToGraphviz(nodes)
+
+    sb ++= "}\n"
+    sb.toString()
+  }
+
+  private def methodToGraphviz(nodes: ArrayBuffer[DirectedGraphNode]): String = {
+    var sb = new StringBuilder()
+    for (node <- nodes) {
+      // node.nodeId + " " +
+      val n1 = node.debugString
+        .replace("\\", "\\\\") // escape escaper
+        .replace("\"", "\\\"")
+        .replace("\n", "\\n")
+        .replace("\r", "")
+      //if (node.linksTo.length == 0)
+      sb ++= "	\"" + node.nodeId + "\" [label=\"" + n1 + "\"]\n"
+      for (next <- node.linksTo) {
+        //val n2 = next.debugString.replace("\"", "\\\"")
+        sb ++= "	\"" + node.nodeId + "\"->\"" + next.nodeId + "\"\n"
+      }
+    }
+    sb.toString()
+  }
+
   def compute(tree: Tree): mutable.Map[String, ArrayBuffer[DirectedGraphNode]] = {
-    println("Generating CFGs...")
+    //println("Generating CFGs...")
 
     //val sdoc: SemanticDocument = doc.sdoc
     val methodMap = mutable.Map.empty[String, ArrayBuffer[DirectedGraphNode]]
@@ -183,7 +203,7 @@ object CfgPerMethod {
       val methodName = d.name.toString()
 
       if (methodMap.keySet.contains(methodName)) // Dont lnow why this happens
-        println("Method name: " + methodName + " was already considered. Will clear result and calculate again.")
+        println("Method name: " + methodName + " was already considered.")
       methodMap(methodName) = ArrayBuffer.empty[DirectedGraphNode]
       val nodes = methodMap(methodName)
 

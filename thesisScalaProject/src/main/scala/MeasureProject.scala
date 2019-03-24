@@ -25,7 +25,9 @@ object MeasureProject {
     svg = svg.replaceAll("%LOC%", loc.toString)
     svg = svg.replaceAll("%CYCLO%", cc.toString)
     svg = svg.replaceAll("%CALLS%", commitStats.calls.toString)
-    //svg = svg.replaceAll("%FANOUT%", commitStats.fanout.toString)
+    svg = svg.replaceAll("%ANDC%", "")
+    svg = svg.replaceAll("%AHH%", "")
+    svg = svg.replaceAll("%FANOUT%", "") //commitStats.fanout.toString
 
     val df = new DecimalFormat(".##")
     svg = svg.replaceAll("%NOC/NOP%", df.format(noc.toDouble / nop))
@@ -33,7 +35,7 @@ object MeasureProject {
     svg = svg.replaceAll("%LOC/NOM%", df.format(loc.toDouble / nom))
     svg = svg.replaceAll("%CYCLO/LOC%", df.format(cc.toDouble / loc))
     svg = svg.replaceAll("%CALLS/NOM%", df.format(commitStats.calls.toDouble / nom))
-    //svg = svg.replaceAll("%FANOUT/CALLS%", df.format(commitStats.fanout.toDouble / commitStats.calls))
+    svg = svg.replaceAll("%FANOUT/CALLS%", "") // df.format(commitStats.fanout.toDouble / commitStats.calls))
 
 
     val redStr = "fill:#ff2700;"
@@ -101,7 +103,6 @@ object MeasureProject {
 
     val functionCollection = exampleTree.collect {
       case q: Defn.Def => q.name
-
     }
     functionCollection.foreach(x => commitStats.nom_set += x.toString)
 
@@ -130,8 +131,9 @@ object MeasureProject {
 
         for (pair <- methodMap) {
           val CC = CfgPerMethod.calculateCC(pair._2)
-          if (CC > 9) {
+          if (CC > 20) {
             println("Big CC found: " + pair._1 + " -> " + CC)
+            println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
           }
           //println(pair._1 + ": CC= " + CC)
           commitStats.cc_set += CC
