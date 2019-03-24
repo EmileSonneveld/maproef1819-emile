@@ -34,55 +34,6 @@ object main extends App {
     return ("cmd /C " + command) !!
   }
 
-
-  def goTroughAllCommits(projectPath: File): Any = {
-    var gitTopLevel = getGitTopLevel(projectPath)
-
-    val projectName = getProjectName(projectPath.toPath)
-    val result = Utils.parseCsvFromFile(new File("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv"))
-    val hashesFromSvg: Seq[String] = result.map(x => x(1))
-
-    execCommand("cd " + gitTopLevel + " && git reset .")
-    clearGitRepo(new File(gitTopLevel))
-
-
-    val hashes = getCommitHashesFromLog(gitTopLevel)
-    for (hash <- hashes) {
-      var commitStats: CommitStats = null
-      try {
-        if (!hashesFromSvg.contains(hash)) {
-          execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
-          execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
-          execCommand("cd " + gitTopLevel + " && git checkout " + hash)
-          println(hash)
-          commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
-        }
-        // Keep commitStats null if it was calculated before
-      } catch {
-        case x: Throwable => {
-          println("Exception while calculating stats. Manually delete all files and start again, plz.")
-          commitStats = new CommitStats // Add empty line to avoid calculating this commit in the future
-          clearGitRepo(new File(gitTopLevel))
-        }
-      }
-
-      if(commitStats != null)
-      {
-        commitStats.commitHash = hash
-
-        val filename = "..\\svg\\pyramid.svg"
-        var svg = scala.io.Source.fromFile(filename).getLines.mkString("\n")
-
-        svg = MeasureProject.fillInPyramidTemplate(svg, commitStats, projectName)
-        Files.write(Paths.get("..\\svg\\pyramid_" + projectName + ".svg"),
-          svg.getBytes(StandardCharsets.UTF_8))
-
-
-        logToCsv(commitStats, projectName)
-      }
-    }
-  }
-
   // In case of complicated git mistakes
   def deleteRecursively(file: File): Unit = {
     if (file.isDirectory)
@@ -94,9 +45,8 @@ object main extends App {
   def clearGitRepo(gitTopLevel: File) = {
     val filesAndFolders: Array[File] = gitTopLevel.listFiles //isFile to find files
     for (f <- filesAndFolders) {
-      println(f)
       if (!f.getAbsolutePath.contains(".git")) {
-        println("deleting this.")
+        println("deleting " + f)
         //f.delete()
         deleteRecursively(f)
       }
@@ -106,25 +56,59 @@ object main extends App {
   }
 
 
-  def logToCsv(commitStats: CommitStats, projectName: String) = {
-    val nop = commitStats.nop_set.size
-    val noc = commitStats.noc_set.size
-    val nom = commitStats.nom_set.size
-    val loc = commitStats.loc
-    val avg_cc = commitStats.cc_set.sum / commitStats.cc_set.size
-    val timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance.getTime)
+  def calculationsOnProject(projectPath: File): Any = {
+    var gitTopLevel = getGitTopLevel(projectPath)
 
-    var str = projectName + ", " + commitStats.commitHash + ", " + nop + ", " + noc + ", " + nom + ", " + loc + ", " + avg_cc + ", " + timeStamp + "\n"
-    val fw = new FileWriter("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv", true)
-    try {
-      fw.write(str)
+    val projectName = getProjectName(projectPath.toPath)
+
+    if (true) {
+      var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
+      var svg = Utils.readFile("..\\svg\\pyramid.svg")
+      svg = MeasureProject.fillInPyramidTemplate(svg, commitStats, projectName)
+      Utils.writeFile("..\\svg\\pyramid_" + projectName + ".svg", svg)
     }
-    finally fw.close()
+    else {
+      val svgPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv"
+      val result = Utils.parseCsvFromFile(new File(svgPath))
+      val hashesFromSvg: Seq[String] = result.map(x => x(1))
+
+      execCommand("cd " + gitTopLevel + " && git reset .")
+      clearGitRepo(new File(gitTopLevel))
+
+
+      val hashes = getCommitHashesFromLog(gitTopLevel)
+      for (hash <- hashes) {
+        var commitStats: CommitStats = null
+        try {
+          if (!hashesFromSvg.contains(hash)) {
+            execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
+            execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
+            execCommand("cd " + gitTopLevel + " && git checkout " + hash)
+            println(hash)
+            commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
+          }
+          // Keep commitStats null if it was calculated before
+        } catch {
+          case x: Throwable => {
+            println("Exception while calculating stats. Will clearGitRepo and checkout master.")
+            commitStats = new CommitStats // Add empty line to avoid calculating this commit in the future
+            clearGitRepo(new File(gitTopLevel))
+          }
+        }
+
+        if (commitStats != null) {
+          commitStats.commitHash = hash
+
+          val str = commitStats.toSvgLine
+          Utils.appendToFile(svgPath, str)
+        }
+      }
+    }
   }
 
 
-  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main"))
-  goTroughAllCommits(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
-  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
-  //goTroughAllCommits(new File("C:\\Users\\emill\\dev\\playframework\\framework\\src\\play\\src\\main"))
+  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
+  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
+  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\playframework\\core\\play\\src\\main"))
 }

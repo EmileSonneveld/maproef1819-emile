@@ -6,9 +6,11 @@ import java.util.Calendar
 
 import scalafix.CfgPerMethod
 
+import scala.collection.mutable.ArrayBuffer
 import scala.language.postfixOps
 import scala.meta._
 import scala.sys.process._
+import scala.xml._
 
 object MeasureProject {
 
@@ -27,6 +29,7 @@ object MeasureProject {
     svg = svg.replaceAll("%NOM%", nom.toString)
     svg = svg.replaceAll("%LOC%", loc.toString)
     svg = svg.replaceAll("%CYCLO%", cc.toString)
+    svg = svg.replaceAll("%CALLS%", commitStats.calls.toString)
     //svg = svg.replaceAll("%FANOUT%", commitStats.fanout.toString)
 
     val df = new DecimalFormat(".##")
@@ -34,8 +37,32 @@ object MeasureProject {
     svg = svg.replaceAll("%NOM/NOC%", df.format(nom.toDouble / noc))
     svg = svg.replaceAll("%LOC/NOM%", df.format(loc.toDouble / nom))
     svg = svg.replaceAll("%CYCLO/LOC%", df.format(cc.toDouble / loc))
+    svg = svg.replaceAll("%CALLS/NOM%", df.format(commitStats.calls.toDouble / nom))
     //svg = svg.replaceAll("%FANOUT/CALLS%", df.format(commitStats.fanout.toDouble / commitStats.calls))
 
+    //val xml = XML.loadString(svg)
+    //
+    //val redStr = "fill:#ff2700;"
+    //val greenStr = "fill:#008f00;"
+    //val blueStr = "fill:#0091ff;"
+    //
+    //def searchNodeWithLabelAttribute(el: Node, label: String): Option[Node] = {
+    //  val childs: Seq[Node] = el.nonEmptyChildren
+    //  for (c <- childs) {
+    //    var opt = c.attribute("http://www.inkscape.org/namespaces/inkscape", "label")
+    //    if (opt.isDefined
+    //      && opt.get.head.text == label)
+    //      return Some(c)
+    //    val cRes = searchNodeWithLabelAttribute(c, label)
+    //    if (cRes.isDefined)
+    //      return cRes
+    //  }
+    //  None
+    //}
+    //
+    //val node = searchNodeWithLabelAttribute(xml, "bg_NocPerNop")
+    //var attr = node.get.attribute("http://www.inkscape.org/namespaces/inkscape", "label").get.head
+    //val newStr = xml.toString()
     return svg
   }
 
@@ -52,10 +79,22 @@ object MeasureProject {
     }
     classCollection.foreach(x => commitStats.noc_set += x.toString)
 
-    val applysForFanout = exampleTree.collect {
-      case q: Term.Apply => q.toString()
+    var applysForFanout = 0
+    exampleTree.collect {
+      case c: Defn.Class =>
+        var set = Set.empty[String]
+        c.collect {
+          case a: Term.Apply => set += a.fun.toString()
+        }
+        applysForFanout += set.size
+      case c: Defn.Object =>
+        var set = Set.empty[String]
+        c.collect {
+          case a: Term.Apply => set += a.fun.toString()
+        }
+        applysForFanout += set.size
     }
-    commitStats.fanout = applysForFanout.length
+    commitStats.calls += applysForFanout
 
     val functionCollection = exampleTree.collect {
       case q: Defn.Def => q.name
