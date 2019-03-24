@@ -15,6 +15,8 @@ object main extends App {
   def getProjectName(path: Path): String = {
     var tmp = path.toString
     tmp = tmp.replace("C:\\Users\\emill\\dev\\", "")
+    tmp = tmp.replace("D:\\github_download\\", "")
+    tmp = tmp.replace("D:\\dev\\", "")
     val firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))
     return tmp.substring(0, firstSlah)
   }
@@ -107,8 +109,23 @@ object main extends App {
   }
 
 
-  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main"))
-  calculationsOnProject(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main"))
-  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main"))
-  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\playframework\\core\\play\\src\\main"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalastyle\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\playframework\\core\\play\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\beakerx\\kernel\\scala\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\BigDL\\spark\\spark-version\\1.5-plus\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\circe\\modules\\core\\shared\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\deeplearning4j\\scalnet\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\dotty\\library\\src\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\finagle\\finagle-core\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\gitbucket\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\incubator-openwhisk\\common\\scala\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\lila\\app"))
+  calculationsOnProject(new File("D:\\github_download\\sbt\\main\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\scala\\src\\reflect\\scala\\reflect"))
+  calculationsOnProject(new File("D:\\github_download\\scalastyle\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\scaloid\\scaloid-common\\src\\main\\scala"))
+  calculationsOnProject(new File("D:\\github_download\\shapeless\\core\\src\\main\\scala"))
 }

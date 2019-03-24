@@ -1,18 +1,13 @@
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, StringWriter}
 
 import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.xpath.XPathFactory
-import org.w3c.dom.{Document, Node}
-
-import scala.language.postfixOps
-
-import java.io.StringWriter
-
-import javax.xml.transform.{TransformerException, TransformerFactory}
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-import javax.xml.xpath.XPathConstants
-import org.w3c.dom.NodeList
+import javax.xml.transform.{TransformerException, TransformerFactory}
+import javax.xml.xpath.{XPathConstants, XPathFactory}
+import org.w3c.dom.{Document, Node, NodeList}
+
+import scala.language.postfixOps
 
 object XmlUtil {
   def parseXmlFromString(xmlString: String): Document = {

@@ -30,6 +30,7 @@ object CfgPerMethod {
     sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
 
     for (nodes <- methodMap.values) {
+      sb ++= "\n"
       for (node <- nodes) {
         // node.nodeId + " " +
         val n1 = node.debugString
@@ -138,7 +139,23 @@ object CfgPerMethod {
             lastNode = after
           }
 
-          case defnVar@Defn.Var(_, _, _, Some(rhs)) =>
+          case Term.While(term1, term2) => {
+            lastNode = doBlock(nodes, lastNode, returnPointsToThis, List(term1))
+            val beginNode = lastNode
+            lastNode = doBlock(nodes, lastNode, returnPointsToThis, List(term2))
+            lastNode.linksTo += beginNode
+          }
+
+          //case Term.NewAnonymous(template) => {
+          //  clickNewNode(template.toString()) // Todo
+          //}
+          //case Term.Select(term, name) => {
+          //  clickNewNode(term.toString()) // Todo
+          //}
+          case defnVar@Defn.Var(_, _, _, Some(rhs)) => {
+            clickNewNode(defnVar.toString())
+          }
+
           case defnVar@Defn.Val(_, _, _, rhs) => {
             clickNewNode(defnVar.toString())
           }
@@ -154,6 +171,7 @@ object CfgPerMethod {
           }
           case anyOtherStatement => {
             println("nothing for this statement: " + anyOtherStatement.toString())
+            clickNewNode(anyOtherStatement.toString()) // Showing something in the graph
           }
         }
       }

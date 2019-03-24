@@ -130,6 +130,9 @@ object MeasureProject {
 
         for (pair <- methodMap) {
           val CC = CfgPerMethod.calculateCC(pair._2)
+          if (CC > 9) {
+            println("Big CC found: " + pair._1 + " -> " + CC)
+          }
           //println(pair._1 + ": CC= " + CC)
           commitStats.cc_set += CC
         }
