@@ -15,7 +15,27 @@ object Utils {
   }
 
   def writeFile(path: Path, content: String): Unit = {
+
+    val dir = normalizeDirectoryPath(path.getParent.toString)
+    val directory = new File(dir)
+    if (!directory.exists) {
+
+      // Only make leading directories in places we know
+      if (dir.contains("C:/Users/emill/dev/")
+        || dir.contains("D:/github_download/")
+        || dir.contains("D:/dev/")
+        || dir.contains("C:/Users/emill/Dropbox/slimmerWorden/2018-2019-Semester2/THESIS/")) {
+        directory.mkdirs
+      }
+    }
+
     Files.write(path, content.getBytes(StandardCharsets.UTF_8))
+  }
+
+  def normalizeDirectoryPath(path: String): String = {
+    var str = path.replace("\\", "/")
+    if (!str.endsWith("/")) str += "/"
+    str
   }
 
   def appendToFile(path: String, content: String): Unit = {

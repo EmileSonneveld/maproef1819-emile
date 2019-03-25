@@ -109,10 +109,11 @@ object main extends App {
   }
 
 
-  calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main\\scala"))
   calculationsOnProject(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main\\scala"))
   calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalastyle\\src\\main\\scala"))
   calculationsOnProject(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main\\scala"))
+  /*
   calculationsOnProject(new File("C:\\Users\\emill\\dev\\playframework\\core\\play\\src\\main\\scala"))
   calculationsOnProject(new File("D:\\github_download\\beakerx\\kernel\\scala\\src\\main\\scala"))
   calculationsOnProject(new File("D:\\github_download\\BigDL\\spark\\spark-version\\1.5-plus\\src\\main\\scala"))
@@ -128,4 +129,5 @@ object main extends App {
   calculationsOnProject(new File("D:\\github_download\\scalastyle\\src\\main\\scala"))
   calculationsOnProject(new File("D:\\github_download\\scaloid\\scaloid-common\\src\\main\\scala"))
   calculationsOnProject(new File("D:\\github_download\\shapeless\\core\\src\\main\\scala"))
+  */
 }

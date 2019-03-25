@@ -129,6 +129,10 @@ object MeasureProject {
 
         val methodMap = CfgPerMethod.compute(exampleTree)
 
+        val relative = projectPath.toPath.relativize(f.toPath)
+        val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\gv\\" + projectName + "\\" + relative + ".gv"
+        Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
+
         for (pair <- methodMap) {
           val CC = CfgPerMethod.calculateCC(pair._2)
           if (CC > 20) {
