@@ -1,7 +1,7 @@
 import java.io.File
 import java.text._
 
-import scalafix.CfgPerMethod
+import scalafix.{CfgPerMethod, SemanticDB}
 
 import scala.language.postfixOps
 import scala.meta._
@@ -71,21 +71,21 @@ object MeasureProject {
     return XmlUtil.documentToString(doc)
   }
 
-  def consumeFile(commitStats: CommitStats, exampleTree: Tree) = {
+  def consumeFile(commitStats: CommitStats, tree: Tree) = {
 
-    val packageCollection = exampleTree.collect {
+    val packageCollection = tree.collect {
       case q: Pkg => q.name
     }
     packageCollection.foreach(x => commitStats.nop_set += x.toString)
 
-    val classCollection = exampleTree.collect {
+    val classCollection = tree.collect {
       case q: Defn.Class => q.name
       case q: Defn.Object => q.name
     }
     classCollection.foreach(x => commitStats.noc_set += x.toString)
 
     var applysForFanout = 0
-    exampleTree.collect {
+    tree.collect {
       case c: Defn.Class =>
         var set = Set.empty[String]
         c.collect {
@@ -101,19 +101,19 @@ object MeasureProject {
     }
     commitStats.calls += applysForFanout
 
-    val functionCollection = exampleTree.collect {
+    val functionCollection = tree.collect {
       case q: Defn.Def => q.name
     }
     functionCollection.foreach(x => commitStats.nom_set += x.toString)
 
-    commitStats.loc += exampleTree.toString.count(x => x == '\n')
+    commitStats.loc += tree.toString.count(x => x == '\n')
   }
 
   def doStatsForProject(projectPath: File, projectName: String): CommitStats = {
 
     val commitStats = new CommitStats
 
-
+    /*
     val scalaFiles = Utils.recursiveListFiles(projectPath)
 
     for (f <- scalaFiles) {
@@ -123,11 +123,11 @@ object MeasureProject {
         val bytes = java.nio.file.Files.readAllBytes(f.toPath)
         val text = new String(bytes, "UTF-8")
         val input = Input.VirtualFile(f.toString, text)
-        val exampleTree = input.parse[Source].get
+        val tree = input.parse[Source].get
 
-        consumeFile(commitStats, exampleTree)
+        consumeFile(commitStats, tree)
 
-        val methodMap = CfgPerMethod.compute(exampleTree)
+        val methodMap = CfgPerMethod.compute(tree)
 
         val relative = projectPath.toPath.relativize(f.toPath)
         val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\gv\\" + projectName + "\\" + relative + ".gv"
@@ -144,32 +144,33 @@ object MeasureProject {
         }
       }
     }
-    /*
-        var scalaRoot = projectPath.getAbsolutePath.replace("\\", "/")
-        if (!scalaRoot.endsWith("/")) scalaRoot += "/"
-        if (scalaRoot.endsWith("src/main/"))
-          scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/".length)
-
-        //execCommand("cd " + getGitTopLevel(new File(scalaRoot)) + " && sbt semanticdb").trim
-
-        val semanticDB = new SemanticDB(new File(scalaRoot))
-        val documents = semanticDB.documents
-
-        for (main_doc <- documents) {
-          println("\n Doc: " + main_doc.tdoc.uri)
-          val doc = semanticDB.reload(main_doc.tdoc.uri)
-
-          consumeFile(doc.sdoc.tree)
-
-          val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
-
-          for (pair <- methodMap) {
-            val CC = CfgPerMethod.calculateCC(pair._2)
-            println(pair._1 + ": CC= " + CC)
-            commitStats.cc_set += CC
-          }
-        }
     */
+    var scalaRoot = Utils.normalizeDirectoryPath(projectPath.getAbsolutePath)
+    if (scalaRoot.endsWith("src/main/scala/"))
+      scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/scala/".length)
+
+    //execCommand("cd " + getGitTopLevel(new File(scalaRoot)) + " && sbt semanticdb").trim
+
+    val semanticDB = new SemanticDB(new File(scalaRoot))
+    val documents = semanticDB.documents
+
+    for (main_doc <- documents) {
+      println("\n Doc: " + main_doc.tdoc.uri)
+      val doc = semanticDB.reload(main_doc.tdoc.uri)
+
+      consumeFile(commitStats, doc.sdoc.tree)
+
+      TypeHiarchy.calculate(doc, semanticDB.symbolTable)
+
+      //val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
+      //
+      //for (pair <- methodMap) {
+      //  val CC = CfgPerMethod.calculateCC(pair._2)
+      //  println(pair._1 + ": CC= " + CC)
+      //  commitStats.cc_set += CC
+      //}
+    }
+
     commitStats
   }
 }
