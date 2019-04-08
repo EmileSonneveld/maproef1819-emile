@@ -11,6 +11,8 @@ class CommitStats {
   var fanout = 0
   var calls = 0
   var loc = 0
+  var andc = 0.0
+  var ahh = 0.0
 
   def toSvgLine: String = {
     val nop = this.nop_set.size

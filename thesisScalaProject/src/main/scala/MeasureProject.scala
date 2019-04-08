@@ -17,6 +17,8 @@ object MeasureProject {
     val loc = commitStats.loc
     val cc = commitStats.cc_set.sum
 
+    val df = new DecimalFormat(".##")
+
     svg = svg.replaceAll("%PROJECT%", projectName)
 
     svg = svg.replaceAll("%NOP%", nop.toString)
@@ -25,11 +27,10 @@ object MeasureProject {
     svg = svg.replaceAll("%LOC%", loc.toString)
     svg = svg.replaceAll("%CYCLO%", cc.toString)
     svg = svg.replaceAll("%CALLS%", commitStats.calls.toString)
-    svg = svg.replaceAll("%ANDC%", "")
-    svg = svg.replaceAll("%AHH%", "")
+    svg = svg.replaceAll("%ANDC%", df.format(commitStats.andc))
+    svg = svg.replaceAll("%AHH%", df.format(commitStats.ahh))
     svg = svg.replaceAll("%FANOUT%", "") //commitStats.fanout.toString
 
-    val df = new DecimalFormat(".##")
     svg = svg.replaceAll("%NOC/NOP%", df.format(noc.toDouble / nop))
     svg = svg.replaceAll("%NOM/NOC%", df.format(nom.toDouble / noc))
     svg = svg.replaceAll("%LOC/NOM%", df.format(loc.toDouble / nom))
@@ -171,6 +172,8 @@ object MeasureProject {
       //  commitStats.cc_set += CC
       //}
     }
+    commitStats.andc = th.calculateANDC()
+    commitStats.ahh = th.calculateAHH()
     Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\gv\\types_" + projectName + ".gv", th.getGvString())
 
 

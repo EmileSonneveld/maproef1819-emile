@@ -24,7 +24,41 @@ class TypeHiarchy() {
   //  symbolList.find(_.name == path).get
   //}
 
-  def addOrReturnSymbol(symbol: String): TypeGraphNode = {
+  def calculateANDC(): Double = {
+    var sum = 0.0
+    var count = 0.0
+    for (n <- symbolList) {
+      sum += n.linksTo.length
+      count += 1
+    }
+    return sum / count
+  }
+
+  def calculateAHH(): Double = {
+    if (symbolList.length == 0)
+      return 0
+    var depthList = ArrayBuffer.empty[Int]
+    for (_ <- symbolList.indices) {
+      depthList += 0
+    }
+    for (i <- symbolList.indices) {
+      rec(0, i)
+    }
+
+    def rec(depth: Int, nodeIdx: Int): Unit = {
+      depthList(nodeIdx) = depth
+      var node = symbolList(nodeIdx)
+      for (node <- node.linksTo) {
+        var childIdx = symbolList.indexOf(node)
+        if (depthList(childIdx) < depth + 1)
+          rec(depth + 1, childIdx)
+      }
+    }
+
+    return depthList.sum.toDouble / depthList.length
+  }
+
+  private def addOrReturnSymbol(symbol: String): TypeGraphNode = {
     val node = symbolList.find(_.name == symbol.toString)
     node match {
       case Some(value) => value
