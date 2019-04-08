@@ -31,7 +31,7 @@ class SemanticDB(val projectPath: File) {
       .reduceOption(_ ++ _)
 
     val classPath = ClassLoader.getSystemClassLoader.asInstanceOf[URLClassLoader].getURLs
-      .map(url => Classpath(url.getFile.replace("/C:/", "C:/")))
+      .map(url => Classpath(url.getFile.replace("/C:/", "C:/").replace("%20", " ")))
       .reduceOption(_ ++ _)
 
     (jars ++ classes ++ classPath).reduceOption(_ ++ _).getOrElse(Classpath(""))

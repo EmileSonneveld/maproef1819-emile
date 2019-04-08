@@ -87,7 +87,7 @@ class TypeHiarchy() {
             println(parents)
           } catch {
             case ex =>
-              println(ex)
+              println("EX: " + ex)
           }
         }
       }
@@ -102,8 +102,8 @@ class TypeHiarchy() {
     println("DONE TypeHiarchy.calculate")
   }
 
-  def print() = {
-    println(nodesToGraphViz(symbolList))
+  def getGvString() = {
+    nodesToGraphViz(symbolList)
   }
 
 }

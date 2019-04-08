@@ -149,7 +149,7 @@ object MeasureProject {
     if (scalaRoot.endsWith("src/main/scala/"))
       scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/scala/".length)
 
-    //execCommand("cd " + getGitTopLevel(new File(scalaRoot)) + " && sbt semanticdb").trim
+    //Utils.execCommand("cd " + getGitTopLevel(new File(scalaRoot)) + " && sbt semanticdb").trim
 
     val semanticDB = new SemanticDB(new File(scalaRoot))
     val documents = semanticDB.documents
@@ -171,7 +171,8 @@ object MeasureProject {
       //  commitStats.cc_set += CC
       //}
     }
-    th.print()
+    Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\gv\\types_" + projectName + ".gv", th.getGvString())
+
 
     commitStats
   }
