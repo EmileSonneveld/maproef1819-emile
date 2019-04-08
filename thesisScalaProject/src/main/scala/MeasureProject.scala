@@ -1,6 +1,7 @@
 import java.io.File
 import java.text._
 
+import scalafix.v1.SemanticDocument
 import scalafix.{CfgPerMethod, SemanticDB}
 
 import scala.language.postfixOps
@@ -29,14 +30,14 @@ object MeasureProject {
     svg = svg.replaceAll("%CALLS%", commitStats.calls.toString)
     svg = svg.replaceAll("%ANDC%", df.format(commitStats.andc))
     svg = svg.replaceAll("%AHH%", df.format(commitStats.ahh))
-    svg = svg.replaceAll("%FANOUT%", "") //commitStats.fanout.toString
+    svg = svg.replaceAll("%FANOUT%", commitStats.fanout.toString)
 
     svg = svg.replaceAll("%NOC/NOP%", df.format(noc.toDouble / nop))
     svg = svg.replaceAll("%NOM/NOC%", df.format(nom.toDouble / noc))
     svg = svg.replaceAll("%LOC/NOM%", df.format(loc.toDouble / nom))
     svg = svg.replaceAll("%CYCLO/LOC%", df.format(cc.toDouble / loc))
     svg = svg.replaceAll("%CALLS/NOM%", df.format(commitStats.calls.toDouble / nom))
-    svg = svg.replaceAll("%FANOUT/CALLS%", "") // df.format(commitStats.fanout.toDouble / commitStats.calls))
+    svg = svg.replaceAll("%FANOUT/CALLS%", df.format(commitStats.fanout.toDouble / commitStats.calls))
 
 
     val redStr = "fill:#ff2700;"
@@ -72,7 +73,8 @@ object MeasureProject {
     return XmlUtil.documentToString(doc)
   }
 
-  def consumeFile(commitStats: CommitStats, tree: Tree) = {
+  def consumeFile(commitStats: CommitStats, sDb: SemanticDB, sdoc: SemanticDocument) = {
+    val tree = sdoc.tree
 
     val packageCollection = tree.collect {
       case q: Pkg => q.name
@@ -85,22 +87,39 @@ object MeasureProject {
     }
     classCollection.foreach(x => commitStats.noc_set += x.toString)
 
-    var applysForFanout = 0
+    var uniqueCallsPerFunction = 0
+    var uniqueCalledClassesPerFunction = 0
     tree.collect {
-      case c: Defn.Class =>
-        var set = Set.empty[String]
+      case c: Defn.Def =>
+        var calls = Set.empty[String]
+        var classes = Set.empty[String]
+        //var defSymbol = sDb.getFromSymbolTable(c, sdoc)
+        //println("\ndefSymbol: " + defSymbol)
         c.collect {
-          case a: Term.Apply => set += a.fun.toString()
+          case a: Term.Apply => {
+            implicit var implicit_sdoc: SemanticDocument = sdoc
+
+            var s = sDb.getFromSymbolTable(a.fun, sdoc)
+
+            try {
+              //var symInfo = sDb.symbolTable.info(s.value.toString)
+              if (!s.value.startsWith("java/lang/") // some arbitrary filtering...
+                && !s.value.startsWith("java/util/")
+                && !s.value.startsWith("scala/Predef")) {
+                classes += s.owner.toString()
+              }
+            } catch {
+              case ex => println("EXCEPTION: " + ex)
+            }
+            calls += a.fun.toString()
+          }
         }
-        applysForFanout += set.size
-      case c: Defn.Object =>
-        var set = Set.empty[String]
-        c.collect {
-          case a: Term.Apply => set += a.fun.toString()
-        }
-        applysForFanout += set.size
+        //println("classes: \n" + classes.mkString("\n"))
+        uniqueCalledClassesPerFunction += classes.size
+        uniqueCallsPerFunction += calls.size
     }
-    commitStats.calls += applysForFanout
+    commitStats.calls += uniqueCallsPerFunction
+    commitStats.fanout += uniqueCalledClassesPerFunction
 
     val functionCollection = tree.collect {
       case q: Defn.Def => q.name
@@ -160,7 +179,7 @@ object MeasureProject {
       println("\n Doc: " + main_doc.tdoc.uri)
       val doc = semanticDB.reload(main_doc.tdoc.uri)
 
-      consumeFile(commitStats, doc.sdoc.tree)
+      consumeFile(commitStats, semanticDB, doc.sdoc)
 
       th.calculate(doc, semanticDB.symbolTable)
 

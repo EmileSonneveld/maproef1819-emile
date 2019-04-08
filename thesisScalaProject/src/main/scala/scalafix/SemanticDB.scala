@@ -7,8 +7,9 @@ import java.nio.file.Path
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.{DirectoryFileFilter, TrueFileFilter}
 import scalafix.internal.v1.InternalSemanticDoc
-import scalafix.v1.{SemanticDocument, SyntacticDocument}
+import scalafix.v1.{SemanticDocument, Symbol, SyntacticDocument}
 
+import scala.meta.Tree
 import scala.meta.inputs.Input
 import scala.meta.internal.semanticdb.{Locator, TextDocument}
 import scala.meta.internal.symtab.GlobalSymbolTable
@@ -72,4 +73,9 @@ class SemanticDB(val projectPath: File) {
 
     new DocumentTuple(document.path, document.tdoc, sdoc)
   }
+
+  def getFromSymbolTable(tree: Tree, sdoc:SemanticDocument): Symbol ={
+    sdoc.internal.symbol(tree)
+  }
+
 }

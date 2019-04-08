@@ -96,10 +96,10 @@ class TypeHiarchy() {
 
 
   def calculate(doc: DocumentTuple, symbolTable: GlobalSymbolTable) = {
-    implicit var implicit_sdoc = doc.sdoc
+    implicit var implicit_sdoc: SemanticDocument = doc.sdoc
 
     val tree = doc.sdoc.tree
-    println("START TypeHiarchy.calculate")
+    //println("START TypeHiarchy.calculate")
 
     //val test = doc.tdoc.symbols(0)
 
@@ -109,16 +109,16 @@ class TypeHiarchy() {
         //if (c.name.toString() == "JoinNode" || c.name.toString() == "TestClass" || c.name.toString() == "TestParent")
         {
           try {
-            val s = c.symbol(doc.sdoc)
+            val s = c.symbol
             val node = addOrReturnSymbol(s.value.toString)
-            println(c.name + ": " + s.value.toString)
+            //println(c.name + ": " + s.value.toString)
 
             var symInfo = symbolTable.info(s.value.toString)
             var parents = symInfo.get.signature.asInstanceOf[scala.meta.internal.semanticdb.ClassSignature].parents
             for (p <- parents) {
               node.linksTo += addOrReturnSymbol(p.asInstanceOf[semanticdb.TypeRef].symbol)
             }
-            println(parents)
+            //println(parents)
           } catch {
             case ex =>
               println("EX: " + ex)
@@ -133,7 +133,7 @@ class TypeHiarchy() {
       //case q: Defn.Object => q.name
     }
 
-    println("DONE TypeHiarchy.calculate")
+    //println("DONE TypeHiarchy.calculate")
   }
 
   def getGvString() = {
