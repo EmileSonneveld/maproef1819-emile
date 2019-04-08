@@ -6,6 +6,14 @@ import scala.collection.immutable
 
 object Utils {
 
+  def escapeGraphVizName(name: String): String = {
+    name
+      .replace("\\", "\\\\") // escape escaper
+      .replace("\"", "\\\"")
+      .replace("\n", "\\n")
+      .replace("\r", "")
+  }
+
   def readFile(path: String): String = {
     scala.io.Source.fromFile(path).getLines.mkString("\n")
   }

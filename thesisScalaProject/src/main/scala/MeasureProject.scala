@@ -154,13 +154,14 @@ object MeasureProject {
     val semanticDB = new SemanticDB(new File(scalaRoot))
     val documents = semanticDB.documents
 
+    val th = new TypeHiarchy
     for (main_doc <- documents) {
       println("\n Doc: " + main_doc.tdoc.uri)
       val doc = semanticDB.reload(main_doc.tdoc.uri)
 
       consumeFile(commitStats, doc.sdoc.tree)
 
-      TypeHiarchy.calculate(doc, semanticDB.symbolTable)
+      th.calculate(doc, semanticDB.symbolTable)
 
       //val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
       //
@@ -170,6 +171,7 @@ object MeasureProject {
       //  commitStats.cc_set += CC
       //}
     }
+    th.print()
 
     commitStats
   }

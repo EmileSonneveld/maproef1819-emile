@@ -1,5 +1,6 @@
 import java.io.File
 import java.text.DecimalFormat
+import scala.meta._
 
 val df = new DecimalFormat("000.")
 
@@ -22,3 +23,5 @@ val path = new File("C:\\Users\\emill\\dev\\ScalafixTemplate\\src\\main\\scala\\
 val relative = base.toPath.relativize(path.toPath)
 
 path.toPath.getParent
+
+q"function(argument)".structure
