@@ -19,7 +19,6 @@ object XmlUtil {
   }
 
   def xpathGetNode(doc: Document, xpathQuery: String): Option[Node] = {
-
     val xPathfactory = XPathFactory.newInstance
     val xpath = xPathfactory.newXPath
     //xpath.setNamespaceContext(ctx)

@@ -1,13 +1,7 @@
-import java.io.{File, FileWriter}
-import java.nio.charset.StandardCharsets
+import java.io.File
 import java.nio.file._
-import java.text._
-import java.util.Calendar
-
-import scalafix.CfgPerMethod
 
 import scala.language.postfixOps
-import scala.meta._
 import scala.sys.process._
 
 object main extends App {
@@ -101,7 +95,7 @@ object main extends App {
         if (commitStats != null) {
           commitStats.commitHash = hash
 
-          val str = commitStats.toSvgLine
+          val str = commitStats.toCsvLine
           Utils.appendToFile(svgPath, str)
         }
       }

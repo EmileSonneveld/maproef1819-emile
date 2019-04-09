@@ -1,10 +1,6 @@
-package scalafix
-
-import scalafix.v1._
-
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, Map}
-import scala.meta.{Defn, Term, _}
+import scala.collection.mutable.ArrayBuffer
+import scala.meta._
 
 
 object CfgPerMethod {
@@ -23,7 +19,7 @@ object CfgPerMethod {
     E - V + 2 * P
   }
 
-  def MethodMapToGraphViz(methodMap: Map[String, ArrayBuffer[DirectedGraphNode]]): String = {
+  def MethodMapToGraphViz(methodMap: mutable.Map[String, ArrayBuffer[DirectedGraphNode]]): String = {
 
     var sb = new StringBuilder()
     sb ++= "# You can visualise this file here: http://webgraphviz.com\n"
@@ -54,16 +50,9 @@ object CfgPerMethod {
   private def methodToGraphviz(nodes: ArrayBuffer[DirectedGraphNode]): String = {
     var sb = new StringBuilder()
     for (node <- nodes) {
-      // node.nodeId + " " +
-      val n1 = node.debugString
-        .replace("\\", "\\\\") // escape escaper
-        .replace("\"", "\\\"")
-        .replace("\n", "\\n")
-        .replace("\r", "")
-      //if (node.linksTo.length == 0)
+      val n1 = Utils.escapeGraphVizName(node.debugString)
       sb ++= "	\"" + node.nodeId + "\" [label=\"" + n1 + "\"]\n"
       for (next <- node.linksTo) {
-        //val n2 = next.debugString.replace("\"", "\\\"")
         sb ++= "	\"" + node.nodeId + "\"->\"" + next.nodeId + "\"\n"
       }
     }
@@ -73,7 +62,6 @@ object CfgPerMethod {
   def compute(tree: Tree): mutable.Map[String, ArrayBuffer[DirectedGraphNode]] = {
     //println("Generating CFGs...")
 
-    //val sdoc: SemanticDocument = doc.sdoc
     val methodMap = mutable.Map.empty[String, ArrayBuffer[DirectedGraphNode]]
 
     var nodeNr = 1

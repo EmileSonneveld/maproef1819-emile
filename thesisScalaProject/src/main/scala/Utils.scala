@@ -1,6 +1,6 @@
 import java.io.{File, FileWriter}
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file._
 
 import scala.collection.immutable
 
@@ -23,7 +23,6 @@ object Utils {
   }
 
   def writeFile(path: Path, content: String): Unit = {
-
     val dir = normalizeDirectoryPath(path.getParent.toString)
     val directory = new File(dir)
     if (!directory.exists) {
@@ -66,7 +65,6 @@ object Utils {
   }
 
   def parseCsvFromFile(file: File): immutable.Seq[Array[String]] = {
-
     var result = List[Array[String]]()
     if (file.exists) {
       val bufferedSource = scala.io.Source.fromFile(file)

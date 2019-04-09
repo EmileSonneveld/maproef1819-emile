@@ -14,7 +14,7 @@ class CommitStats {
   var andc = 0.0
   var ahh = 0.0
 
-  def toSvgLine: String = {
+  def toCsvLine: String = {
     val nop = this.nop_set.size
     val noc = this.noc_set.size
     val nom = this.nom_set.size

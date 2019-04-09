@@ -1,16 +1,12 @@
 import scalafix.DocumentTuple
-
-import scala.meta.Defn
 import scalafix.v1._
 
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.collection.mutable.ArrayBuffer
-import scala.meta._
+import scala.meta.{Defn, _}
 import scala.meta.internal.semanticdb
 import scala.meta.internal.symtab.GlobalSymbolTable
 
-class TypeHiarchy() {
+class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
 
   class TypeGraphNode(val symbol: String) {
     def name: String = symbol.toString
@@ -18,7 +14,7 @@ class TypeHiarchy() {
     val linksTo: ArrayBuffer[TypeGraphNode] = ArrayBuffer.empty[TypeGraphNode]
   }
 
-  val symbolList = ArrayBuffer.empty[TypeGraphNode]
+  private val symbolList = ArrayBuffer.empty[TypeGraphNode]
 
   //def GetNodeByPath(path: String) = {
   //  symbolList.find(_.name == path).get
@@ -95,7 +91,7 @@ class TypeHiarchy() {
   }
 
 
-  def calculate(doc: DocumentTuple, symbolTable: GlobalSymbolTable) = {
+  def absorb(doc: DocumentTuple) = {
     implicit var implicit_sdoc: SemanticDocument = doc.sdoc
 
     val tree = doc.sdoc.tree
@@ -120,7 +116,7 @@ class TypeHiarchy() {
             }
             //println(parents)
           } catch {
-            case ex =>
+            case ex: Throwable =>
               println("EX: " + ex)
           }
         }

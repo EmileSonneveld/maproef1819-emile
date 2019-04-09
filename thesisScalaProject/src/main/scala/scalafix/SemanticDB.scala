@@ -32,7 +32,7 @@ class SemanticDB(val projectPath: File) {
       .reduceOption(_ ++ _)
 
     val classPath = ClassLoader.getSystemClassLoader.asInstanceOf[URLClassLoader].getURLs
-      .map(url => Classpath(url.getFile.replace("/C:/", "C:/").replace("%20", " ")))
+      .map(url => Classpath(url.getFile.replace("/C:/", "C:/").replace("%20", " "))) // Maybe more url-decoding is needed here
       .reduceOption(_ ++ _)
 
     (jars ++ classes ++ classPath).reduceOption(_ ++ _).getOrElse(Classpath(""))
@@ -44,7 +44,7 @@ class SemanticDB(val projectPath: File) {
     var documents: Seq[DocumentTuple] = List.empty
 
     // Locator will find all *.semanticdb files
-    // textDocuments.documents contains 1 or 2 elements. When 2, one of them doesnt have a MD5. This one is ignored
+    // textDocuments.documents contains 1 or 2 elements. When 2, one of them doesnt have a MD5 and will be ignored
     Locator.apply(projectPath.toPath)((path, textDocuments) => {
       val tdocs = textDocuments.documents.filter(!_.md5.isEmpty)
       documents ++= tdocs.map(tdoc => {
@@ -74,7 +74,7 @@ class SemanticDB(val projectPath: File) {
     new DocumentTuple(document.path, document.tdoc, sdoc)
   }
 
-  def getFromSymbolTable(tree: Tree, sdoc:SemanticDocument): Symbol ={
+  def getFromSymbolTable(tree: Tree, sdoc: SemanticDocument): Symbol = {
     sdoc.internal.symbol(tree)
   }
 
