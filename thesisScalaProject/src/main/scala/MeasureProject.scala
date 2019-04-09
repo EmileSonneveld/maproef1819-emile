@@ -16,7 +16,7 @@ object MeasureProject {
     val noc = commitStats.noc_set.size
     val nom = commitStats.nom_set.size
     val loc = commitStats.loc
-    val cc = commitStats.cc_set.sum
+    val cc = commitStats.cc
 
     val df = new DecimalFormat(".##")
 
@@ -158,13 +158,13 @@ object MeasureProject {
       println("\n Doc: " + main_doc.tdoc.uri)
       val doc = semanticDB.reload(main_doc.tdoc.uri)
 
-      if (false) {
+      if (true) {
         consumeFile(commitStats, semanticDB, doc.sdoc)
 
         th.absorb(doc)
       }
 
-      if (false) {
+      if (true) {
         val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
 
         val relative = projectPath.toPath.relativize(doc.sdoc.input.asInstanceOf[Input.File].path.toNIO)
@@ -178,17 +178,32 @@ object MeasureProject {
             println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
           }
           //println(pair._1 + ": CC= " + CC)
-          commitStats.cc_set += CC
+          commitStats.cc += CC
         }
       }
 
       val tree = doc.sdoc.tree
       if (true) { // Check if god class
-
         tree.collect {
           case c: Defn.Class => {
-            val externalProps = externalProperties(c, semanticDB, doc.sdoc)
-            val cohesion = calculateCohesion(c, semanticDB, doc.sdoc)
+            if (!c.name.value.endsWith("Test")) { // Naming convension for test classes
+              var cc = 0
+              val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
+              for (pair <- methodMap) {
+                cc += CfgPerMethod.calculateCC(pair._2)
+              }
+              val externalProps = externalProperties(c, semanticDB, doc.sdoc)
+              val cohesion = calculateCohesion(c, semanticDB, doc.sdoc)
+
+              if (externalProps > 20
+                && cc > 30
+                && cohesion < 0.3) {
+                println("\nGodclass detected!")
+                println("cc: " + cc)
+                println("externalProps: " + externalProps)
+                //println("cohesion: "+cohesion)
+              }
+            }
           }
         }
       }
@@ -207,23 +222,30 @@ object MeasureProject {
 
     var externalProperties: Set[String] = Set.empty[String]
 
+    if (cSymbol.value.contains("ImportOrderChecker")) {
+      println("")
+    }
     c.collect({
       case d: Defn.Def => {
         d.body.collect({
           case term: Term.Name => {
             val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
-            if (!termSymbol.isLocal && termSymbol.owner != cSymbol) {
+            if (!termSymbol.isLocal && !termSymbol.value.startsWith(cSymbol.value)) {
+              // TODO: Check if in parent hiarchy
+              // TODO: Ignore properies from nested classes
               val decodedPropName = termSymbol.value
-              if (doWeOwnThisClass(decodedPropName))
+              if (doWeOwnThisClass(decodedPropName)) {
                 externalProperties += decodedPropName
+              }
             }
           }
         })
       }
     })
-    println("externalProperties: " + externalProperties.mkString(", "))
+    println("externalProperties: \n\t" + externalProperties.mkString("\n\t"))
     externalProperties.size
   }
+
 
   def calculateCohesion(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
 

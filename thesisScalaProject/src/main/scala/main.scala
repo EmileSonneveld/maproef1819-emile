@@ -103,10 +103,10 @@ object main extends App {
   }
 
 
-  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\testScala\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\testScala\\src\\main\\scala"))
   calculationsOnProject(new File("C:\\Users\\emill\\dev\\CTT-editor\\src\\main\\scala"))
-  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main\\scala"))
-  //calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalastyle\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalafixtemplate\\src\\main\\scala"))
+  calculationsOnProject(new File("C:\\Users\\emill\\dev\\scalastyle\\src\\main\\scala"))
 
   //calculationsOnProject(new File("C:\\Users\\emill\\dev\\MoVE\\src\\main\\scala"))
   /*

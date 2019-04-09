@@ -7,7 +7,7 @@ class CommitStats {
   var nop_set: Set[String] = Set[String]()
   var noc_set: Set[String] = Set[String]()
   var nom_set: Set[String] = Set[String]()
-  var cc_set: Set[Double] = Set[Double]()
+  var cc: Int = 0
   var fanout = 0
   var calls = 0
   var loc = 0
@@ -19,9 +19,9 @@ class CommitStats {
     val noc = this.noc_set.size
     val nom = this.nom_set.size
     val loc = this.loc
-    val avg_cc = this.cc_set.sum / this.cc_set.size
+    //val avg_cc = this.cc_set.sum / this.cc_set.size
     val timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance.getTime)
 
-    this.commitHash + ", " + nop + ", " + noc + ", " + nom + ", " + loc + ", " + avg_cc + ", " + timeStamp + "\n"
+    this.commitHash + ", " + nop + ", " + noc + ", " + nom + ", " + loc + ", " + cc + ", " + timeStamp + "\n"
   }
 }
