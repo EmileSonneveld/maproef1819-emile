@@ -4,6 +4,7 @@ import java.text._
 import scalafix.v1.SemanticDocument
 import scalafix.SemanticDB
 
+import scala.collection.mutable.ArrayBuffer
 import scala.language.postfixOps
 import scala.meta._
 
@@ -114,9 +115,7 @@ object MeasureProject {
 
             try {
               //var symInfo = sDb.symbolTable.info(s.value.toString)
-              if (!s.value.startsWith("java/lang/") // some arbitrary filtering...
-                && !s.value.startsWith("java/util/")
-                && !s.value.startsWith("scala/Predef")) {
+              if (doWeOwnThisClass(s.value)) {
                 classes += s.owner.toString()
               }
             } catch {
@@ -133,6 +132,14 @@ object MeasureProject {
     commitStats.fanout += uniqueCalledClassesPerFunction
   }
 
+  /**
+    * Todo: Use project data.
+    */
+  def doWeOwnThisClass(classUri: String): Boolean = {
+    !classUri.startsWith("java/lang/") &&
+      !classUri.startsWith("java/util/") &&
+      !classUri.startsWith("scala/")
+  }
 
   def doStatsForProject(projectPath: File, projectName: String): CommitStats = {
     val commitStats = new CommitStats
@@ -151,9 +158,11 @@ object MeasureProject {
       println("\n Doc: " + main_doc.tdoc.uri)
       val doc = semanticDB.reload(main_doc.tdoc.uri)
 
-      consumeFile(commitStats, semanticDB, doc.sdoc)
+      if (false) {
+        consumeFile(commitStats, semanticDB, doc.sdoc)
 
-      th.absorb(doc)
+        th.absorb(doc)
+      }
 
       if (false) {
         val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
@@ -172,6 +181,17 @@ object MeasureProject {
           commitStats.cc_set += CC
         }
       }
+
+      val tree = doc.sdoc.tree
+      if (true) { // Check if god class
+
+        tree.collect {
+          case c: Defn.Class => {
+            val externalProps = externalProperties(c, semanticDB, doc.sdoc)
+            val cohesion = calculateCohesion(c, semanticDB, doc.sdoc)
+          }
+        }
+      }
     }
     commitStats.andc = th.calculateANDC()
     commitStats.ahh = th.calculateAHH()
@@ -179,5 +199,83 @@ object MeasureProject {
 
 
     commitStats
+  }
+
+  def externalProperties(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
+
+    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
+
+    var externalProperties: Set[String] = Set.empty[String]
+
+    c.collect({
+      case d: Defn.Def => {
+        d.body.collect({
+          case term: Term.Name => {
+            val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
+            if (!termSymbol.isLocal && termSymbol.owner != cSymbol) {
+              val decodedPropName = termSymbol.value
+              if (doWeOwnThisClass(decodedPropName))
+                externalProperties += decodedPropName
+            }
+          }
+        })
+      }
+    })
+    println("externalProperties: " + externalProperties.mkString(", "))
+    externalProperties.size
+  }
+
+  def calculateCohesion(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
+
+    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
+
+    class MethodNodeWithUsages(val name: String) {
+      var usesProperty: Set[String] = Set.empty[String]
+
+      override def toString: String = {
+        "MethodNodeWithUsages(" + name + ")\n" +
+          usesProperty.mkString("\n")
+      }
+    }
+    var methods = Set.empty[MethodNodeWithUsages]
+
+    c.collect({
+      case d: Defn.Def => {
+        val dSymbol = semanticDB.getFromSymbolTable(d, sdoc)
+        var mNode = new MethodNodeWithUsages(dSymbol.value)
+
+        d.body.collect({
+          case term: Term.Name => {
+            val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
+            if (termSymbol.owner == cSymbol) {
+              val decodedPropName = termSymbol.value
+                .replace(cSymbol.value + "`", "")
+                .replace(cSymbol.value, "")
+                .replace("_=`().", "")
+                .replace("().", "")
+              mNode.usesProperty += decodedPropName
+            }
+          }
+        })
+        methods += mNode
+      }
+    })
+    println(methods.mkString("\n\n"))
+
+    var pairsWithCommon = 0
+    for (m1 <- methods) {
+      for (m2 <- methods) {
+        if (m1 != m2) {
+          val intersection = m1.usesProperty.intersect(m2.usesProperty)
+          if (intersection.size > 0)
+            pairsWithCommon += 1
+        }
+      }
+    }
+    var cohesion = pairsWithCommon.toDouble / (methods.size * (methods.size - 1))
+    if (cohesion.isNaN || cohesion.isInfinite) cohesion = 0
+    println("cohesion: " + cohesion)
+
+    cohesion
   }
 }
