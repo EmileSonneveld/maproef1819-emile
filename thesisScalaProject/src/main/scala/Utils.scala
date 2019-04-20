@@ -1,6 +1,9 @@
-import java.io.{File, FileWriter}
+import java.io.{File, FileWriter, IOException}
 import java.nio.charset.StandardCharsets
 import java.nio.file._
+import java.util
+import java.util.{ArrayList, List}
+import java.util.stream.{Collectors, Stream}
 
 import scala.collection.immutable
 
@@ -39,6 +42,22 @@ object Utils {
     Files.write(path, content.getBytes(StandardCharsets.UTF_8))
   }
 
+  def getFilesFromDirectory(d: File): scala.List[File] = {
+    if (d.exists && d.isDirectory) {
+      d.listFiles.filter(_.isFile).toList
+    } else {
+      scala.List.empty
+    }
+  }
+
+  def getFoldersFromDirectory(d: File): scala.List[File] = {
+    if (d.exists && d.isDirectory) {
+      d.listFiles.filter(_.isDirectory).toList
+    } else {
+      scala.List.empty
+    }
+  }
+
   def normalizeDirectoryPath(path: String): String = {
     var str = path.replace("\\", "/")
     if (!str.endsWith("/")) str += "/"
@@ -65,7 +84,7 @@ object Utils {
   }
 
   def parseCsvFromFile(file: File): immutable.Seq[Array[String]] = {
-    var result = List[Array[String]]()
+    var result =  scala.List[Array[String]]()
     if (file.exists) {
       val bufferedSource = scala.io.Source.fromFile(file)
       for (line <- bufferedSource.getLines) {

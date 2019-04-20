@@ -69,7 +69,7 @@ class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
 
   def nodesToGraphViz(nodes: ArrayBuffer[TypeGraphNode]): String = {
     var sb = new StringBuilder()
-    sb ++= "# You can visualise this file here: http://webgraphviz.com\n"
+    sb ++= "// You can visualise this file here: http://webgraphviz.com\n"
     sb ++= "digraph {\n"
     sb ++= "  rankdir=BT;\n"
     sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"

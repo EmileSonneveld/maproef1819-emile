@@ -22,7 +22,7 @@ object CfgPerMethod {
   def MethodMapToGraphViz(methodMap: mutable.Map[String, ArrayBuffer[DirectedGraphNode]]): String = {
 
     var sb = new StringBuilder()
-    sb ++= "# You can visualise this file here: http://webgraphviz.com\n"
+    sb ++= "// You can visualise this file here: http://webgraphviz.com\n"
     sb ++= "digraph {\n"
     sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
 
@@ -37,7 +37,7 @@ object CfgPerMethod {
 
   def nodesToGraphViz(nodes: ArrayBuffer[DirectedGraphNode]): String = {
     var sb = new StringBuilder()
-    sb ++= "# You can visualise this file here: http://webgraphviz.com\n"
+    sb ++= "// You can visualise this file here: http://webgraphviz.com\n"
     sb ++= "digraph {\n"
     sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
 
