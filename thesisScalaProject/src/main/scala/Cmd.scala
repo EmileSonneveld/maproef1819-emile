@@ -24,7 +24,7 @@ object Cmd {
     re.findAllIn(logString).map(x => x.substring(7))
   }
 
-  def getGitTopLevel(path: File) = {
+  def getGitTopLevel(path: File): String = {
     execCommand("cd " + path + " && git rev-parse --show-toplevel").trim
   }
 
@@ -41,7 +41,7 @@ object Cmd {
       throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
   }
 
-  def clearGitRepo(gitTopLevel: File) = {
+  def clearGitRepo(gitTopLevel: File): Unit = {
     val filesAndFolders: Array[File] = gitTopLevel.listFiles //isFile to find files
     for (f <- filesAndFolders) {
       if (!f.getAbsolutePath.contains(".git")) {
