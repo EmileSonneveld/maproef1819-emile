@@ -20,3 +20,20 @@ libraryDependencies += "org.scalameta" % "interactive_2.12.7" % scalaMetaVersion
 libraryDependencies += "ch.epfl.scala" %% "scalafix-core" % "0.9.1"
 
 libraryDependencies += "commons-io" % "commons-io" % "2.6"
+
+// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
+libraryDependencies += "org.seleniumhq.selenium" % "selenium-java" % "3.141.59"
+// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-support
+libraryDependencies += "org.seleniumhq.selenium" % "selenium-support" % "3.141.59"
+
+// https://mvnrepository.com/artifact/org.seleniumhq.selenium.client-drivers/selenium-java-client-driver
+libraryDependencies += "org.seleniumhq.selenium.client-drivers" % "selenium-java-client-driver" % "1.0.2" % Test
+
+
+// https://mvnrepository.com/artifact/org.hamcrest/hamcrest-all
+libraryDependencies += "org.hamcrest" % "hamcrest-all" % "1.1" % Test
+
+// https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient
+libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.5.8"
+// https://mvnrepository.com/artifact/org.jboss.netty/netty
+libraryDependencies += "org.jboss.netty" % "netty" % "3.2.10.Final"
