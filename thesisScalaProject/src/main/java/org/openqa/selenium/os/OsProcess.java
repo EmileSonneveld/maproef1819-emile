@@ -15,23 +15,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+package org.openqa.selenium.os;
 
-//package org.openqa.selenium.os;
+import java.io.File;
+import java.io.OutputStream;
+import java.util.Map;
 
-import org.openqa.selenium.WebDriverException;
+interface OsProcess {
+  Map<String,String> getEnvironment();
 
-@SuppressWarnings("serial")
-public class WindowsRegistryException extends WebDriverException {
-  WindowsRegistryException(Exception e) {
-    super(generateMessage(), e);
-  }
+  void setEnvironmentVariable(String name, String value);
 
-  private static String generateMessage() {
-    return "Problem while managing the registry, OS Version '" +
-        System.getProperty("os.version") + "', regVersion1 = " + WindowsUtils.regVersion1;
-  }
+  void copyOutputTo(OutputStream out);
 
-  WindowsRegistryException(String message) {
-    this(new RuntimeException(message));
-  }
+  void setInput(String allInput);
+
+  void setWorkingDirectory(File workingDirectory);
+
+  void executeAsync();
+
+  void waitFor() throws InterruptedException;
+  
+  void waitFor(long timeout) throws InterruptedException;
+
+  int destroy();
+
+  int getExitCode();
+
+  String getStdOut();
+  
+  boolean isRunning();
+
+  void checkForError();
 }

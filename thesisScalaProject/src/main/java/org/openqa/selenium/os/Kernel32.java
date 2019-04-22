@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//package org.openqa.selenium.os;
+package org.openqa.selenium.os;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -39,7 +39,7 @@ public interface Kernel32 extends com.sun.jna.platform.win32.Kernel32 {
     boolean AssignProcessToJobObject(HANDLE hJob, HANDLE hProcess);
     boolean TerminateJobObject(HANDLE hJob, long uExitCode);
     int ResumeThread(HANDLE hThread);
-    int GetProcessId(HANDLE Process);
+    //int GetProcessId(HANDLE Process);
 
     // 0x00000800
     int JOB_OBJECT_LIMIT_BREAKAWAY_OK = 2048;

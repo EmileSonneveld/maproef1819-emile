@@ -14,7 +14,7 @@
  *  limitations under the License.
  *
  */
-//package org.openqa.selenium.os;
+package org.openqa.selenium.os;
 
 import static org.openqa.selenium.Platform.WINDOWS;
 

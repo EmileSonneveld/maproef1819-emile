@@ -1,7 +1,7 @@
 import java.io.File
 import java.util.Date
 import java.security.PublicKey
-import java.sql.{Connection, DriverManager, PreparedStatement, Timestamp}
+import java.sql._
 import java.time.ZonedDateTime
 
 object LargeScaleDb {
@@ -34,4 +34,22 @@ object LargeScaleDb {
     }, stdOutput)
     pstmt.executeUpdate
   }
+
+
+  def getBuildTry(buildPath: File): BuildTry = {
+    val statement = conn.createStatement
+    val result = statement.executeQuery("SELECT * from single_row")
+    if (result.isClosed)
+      null
+    else
+      BuildTry(
+        result.getLong("id"),
+        new File(result.getString("buildPath")),
+        result.getTimestamp("buildDateTime"),
+        result.getString("stdOutput"),
+      )
+  }
 }
+
+
+case class BuildTry(id: Long, buildPath: File, buildDateTime: Timestamp, stdOutput: String)

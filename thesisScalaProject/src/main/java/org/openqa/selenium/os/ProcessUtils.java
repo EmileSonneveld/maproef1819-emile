@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 
-//package org.openqa.selenium.os;
+package org.openqa.selenium.os;
 
 import org.openqa.selenium.Platform;
 

@@ -9,6 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.language.postfixOps
 import scala.sys.process._
+import org.openqa.selenium.os._
 
 /**
   * Interface with file system and other programs
@@ -74,7 +75,7 @@ object Cmd {
     val p = Process(command, cd).run(ProcessLogger(outputBuffer append _)) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
-      val exitValue: Int = Await.result(f, duration.Duration(1, "sec"))
+      val exitValue: Int = Await.result(f, duration.Duration(2 * 60, "sec"))
       if (exitValue != 0)
         println("exitValue: " + exitValue)
     } catch {
