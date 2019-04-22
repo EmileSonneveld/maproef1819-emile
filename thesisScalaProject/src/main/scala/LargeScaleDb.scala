@@ -1,10 +1,12 @@
 import java.io.File
+import java.util.Date
 import java.security.PublicKey
-import java.sql.{Connection, DriverManager, PreparedStatement}
+import java.sql.{Connection, DriverManager, PreparedStatement, Timestamp}
+import java.time.ZonedDateTime
 
 object LargeScaleDb {
 
-  private var conn: Connection = null
+  private var conn: Connection = _
 
   try {
     Class.forName("org.sqlite.JDBC")
@@ -16,8 +18,12 @@ object LargeScaleDb {
   }
 
   def insertBuildTry(buildPath: File, stdOutput: String): Unit = {
-    val pstmt = conn.prepareStatement("INSERT INTO build_tries VALUES (NULL, ?, ?)")
+    val pstmt = conn.prepareStatement("INSERT INTO build_tries VALUES (NULL, ?, ?, ?)")
     var i = 0
+    pstmt.setTimestamp({
+      i += 1
+      i
+    }, new Timestamp(new Date().getTime))
     pstmt.setString({
       i += 1
       i

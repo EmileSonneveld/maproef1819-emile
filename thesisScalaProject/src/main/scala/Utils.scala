@@ -6,6 +6,7 @@ import java.util.{ArrayList, List}
 import java.util.stream.{Collectors, Stream}
 
 import scala.collection.immutable
+import scala.collection.mutable.ListBuffer
 
 object Utils {
 
@@ -40,6 +41,15 @@ object Utils {
     }
 
     Files.write(path, content.getBytes(StandardCharsets.UTF_8))
+  }
+
+  def recursiveListFilesWithName(f: File, name: String, currentDepth: Int = 0): Array[File] = {
+    if (currentDepth >= 3) return Array()
+    val childs = f.listFiles()
+    var these: Array[File] = childs.filter(_.isDirectory).flatMap(ff => recursiveListFilesWithName(ff, name, currentDepth + 1))
+    if (f.listFiles.exists(a => a.getName.endsWith(name)))
+      these :+= f
+    these
   }
 
   def getFilesFromDirectory(d: File): scala.List[File] = {
@@ -84,7 +94,7 @@ object Utils {
   }
 
   def parseCsvFromFile(file: File): immutable.Seq[Array[String]] = {
-    var result =  scala.List[Array[String]]()
+    var result = scala.List[Array[String]]()
     if (file.exists) {
       val bufferedSource = scala.io.Source.fromFile(file)
       for (line <- bufferedSource.getLines) {

@@ -1,8 +1,7 @@
 import java.io._
 import java.nio.file._
 
-import Cmd.convertStreamToString
-
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.language.postfixOps
@@ -23,84 +22,42 @@ object Cmd {
     return tmp.substring(0, firstSlah)
   }
 
-  def getCommitHashesFromLog(gitTopLevel: String): Iterator[String] = {
-    val logString = execCommand("cd " + gitTopLevel + " && git log --format=\"commit %H\"")
+  def getCommitHashesFromLog(gitTopLevel: File): Iterator[String] = {
+    val logString = execCommandWithTimeout("git log --format=\"commit %H\"", gitTopLevel)
     val re = """commit ([\w]+)""".r
     re.findAllIn(logString).map(x => x.substring(7))
   }
 
-  def getGitTopLevel(path: File): String = {
-    execCommand("cd " + path + " && git rev-parse --show-toplevel").trim
+  def getGitTopLevel(path: File): File = {
+    val res = execCommandWithTimeout("git rev-parse --show-toplevel", path).trim
+    new File(res)
   }
 
-  def convertStreamToString(is: InputStream): String = {
-    def inner(reader: BufferedReader, sb: StringBuilder): String = {
-      val line = reader.readLine()
-      if (line != null) {
-        try {
-          inner(reader, sb.append(line + "\n"))
-        } catch {
-          case e: IOException => e.printStackTrace()
-        } finally {
-          try {
-            is.close()
-          } catch {
-            case e: IOException => e.printStackTrace()
-          }
-        }
-
-      }
-      sb.toString()
-    }
-
-    inner(new BufferedReader(new InputStreamReader(is)), new StringBuilder())
-  }
-
-
+  /**
+    * Doesn't do cd right!
+    */
   def execCommand(command: String): String = {
     println("> " + command)
     return ("cmd /C " + command) !!
   }
 
-  def execCommandWithTimeout(command: String, cd: File) = {
+  def execCommandWithTimeout(command: String, cd: File): String = {
     println("> " + command)
 
-    var in = "" // no input defined
-    var stdOut = ""
-    var stdErr = ""
-    val io = new ProcessIO(
-      stdin => {
-        stdin.write(in.getBytes)
-        stdin.close()
-      },
-      stdout => {
-        val tmp = convertStreamToString(stdout)
-        stdOut = tmp
-        println(tmp)
-        stdout.close()
-      },
-      stderr => {
-        val tmp = convertStreamToString(stderr)
-        stdErr = tmp
-        println(tmp)
-        stderr.close()
-      })
-
-    //val p: Process = command.run() // start asynchronously
-    val p = Process(command, cd).run(io) // start asynchronously
-    var alive = p.isAlive();
+    val outputBuffer = ListBuffer[String]()
+    val p = Process(command, cd).run(ProcessLogger(outputBuffer append _)) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
-    val exitValue: Int = try {
-      Await.result(f, duration.Duration(60*5, "sec"))
+    try {
+      val exitValue: Int = Await.result(f, duration.Duration(5 * 60, "sec"))
+      if (exitValue != 0)
+        println("exitValue: " + exitValue)
     } catch {
       case _: TimeoutException =>
+        outputBuffer.append(outputBuffer mkString "\n")
         println("TIMEOUT!")
         p.destroy()
-        p.exitValue()
     }
-    println("exitValue: " + exitValue)
-    exitValue
-    stdOut
+    outputBuffer.mkString("\n")
   }
 
   // In case of complicated git mistakes
@@ -109,6 +66,12 @@ object Cmd {
       file.listFiles.foreach(deleteRecursively)
     if (file.exists && !file.delete)
       throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
+  }
+
+
+  def gitSoftClean(gitTopLevel: File): Unit = {
+    Cmd.execCommandWithTimeout("git clean -f", gitTopLevel) // for untracked files
+    Cmd.execCommandWithTimeout("git checkout .", gitTopLevel) // for modified files
   }
 
   def clearGitRepo(gitTopLevel: File): Unit = {
@@ -120,7 +83,7 @@ object Cmd {
         deleteRecursively(f)
       }
     }
-    execCommand("cd " + gitTopLevel + " && git checkout master")
-    execCommand("cd " + gitTopLevel + " && git checkout .")
+    execCommandWithTimeout("git checkout master", gitTopLevel)
+    execCommandWithTimeout("git checkout .", gitTopLevel)
   }
 }

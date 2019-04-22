@@ -2,7 +2,6 @@ import java.io.File
 import java.nio.file._
 
 import scala.language.postfixOps
-import scala.sys.process._
 
 object main extends App {
 
@@ -22,8 +21,8 @@ object main extends App {
       val result = Utils.parseCsvFromFile(new File(svgPath))
       val hashesFromSvg: Seq[String] = result.map(x => x(1))
 
-      Cmd.execCommand("cd " + gitTopLevel + " && git reset .")
-      Cmd.clearGitRepo(new File(gitTopLevel))
+      Cmd.execCommandWithTimeout("git reset .", gitTopLevel)
+      Cmd.clearGitRepo(gitTopLevel)
 
 
       val hashes = Cmd.getCommitHashesFromLog(gitTopLevel)
@@ -31,9 +30,8 @@ object main extends App {
         var commitStats: CommitStats = null
         try {
           if (!hashesFromSvg.contains(hash)) {
-            Cmd.execCommand("cd " + gitTopLevel + " && git clean -f") // for untracked files
-            Cmd.execCommand("cd " + gitTopLevel + " && git checkout .") // for modified files
-            Cmd.execCommand("cd " + gitTopLevel + " && git checkout " + hash)
+            Cmd.gitSoftClean(gitTopLevel)
+            Cmd.execCommandWithTimeout("git checkout " + hash, gitTopLevel)
             println(hash)
             commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
           }
@@ -42,7 +40,7 @@ object main extends App {
           case x: Throwable => {
             println("Exception while calculating stats. Will clearGitRepo and checkout master.")
             commitStats = new CommitStats // Add empty line to avoid calculating this commit in the future
-            Cmd.clearGitRepo(new File(gitTopLevel))
+            Cmd.clearGitRepo(gitTopLevel)
           }
         }
 
