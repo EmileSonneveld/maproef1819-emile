@@ -1,6 +1,10 @@
-import java.io.File
+import java.io._
 import java.nio.file._
 
+import Cmd.convertStreamToString
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
 import scala.language.postfixOps
 import scala.sys.process._
 
@@ -8,6 +12,7 @@ import scala.sys.process._
   * Interface with file system and other programs
   */
 object Cmd {
+
 
   def getProjectName(path: Path): String = {
     var tmp = path.toString
@@ -28,9 +33,74 @@ object Cmd {
     execCommand("cd " + path + " && git rev-parse --show-toplevel").trim
   }
 
+  def convertStreamToString(is: InputStream): String = {
+    def inner(reader: BufferedReader, sb: StringBuilder): String = {
+      val line = reader.readLine()
+      if (line != null) {
+        try {
+          inner(reader, sb.append(line + "\n"))
+        } catch {
+          case e: IOException => e.printStackTrace()
+        } finally {
+          try {
+            is.close()
+          } catch {
+            case e: IOException => e.printStackTrace()
+          }
+        }
+
+      }
+      sb.toString()
+    }
+
+    inner(new BufferedReader(new InputStreamReader(is)), new StringBuilder())
+  }
+
+
   def execCommand(command: String): String = {
     println("> " + command)
     return ("cmd /C " + command) !!
+  }
+
+  def execCommandWithTimeout(command: String, cd: File) = {
+    println("> " + command)
+
+    var in = "" // no input defined
+    var stdOut = ""
+    var stdErr = ""
+    val io = new ProcessIO(
+      stdin => {
+        stdin.write(in.getBytes)
+        stdin.close()
+      },
+      stdout => {
+        val tmp = convertStreamToString(stdout)
+        stdOut = tmp
+        println(tmp)
+        stdout.close()
+      },
+      stderr => {
+        val tmp = convertStreamToString(stderr)
+        stdErr = tmp
+        println(tmp)
+        stderr.close()
+      })
+
+    //val p: Process = command.run() // start asynchronously
+    val p = Process(command, cd).run(io) // start asynchronously
+    var alive = p.isAlive();
+    val f = Future(blocking(p.exitValue())) // wrap in Future
+    val exitValue: Int = try {
+      Await.result(f, duration.Duration(60*5, "sec"))
+    } catch {
+      case _: TimeoutException =>
+        println("TIMEOUT!")
+        p.destroy()
+        p.exitValue()
+    }
+    println("exitValue: " + exitValue)
+    exitValue
+    stdOut
   }
 
   // In case of complicated git mistakes
