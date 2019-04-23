@@ -80,7 +80,7 @@ object Cmd {
         println("exitValue: " + exitValue)
     } catch {
       case _: TimeoutException =>
-        outputBuffer.append(outputBuffer mkString "\n")
+        outputBuffer.append("TIMEOUT!")
         println("TIMEOUT!")
         //p.destroy()
         killProccesHiarchy(p)

@@ -38,18 +38,18 @@ object LargeScaleDb {
 
   def getBuildTry(buildPath: File): BuildTry = {
     val statement = conn.createStatement
-    val result = statement.executeQuery("SELECT * from single_row")
+    val result = statement.executeQuery("SELECT * from build_tries")
     if (result.isClosed)
       null
     else
       BuildTry(
         result.getLong("id"),
         new File(result.getString("buildPath")),
-        result.getTimestamp("buildDateTime"),
+        result.getLong("buildDateTime"),
         result.getString("stdOutput"),
       )
   }
 }
 
 
-case class BuildTry(id: Long, buildPath: File, buildDateTime: Timestamp, stdOutput: String)
+case class BuildTry(id: Long, buildPath: File, buildDateTime: Long, stdOutput: String)

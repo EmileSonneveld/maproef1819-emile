@@ -18,13 +18,18 @@ object LargeScaleCompilation {
     println(projects.mkString("\n"))
 
     for (p <- projects) {
-      //Cmd.execCommand("cd " + p )//+ " && java -jar \"C:/Program Files (x86)/sbt/bin/sbt-launch.jar\"")
-      var gitTopLevel = Cmd.getGitTopLevel(p)
-      //Cmd.gitSoftClean(gitTopLevel)
-      var returnString = Cmd.execCommandWithTimeout("sbt.bat semanticdb", p)
+      var row = LargeScaleDb.getBuildTry(p);
+      if (row == null) {
+        //Cmd.execCommand("cd " + p )//+ " && java -jar \"C:/Program Files (x86)/sbt/bin/sbt-launch.jar\"")
+        var gitTopLevel = Cmd.getGitTopLevel(p)
+        //Cmd.gitSoftClean(gitTopLevel)
+        var returnString = Cmd.execCommandWithTimeout("sbt.bat semanticdb", p)
 
-      LargeScaleDb.insertBuildTry(p, returnString)
-      //Cmd.execCommandWithTimeout("simple_console.exe", new File(p))
+        LargeScaleDb.insertBuildTry(p, returnString)
+        //Cmd.execCommandWithTimeout("simple_console.exe", new File(p))
+      } else {
+        println("Skipped: " + p)
+      }
     }
   }
 }
