@@ -69,6 +69,7 @@ object main extends App {
     .filter(x => new File(Utils.normalizeDirectoryPath(x.toString) + "src\\main\\scala").exists()) // Only do standard paths
 
   for (file <- projects) {
-      calculationsOnProjectWrap(file)
+    calculationsOnProjectWrap(file)
   }
+  //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw"))
 }

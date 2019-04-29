@@ -198,7 +198,7 @@ object MeasureProject {
               if (externalProps > 20
                 && cc > 30
                 && cohesion < 0.3) {
-                println("\nGodclass detected!")
+                println("\nGodclass detected! " + c.name.toString())
                 println("cc: " + cc)
                 println("externalProps: " + externalProps)
                 //println("cohesion: "+cohesion)
@@ -216,7 +216,7 @@ object MeasureProject {
     commitStats
   }
 
-  def externalProperties(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
+  def externalProperties(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
 
     val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
 
