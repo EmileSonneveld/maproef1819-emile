@@ -14,11 +14,11 @@ object main extends App {
       var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
       var svg = Utils.readFile("..\\svg\\pyramid.svg")
       svg = MeasureProject.fillInPyramidTemplate(svg, commitStats, projectName)
-      Utils.writeFile("..\\svg\\pyramid_" + projectName + ".svg", svg)
+      Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg\\pyramid_" + projectName + ".svg", svg)
     }
     else {
-      val svgPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\csv\\log_" + projectName + ".csv"
-      val result = Utils.parseCsvFromFile(new File(svgPath))
+      val csvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\csv\\log_" + projectName + ".csv"
+      val result = Utils.parseCsvFromFile(new File(csvPath))
       val hashesFromSvg: Seq[String] = result.map(x => x(1))
 
       Cmd.execCommandWithTimeout("git reset .", gitTopLevel)
@@ -48,7 +48,7 @@ object main extends App {
           commitStats.commitHash = hash
 
           val str = commitStats.toCsvLine
-          Utils.appendToFile(svgPath, str)
+          Utils.appendToFile(csvPath, str)
         }
       }
     }
@@ -62,45 +62,13 @@ object main extends App {
       println("calculationsOnProjectWrap sbt path not standard")
   }
 
-  calculationsOnProjectWrap(new File("D:/github_download/99_scala_problems"))
-  //calculationsOnProjectWrap(new File("D:/github_download/akka-in-action/chapter-fault-tolerance"))
-  //calculationsOnProjectWrap(new File("D:/github_download/akka-in-action/chapter-integration"))
-  //calculationsOnProjectWrap(new File("D:/github_download/akka-in-action/chapter-perf"))
-  //calculationsOnProjectWrap(new File("D:/github_download/akka-in-action/chapter-routing"))
-  //calculationsOnProjectWrap(new File("D:/github_download/akka-in-action/chapter-state"))
-  //calculationsOnProjectWrap(new File("D:/github_download/akka-in-action/chapter-structure"))
-  //calculationsOnProjectWrap(new File("D:/github_download/akka-in-action/chapter-testdriven"))
-  calculationsOnProjectWrap(new File("D:/github_download/akka-persistence-jdbc"))
-  calculationsOnProjectWrap(new File("D:/github_download/alasc"))
-  calculationsOnProjectWrap(new File("D:/github_download/algorithms"))
-  calculationsOnProjectWrap(new File("D:/github_download/avrohugger"))
-  calculationsOnProjectWrap(new File("D:/github_download/bacala"))
-  calculationsOnProjectWrap(new File("D:/github_download/bezug-eventsourcing"))
-  calculationsOnProjectWrap(new File("D:/github_download/blaze"))
-  calculationsOnProjectWrap(new File("D:/github_download/bootzooka"))
-  calculationsOnProjectWrap(new File("D:/github_download/chisel-tutorial"))
-  calculationsOnProjectWrap(new File("D:/github_download/command-line-arguments"))
-  calculationsOnProjectWrap(new File("D:/github_download/cspom"))
-  calculationsOnProjectWrap(new File("D:/github_download/DieStats"))
-  calculationsOnProjectWrap(new File("D:/github_download/dregex"))
-  calculationsOnProjectWrap(new File("D:/github_download/FiloDB"))
-  calculationsOnProjectWrap(new File("D:/github_download/FlashFry"))
-  //calculationsOnProjectWrap(new File("D:/github_download/framian/framian-benchmarks"))
-  calculationsOnProjectWrap(new File("D:/github_download/GameContentSolved"))
-  //calculationsOnProjectWrap(new File("D:/github_download/gfc-concurrent/project"))
-  calculationsOnProjectWrap(new File("D:/github_download/gfc-concurrent"))
-  calculationsOnProjectWrap(new File("D:/github_download/gitReport"))
-  calculationsOnProjectWrap(new File("D:/github_download/google-safebrowsing2"))
-  calculationsOnProjectWrap(new File("D:/github_download/JMHC"))
-  calculationsOnProjectWrap(new File("D:/github_download/josimtext"))
-  calculationsOnProjectWrap(new File("D:/github_download/jsengine"))
-  calculationsOnProjectWrap(new File("D:/github_download/lars"))
-  calculationsOnProjectWrap(new File("D:/github_download/libanius"))
-  calculationsOnProjectWrap(new File("D:/github_download/LoMRF"))
-  calculationsOnProjectWrap(new File("D:/github_download/maxmind-geoip2-scala"))
-  calculationsOnProjectWrap(new File("D:/github_download/metrics-scala"))
-  calculationsOnProjectWrap(new File("D:/github_download/busymachines-commons"))
-  calculationsOnProjectWrap(new File("D:/github_download/dregex/project"))
-  calculationsOnProjectWrap(new File("D:/github_download/dropwizard-scala"))
+  var projects = LargeScaleDb.getSuccesfullProjects()
+    .map(x => x.buildPath)
+    .distinct
+    .filter(x => Utils.normalizeDirectoryPath(x.toString).count(x => x == '/') <= 3) // assume only one project per reposetory
+    .filter(x => new File(Utils.normalizeDirectoryPath(x.toString) + "src\\main\\scala").exists()) // Only do standard paths
 
+  for (file <- projects) {
+      calculationsOnProjectWrap(file)
+  }
 }

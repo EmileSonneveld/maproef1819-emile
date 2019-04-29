@@ -72,12 +72,14 @@ object Cmd {
     println("> " + command)
 
     val outputBuffer = ListBuffer[String]()
-    val p = Process(command, cd).run(ProcessLogger(outputBuffer append _)) // start asynchronously
+    val p = Process(command, cd, "JAVA_HOME" -> "C:\\Program Files\\Java\\jdk1.8.0_131") // SBT likes it like this
+      .run(ProcessLogger(outputBuffer append _)) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
-      val exitValue: Int = Await.result(f, duration.Duration(2 * 60, "sec"))
+      val exitValue: Int = Await.result(f, duration.Duration(5 * 60, "sec"))
       if (exitValue != 0)
         println("exitValue: " + exitValue)
+
     } catch {
       case _: TimeoutException =>
         outputBuffer.append("TIMEOUT!")

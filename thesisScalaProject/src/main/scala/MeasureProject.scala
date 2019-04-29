@@ -168,7 +168,7 @@ object MeasureProject {
         val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
 
         val relative = projectPath.toPath.relativize(doc.sdoc.input.asInstanceOf[Input.File].path.toNIO)
-        val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\gv\\" + projectName + "\\" + relative + ".gv"
+        val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\" + projectName + "\\" + relative + ".gv"
         Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
 
         for (pair <- methodMap) {
@@ -210,7 +210,7 @@ object MeasureProject {
     }
     commitStats.andc = th.calculateANDC()
     commitStats.ahh = th.calculateAHH()
-    Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\gv\\types_" + projectName + ".gv", th.getGvString())
+    Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\types_" + projectName + ".gv", th.getGvString())
 
 
     commitStats
