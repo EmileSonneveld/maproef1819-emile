@@ -7,6 +7,7 @@ import scalafix.SemanticDB
 import scala.collection.mutable.ArrayBuffer
 import scala.language.postfixOps
 import scala.meta._
+import scala.meta.internal.semanticdb.SymbolInformation
 
 object MeasureProject {
 
@@ -136,8 +137,8 @@ object MeasureProject {
     * Todo: Use project data.
     */
   def doWeOwnThisClass(classUri: String): Boolean = {
-    !classUri.startsWith("java/lang/") &&
-      !classUri.startsWith("java/util/") &&
+    !classUri.startsWith("java/") &&
+      !classUri.startsWith("javax/") &&
       !classUri.startsWith("scala/")
   }
 
@@ -188,20 +189,46 @@ object MeasureProject {
           case c: Defn.Class => {
             if (!c.name.value.endsWith("Test")) { // Naming convension for test classes
               var cc = 0
-              val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
+              val methodMap = CfgPerMethod.compute(c) //doc.sdoc.tree)
               for (pair <- methodMap) {
                 cc += CfgPerMethod.calculateCC(pair._2)
               }
-              val externalProps = externalProperties(c, semanticDB, doc.sdoc)
+              val classExternalProps = externalProperties(c, semanticDB, doc.sdoc)
               val cohesion = calculateCohesion(c, semanticDB, doc.sdoc)
 
-              if (externalProps > 20
+              if (classExternalProps > 20
                 && cc > 30
                 && cohesion < 0.3) {
                 println("\nGodclass detected! " + c.name.toString())
                 println("cc: " + cc)
-                println("externalProps: " + externalProps)
+                println("classExternalProps: " + classExternalProps)
                 //println("cohesion: "+cohesion)
+              }
+
+              tree.collect {
+                case d@Defn.Def(_, name, _, _, _, body) =>
+                  val methodExternalPropsSet = externalProperties(c, d, semanticDB, doc.sdoc)
+                  val methodExternalProps = methodExternalPropsSet.size
+                  val methodExternalPropsClasses = {
+                    var set: Set[String] = Set.empty[String]
+                    for (e <- methodExternalPropsSet) {
+                      var idx = e.lastIndexOf("#")
+                      if (!e.endsWith(".") || idx == -1)
+                        idx = math.max(idx, e.lastIndexOf("."))
+                      set += e.substring(0, idx)
+                    }
+                    set
+                  }
+                  val methodInternalProps = internalProperties(c, d, semanticDB, doc.sdoc).size
+                  if (methodExternalProps > 11
+                    && methodExternalProps > methodInternalProps * 3
+                    && methodExternalPropsClasses.size <= 6) {
+
+                    println("\nFeatureEnvy detected! " + d.name.toString())
+                    println("methodExternalProps: " + methodExternalProps)
+                    println("methodInternalProps: " + methodInternalProps)
+                    println("methodExternalPropsClasses.size: " + methodExternalPropsClasses.size)
+                  }
               }
             }
           }
@@ -218,34 +245,71 @@ object MeasureProject {
 
   def externalProperties(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
 
-    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
 
-    var externalProperties: Set[String] = Set.empty[String]
+    var externalProps: Set[String] = Set.empty[String]
 
-    if (cSymbol.value.contains("ImportOrderChecker")) {
-      println("")
-    }
     c.collect({
       case d: Defn.Def => {
-        d.body.collect({
-          case term: Term.Name => {
-            val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
-            if (!termSymbol.isLocal && !termSymbol.value.startsWith(cSymbol.value)) {
-              // TODO: Check if in parent hiarchy
-              // TODO: Ignore properies from nested classes
-              val decodedPropName = termSymbol.value
-              if (doWeOwnThisClass(decodedPropName)) {
+        externalProps ++= externalProperties(c, d, semanticDB, sdoc)
+      }
+    })
+    println("externalProperties: \n\t" + externalProps.mkString("\n\t"))
+    externalProps.size
+  }
+
+  def externalProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
+    var externalProperties: Set[String] = Set.empty[String]
+
+    d.body.collect({
+      case term: Term.Name => {
+        val semanticDB_ = semanticDB
+        val sdoc_ = sdoc
+        val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
+        if (!termSymbol.isNone) {
+          if (!termSymbol.isLocal && !termSymbol.value.startsWith(cSymbol.value)) {
+            val decodedPropName = termSymbol.value
+            // TODO: Check if in parent hiarchy
+            // TODO: Ignore properies from nested classes
+            if (doWeOwnThisClass(decodedPropName)) {
+              val info = semanticDB.getInfo(termSymbol, sdoc)
+              if (info.kind != SymbolInformation.Kind.OBJECT) {
                 externalProperties += decodedPropName
               }
             }
           }
-        })
+        }
       }
     })
-    println("externalProperties: \n\t" + externalProperties.mkString("\n\t"))
-    externalProperties.size
+    externalProperties
   }
 
+  // Shares many LOC with externalProperties
+  def internalProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
+    var externalProperties: Set[String] = Set.empty[String]
+
+    d.body.collect({
+      case term: Term.Name => {
+        val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
+        if (!termSymbol.isNone) {
+          if (!termSymbol.isLocal && !termSymbol.value.startsWith(cSymbol.value)) {
+          } else {
+            val decodedPropName = termSymbol.value
+            // TODO: Check if in parent hiarchy
+            // TODO: Ignore properies from nested classes
+            if (doWeOwnThisClass(decodedPropName)) {
+              val info = semanticDB.getInfo(termSymbol, sdoc)
+              if (info.kind != SymbolInformation.Kind.OBJECT) {
+                externalProperties += decodedPropName
+              }
+            }
+          }
+        }
+      }
+    })
+    externalProperties
+  }
 
   def calculateCohesion(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
 

@@ -62,6 +62,7 @@ object main extends App {
       println("calculationsOnProjectWrap sbt path not standard")
   }
 
+/*
   var projects = LargeScaleDb.getSuccesfullProjects()
     .map(x => x.buildPath)
     .distinct
@@ -70,6 +71,6 @@ object main extends App {
 
   for (file <- projects) {
     calculationsOnProjectWrap(file)
-  }
-  //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw"))
+  }*/
+  calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
 }

@@ -78,4 +78,8 @@ class SemanticDB(val projectPath: File) {
     sdoc.internal.symbol(tree)
   }
 
+  def getInfo(sym: Symbol, sdoc: SemanticDocument) = {
+    sdoc.internal.info(sym).get.info
+  }
+
 }
