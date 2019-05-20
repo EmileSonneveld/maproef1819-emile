@@ -1,3 +1,6 @@
+import java.text.{DecimalFormat, DecimalFormatSymbols}
+import java.util.Locale
+
 import scalafix.DocumentTuple
 import scalafix.v1._
 
@@ -66,6 +69,23 @@ class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
     }
   }
 
+  def getPackageName(symbolString: String): String = {
+    var slashIndex = symbolString.indexOf("/")
+    if (slashIndex == -1) return symbolString // could be local class
+    //slashIndex = symbolString.indexOf("/", slashIndex + 1)
+    slashIndex = Integer.max(slashIndex, symbolString.indexOf("/", slashIndex + 1))
+    symbolString.substring(0, slashIndex)
+  }
+
+  def getHlsColorForString(str: String): String = {
+    val percent1 = ((str + "A").hashCode.doubleValue() / Integer.MAX_VALUE.doubleValue() + 1) / 2
+    val percent2 = ((str + "B").hashCode.doubleValue() / Integer.MAX_VALUE.doubleValue() + 1) / 2
+
+    val otherSymbols = new DecimalFormatSymbols(Locale.getDefault())
+    otherSymbols.setDecimalSeparator('.')
+    val df = new DecimalFormat("0.###", otherSymbols)
+    df.format(percent1) + " " + df.format(0.15 + percent2 * 0.4) + " 1.0"
+  }
 
   def nodesToGraphViz(nodes: ArrayBuffer[TypeGraphNode]): String = {
     var sb = new StringBuilder()
@@ -75,15 +95,22 @@ class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
     sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
 
     for (node <- nodes) {
-      // node.nodeId + " " +
-      val n1 = Utils.escapeGraphVizName(node.name)
+      if (node.name != "scala/AnyRef#") {
+        // node.nodeId + " " +
+        val n1 = Utils.escapeGraphVizName(node.name)
 
-      //if (node.linksTo.length == 0)
-      sb ++= "	\"" + n1 + "\"\n" //+ "\" [label=\"" + n1 + "\"]\n"
-      for (next <- node.linksTo) {
-        val n2 = Utils.escapeGraphVizName(next.name)
-        sb ++= "	\"" + n1 + "\"->\"" + n2 + "\"\n"
+        //if (node.linksTo.length == 0)
+        var nam = getPackageName(node.name)
+        sb ++= "	\"" + n1 + "\" [color=\"" + getHlsColorForString(nam) + "\" ]\n"
+        for (next <- node.linksTo) {
+
+          if (next.name != "scala/AnyRef#") {
+            val n2 = Utils.escapeGraphVizName(next.name)
+            sb ++= "	\"" + n1 + "\"->\"" + n2 + "\"\n"
+          }
+        }
       }
+
     }
 
     sb ++= "}\n"
@@ -91,7 +118,7 @@ class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
   }
 
 
-  def absorb(doc: DocumentTuple) = {
+  def absorb(doc: DocumentTuple): Unit = {
     implicit var implicit_sdoc: SemanticDocument = doc.sdoc
 
     val tree = doc.sdoc.tree
@@ -99,33 +126,31 @@ class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
 
     //val test = doc.tdoc.symbols(0)
 
-    val classCollection = tree.collect {
-      // scala.Tuple5[scala.List[scala.meta.Mod], scala.meta.Type.Name, scala.List[scala.meta.Type.Param], scala.meta.Ctor.Primary, scala.meta.Template]
-      case c@Defn.Class(mod, name, param, primary, template) => {
-        //if (c.name.toString() == "JoinNode" || c.name.toString() == "TestClass" || c.name.toString() == "TestParent")
-        {
-          try {
-            val s = c.symbol
-            val node = addOrReturnSymbol(s.value.toString)
-            //println(c.name + ": " + s.value.toString)
+    def consumeTraitOrClass(c: Tree): Unit = {
+      //if (c.name.toString() == "JoinNode" || c.name.toString() == "TestClass" || c.name.toString() == "TestParent")
+      {
+        try {
+          val s = c.symbol
+          val node = addOrReturnSymbol(s.value.toString)
 
-            var symInfo = symbolTable.info(s.value.toString)
-            var parents = symInfo.get.signature.asInstanceOf[scala.meta.internal.semanticdb.ClassSignature].parents
-            for (p <- parents) {
-              node.linksTo += addOrReturnSymbol(p.asInstanceOf[semanticdb.TypeRef].symbol)
-            }
-            //println(parents)
-          } catch {
-            case ex: Throwable =>
-              println("EX: " + ex)
+          var symInfo = symbolTable.info(s.value.toString)
+          var parents = symInfo.get.signature.asInstanceOf[scala.meta.internal.semanticdb.ClassSignature].parents
+          for (p <- parents) {
+            node.linksTo += addOrReturnSymbol(p.asInstanceOf[semanticdb.TypeRef].symbol)
           }
+          //println(parents)
+        } catch {
+          case _: scala.meta.internal.classpath.MissingSymbolException =>
+          // ignore
+          case ex: Throwable =>
+            println("EX: " + ex)
         }
       }
-      case option@Term.Select(Term.Name("Option"), Term.Name("apply")) => {
-        println("synthetic = " + option.synthetic)
-        println("structure = " + option.synthetic.structure)
-      }
+    }
 
+    tree.collect {
+      case c: Defn.Class => consumeTraitOrClass(c)
+      case c: Defn.Trait => consumeTraitOrClass(c)
       //case q: Defn.Object => q.name
     }
 

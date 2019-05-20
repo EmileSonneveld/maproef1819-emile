@@ -1,15 +1,22 @@
 import java.io.File
-import java.text.DecimalFormat
+import java.text.{DecimalFormat, DecimalFormatSymbols}
+import java.util.Locale
+
 import scala.meta._
 
-val df = new DecimalFormat("000.")
+//val df = new DecimalFormat("000.")
+
+val otherSymbols = new DecimalFormatSymbols( Locale.getDefault())
+otherSymbols.setDecimalSeparator('.')
+val df = new DecimalFormat("0.##", otherSymbols)
+
 
 df.format(0)
 df.format(3)
 df.format(10)
 df.format(13)
 df.format(134)
-df.format(1348)
+df.format(1348000)
 
 
 df.format(2.0)

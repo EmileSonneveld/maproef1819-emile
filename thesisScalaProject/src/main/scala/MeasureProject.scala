@@ -212,7 +212,7 @@ object MeasureProject {
                   val methodExternalPropsClasses = {
                     var set: Set[String] = Set.empty[String]
                     for (e <- methodExternalPropsSet) {
-                      set += propGetParentClass(e)
+                      set += propGetOwnerClass(e)
                     }
                     set
                   }
@@ -261,7 +261,7 @@ object MeasureProject {
     commitStats
   }
 
-  def propGetParentClass(e: String): String = {
+  def propGetOwnerClass(e: String): String = {
     var idx = e.lastIndexOf("#")
     if (!e.endsWith(".") || idx == -1)
       idx = math.max(idx, e.lastIndexOf("."))
