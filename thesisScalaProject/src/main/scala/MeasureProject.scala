@@ -226,12 +226,33 @@ object MeasureProject {
                     println("methodInternalProps: " + methodInternalProps)
                     println("methodExternalPropsClasses.size: " + methodExternalPropsClasses.size)
                   }
+
+                  val methodNodes = CfgPerMethod.compute(d).head._2
+                  val methodCc = CfgPerMethod.calculateCC(methodNodes)
+
+                  val loc = d.toString.count(x => x == '\n')
+
+                  val methodLocalPropsSet = localProperties(c, d, semanticDB, doc.sdoc)
+                  val totalVars = methodLocalPropsSet.size + methodInternalProps + methodExternalProps
+
+                  if (loc > 50 // arbitrary number
+                    && methodCc > 10
+                    // TODO: Nesting level
+                    && totalVars > 10
+                  ) {
+
+                    println("\nBrainMethod detected! " + d.name.toString())
+                    println("loc: " + loc)
+                    println("methodCc: " + methodCc)
+                    println("totalVars: " + totalVars)
+                  }
               }
             }
           }
         }
       }
     }
+
     commitStats.andc = th.calculateANDC()
     commitStats.ahh = th.calculateAHH()
     Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\types_" + projectName + ".gv", th.getGvString())
@@ -240,7 +261,7 @@ object MeasureProject {
     commitStats
   }
 
-  def propGetParentClass(e:String): String ={
+  def propGetParentClass(e: String): String = {
     var idx = e.lastIndexOf("#")
     if (!e.endsWith(".") || idx == -1)
       idx = math.max(idx, e.lastIndexOf("."))
@@ -263,7 +284,7 @@ object MeasureProject {
 
   def externalProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
-    var externalProperties: Set[String] = Set.empty[String]
+    var collectedProperties: Set[String] = Set.empty[String]
 
     d.body.collect({
       case term: Term.Name => {
@@ -278,20 +299,20 @@ object MeasureProject {
             if (doWeOwnThisClass(decodedPropName)) {
               val info = semanticDB.getInfo(termSymbol, sdoc)
               if (info.kind != SymbolInformation.Kind.OBJECT) {
-                externalProperties += decodedPropName
+                collectedProperties += decodedPropName
               }
             }
           }
         }
       }
     })
-    externalProperties
+    collectedProperties
   }
 
   // Shares many LOC with externalProperties
   def internalProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
-    var externalProperties: Set[String] = Set.empty[String]
+    var collectedProperties: Set[String] = Set.empty[String]
 
     d.body.collect({
       case term: Term.Name => {
@@ -305,14 +326,40 @@ object MeasureProject {
             if (doWeOwnThisClass(decodedPropName)) {
               val info = semanticDB.getInfo(termSymbol, sdoc)
               if (info.kind != SymbolInformation.Kind.OBJECT) {
-                externalProperties += decodedPropName
+                collectedProperties += decodedPropName
               }
             }
           }
         }
       }
     })
-    externalProperties
+    collectedProperties
+  }
+
+  // Shares many LOC with externalProperties
+  def localProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
+    var collectedProperties: Set[String] = Set.empty[String]
+
+    d.body.collect({
+      case term: Term.Name => {
+        val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
+        if (!termSymbol.isNone) {
+          if (termSymbol.isLocal) {
+            val decodedPropName = termSymbol.value
+            // TODO: Check if in parent hiarchy
+            // TODO: Ignore properies from nested classes
+            //if (doWeOwnThisClass(decodedPropName)){
+            val info = semanticDB.getInfo(termSymbol, sdoc)
+            if (info.kind != SymbolInformation.Kind.OBJECT) {
+              collectedProperties += decodedPropName
+            }
+            //}
+          }
+        }
+      }
+    })
+    collectedProperties
   }
 
   def calculateCohesion(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {

@@ -72,5 +72,6 @@ object main extends App {
   for (file <- projects) {
     calculationsOnProjectWrap(file)
   }*/
-  calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
+  //calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
+  calculationsOnProjectWrap(new File("C:\\Users\\emill\\Desktop\\github_download\\SHotDraw\\SHotDraw"))
 }

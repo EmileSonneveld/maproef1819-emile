@@ -178,7 +178,7 @@ object CfgPerMethod {
             //doMethod(d)
           }
           case anyOtherStatement => {
-            println("nothing for this statement: " + anyOtherStatement.toString())
+            println("nothing for this statement") // + anyOtherStatement.toString())
             clickNewNode(anyOtherStatement.toString()) // Showing something in the graph
           }
         }
@@ -190,7 +190,7 @@ object CfgPerMethod {
     def doMethod(d: Defn.Def) = {
       val methodName = d.name.toString()
 
-      if (methodMap.keySet.contains(methodName)) // Dont lnow why this happens
+      if (methodMap.keySet.contains(methodName)) // Dont know why this happens
         println("Method name: " + methodName + " was already considered.")
       methodMap(methodName) = ArrayBuffer.empty[DirectedGraphNode]
       val nodes = methodMap(methodName)
@@ -209,10 +209,16 @@ object CfgPerMethod {
       }
     }
 
-    tree.collect {
+    tree match {
       case d@Defn.Def(_, name, _, _, _, body) =>
         doMethod(d)
+      case _ =>
+        tree.collect {
+          case d@Defn.Def(_, name, _, _, _, body) =>
+            doMethod(d)
+        }
     }
+
     //println("\n\n" + nodesToGraphViz(methodMap))
     methodMap
   }
