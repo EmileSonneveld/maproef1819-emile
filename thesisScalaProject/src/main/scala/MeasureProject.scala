@@ -212,10 +212,7 @@ object MeasureProject {
                   val methodExternalPropsClasses = {
                     var set: Set[String] = Set.empty[String]
                     for (e <- methodExternalPropsSet) {
-                      var idx = e.lastIndexOf("#")
-                      if (!e.endsWith(".") || idx == -1)
-                        idx = math.max(idx, e.lastIndexOf("."))
-                      set += e.substring(0, idx)
+                      set += propGetParentClass(e)
                     }
                     set
                   }
@@ -241,6 +238,13 @@ object MeasureProject {
 
 
     commitStats
+  }
+
+  def propGetParentClass(e:String): String ={
+    var idx = e.lastIndexOf("#")
+    if (!e.endsWith(".") || idx == -1)
+      idx = math.max(idx, e.lastIndexOf("."))
+    return e.substring(0, idx)
   }
 
   def externalProperties(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {

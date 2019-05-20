@@ -1,4 +1,4 @@
-package scalafix
+package scalafix // We must develop in this package to acces some private variables.
 
 import java.io.File
 import java.net.URLClassLoader
