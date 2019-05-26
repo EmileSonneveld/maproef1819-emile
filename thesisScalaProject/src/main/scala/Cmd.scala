@@ -23,8 +23,9 @@ object Cmd {
     tmp = tmp.replace("D:\\github_download\\", "")
     tmp = tmp.replace("C:\\Users\\emill\\Desktop\\github_download\\", "")
     tmp = tmp.replace("D:\\dev\\", "")
-    val firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))
-    return tmp.substring(0, firstSlah)
+    var firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))
+    if (firstSlah == -1) return tmp
+    else return tmp.substring(0, firstSlah)
   }
 
   def getCommitHashesFromLog(gitTopLevel: File): Iterator[String] = {

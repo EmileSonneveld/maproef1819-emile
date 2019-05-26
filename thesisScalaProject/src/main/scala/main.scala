@@ -58,8 +58,10 @@ object main extends App {
     var f = new File(Utils.normalizeDirectoryPath(sbtProjectPath.toString) + "src\\main\\scala")
     if (f.exists())
       calculationsOnProject(f)
-    else
+    else {
       println("calculationsOnProjectWrap sbt path not standard")
+      //calculationsOnProject(sbtProjectPath)
+    }
   }
 
 /*
@@ -72,10 +74,11 @@ object main extends App {
   for (file <- projects) {
     calculationsOnProjectWrap(file)
   }*/
-  calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\MoVE"))
+  //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\MoVE"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\scalafixtemplate"))
-  //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\testScala"))
+  calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\testScala"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\CTT-editor"))
+  //calculationsOnProjectWrap(new File("D:\\github_download\\scalameta"))
   //calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\Desktop\\github_download\\SHotDraw\\SHotDraw"))
 }

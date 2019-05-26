@@ -26,3 +26,9 @@ libraryDependencies += "commons-io" % "commons-io" % "2.6"
 // Could perhaps also acces the private parts with reflections
 // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
 libraryDependencies += "org.seleniumhq.selenium" % "selenium-java" % "3.141.59"
+
+
+
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.5"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
+

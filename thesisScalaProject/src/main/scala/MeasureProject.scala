@@ -2,12 +2,17 @@ import java.io.File
 import java.text._
 
 import scalafix.v1.SemanticDocument
-import scalafix.SemanticDB
+import scalafix.{DocumentTuple, SemanticDB}
+
 
 import scala.collection.mutable.ArrayBuffer
 import scala.language.postfixOps
 import scala.meta._
+import scala.meta.internal.semanticdb
 import scala.meta.internal.semanticdb.SymbolInformation
+
+
+trait ClassOrTrait extends Tree {}
 
 object MeasureProject {
 
@@ -152,20 +157,26 @@ object MeasureProject {
     //Utils.execCommand("cd " + getGitTopLevel(new File(scalaRoot)) + " && sbt semanticdb").trim
 
     val semanticDB = new SemanticDB(new File(scalaRoot))
-    val documents = semanticDB.documents
 
-    val th = new TypeHiarchy(semanticDB.symbolTable)
-    for (main_doc <- documents) {
-      println("\n Doc: " + main_doc.tdoc.uri)
-      val doc = semanticDB.reload(main_doc.tdoc.uri)
+    if (true) {
+      val th = new TypeHiarchy(semanticDB)
+      for (doc <- semanticDB.documents) {
+        th.absorb(doc)
+      }
+      Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\types_" + projectName + ".gv", th.getGvString())
+
+      commitStats.andc = th.calculateANDC()
+      commitStats.ahh = th.calculateAHH()
+    }
+
+    for (doc <- semanticDB.documents) {
+      println("\n Doc: " + doc.tdoc.uri)
 
       if (true) {
         consumeFile(commitStats, semanticDB, doc.sdoc)
-
-        th.absorb(doc)
       }
 
-      if (true) {
+      if (true) { // CC and Code Flow Graph
         val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
 
         val relative = projectPath.toPath.relativize(doc.sdoc.input.asInstanceOf[Input.File].path.toNIO)
@@ -183,11 +194,12 @@ object MeasureProject {
         }
       }
 
-      val tree = doc.sdoc.tree
-      if (true) { // Check if god class
-        tree.collect {
+      if (true) { // Check design smells
+        doc.sdoc.tree.collect {
           case c: Defn.Class => {
             if (!c.name.value.endsWith("Test")) { // Naming convension for test classes
+              println("Class: " + c.name.value)
+
               var cc = 0
               val methodMap = CfgPerMethod.compute(c) //doc.sdoc.tree)
               for (pair <- methodMap) {
@@ -200,14 +212,17 @@ object MeasureProject {
                 && cc > 30
                 && cohesion < 0.3) {
                 println("\nGodclass detected! " + c.name.toString())
-                println("cc: " + cc)
-                println("classExternalProps: " + classExternalProps)
-                //println("cohesion: "+cohesion)
+                println("    cc: " + cc)
+                println("    classExternalProps: " + classExternalProps)
+                println("    cohesion: " + cohesion)
               }
 
-              tree.collect {
-                case d@Defn.Def(_, name, _, _, _, body) =>
+              c.collect {
+                case d: Defn.Def =>
+                  println("Def: " + d.name.value)
+
                   val methodExternalPropsSet = externalProperties(c, d, semanticDB, doc.sdoc)
+                  println("methodExternalPropsSet: " + methodExternalPropsSet)
                   val methodExternalProps = methodExternalPropsSet.size
                   val methodExternalPropsClasses = {
                     var set: Set[String] = Set.empty[String]
@@ -216,15 +231,18 @@ object MeasureProject {
                     }
                     set
                   }
-                  val methodInternalProps = internalProperties(c, d, semanticDB, doc.sdoc).size
+                  val methodInternalPropsSet = internalProperties(c, d, semanticDB, doc.sdoc)
+                  val methodInternalProps = methodInternalPropsSet.size
+                  println("methodInternalPropsSet: " + methodInternalPropsSet)
+
                   if (methodExternalProps > 11
                     && methodExternalProps > methodInternalProps * 3
                     && methodExternalPropsClasses.size <= 6) {
 
                     println("\nFeatureEnvy detected! " + d.name.toString())
-                    println("methodExternalProps: " + methodExternalProps)
-                    println("methodInternalProps: " + methodInternalProps)
-                    println("methodExternalPropsClasses.size: " + methodExternalPropsClasses.size)
+                    println("    methodExternalProps: " + methodExternalProps)
+                    println("    methodInternalProps: " + methodInternalProps)
+                    println("    methodExternalPropsClasses.size: " + methodExternalPropsClasses.size)
                   }
 
                   val methodNodes = CfgPerMethod.compute(d).head._2
@@ -242,9 +260,9 @@ object MeasureProject {
                   ) {
 
                     println("\nBrainMethod detected! " + d.name.toString())
-                    println("loc: " + loc)
-                    println("methodCc: " + methodCc)
-                    println("totalVars: " + totalVars)
+                    println("    loc: " + loc)
+                    println("    methodCc: " + methodCc)
+                    println("    totalVars: " + totalVars)
                   }
               }
             }
@@ -252,10 +270,6 @@ object MeasureProject {
         }
       }
     }
-
-    commitStats.andc = th.calculateANDC()
-    commitStats.ahh = th.calculateAHH()
-    Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\types_" + projectName + ".gv", th.getGvString())
 
 
     commitStats
@@ -268,9 +282,7 @@ object MeasureProject {
     return e.substring(0, idx)
   }
 
-  def externalProperties(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
-
-
+  def externalProperties(c: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
     var externalProps: Set[String] = Set.empty[String]
 
     c.collect({
@@ -278,11 +290,12 @@ object MeasureProject {
         externalProps ++= externalProperties(c, d, semanticDB, sdoc)
       }
     })
-    println("externalProperties: \n\t" + externalProps.mkString("\n\t"))
+    //println("externalProperties in class: \n\t" + externalProps.mkString("\n\t"))
     externalProps.size
   }
 
-  def externalProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+
+  def externalProperties(c: Tree, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
     var collectedProperties: Set[String] = Set.empty[String]
 
@@ -309,8 +322,38 @@ object MeasureProject {
     collectedProperties
   }
 
+  def getParents(semanticDB: SemanticDB, symbolString: String): Seq[String] = {
+    var symInfo = semanticDB.symbolTable.info(symbolString).get
+    var parents = symInfo.signature.asInstanceOf[scala.meta.internal.semanticdb.ClassSignature].parents
+    parents.map(x => x.asInstanceOf[semanticdb.TypeRef].symbol)
+  }
+
+  def getAllParentSymbs(semanticDB: SemanticDB, symbolString: String): Set[String] = {
+    var collectedParents = Set.empty[String]
+
+    var depth = 0
+
+    def collectParentsRecurse(currentSymbol: String): Unit = {
+      if (!collectedParents.contains(currentSymbol)) {
+        collectedParents += currentSymbol
+        println(" " * depth + currentSymbol)
+
+        val parents = getParents(semanticDB, currentSymbol)
+        depth += 1
+        for (parentSymbolString <- parents) {
+          collectParentsRecurse(parentSymbolString)
+        }
+        depth -= 1
+      }
+    }
+
+    collectParentsRecurse(symbolString)
+
+    collectedParents
+  }
+
   // Shares many LOC with externalProperties
-  def internalProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+  def internalProperties(c: Tree, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
     var collectedProperties: Set[String] = Set.empty[String]
 
@@ -397,7 +440,7 @@ object MeasureProject {
         methods += mNode
       }
     })
-    println(methods.mkString("\n\n"))
+    //println(methods.mkString("\n\n"))
 
     var pairsWithCommon = 0
     for (m1 <- methods) {
@@ -411,8 +454,6 @@ object MeasureProject {
     }
     var cohesion = pairsWithCommon.toDouble / (methods.size * (methods.size - 1))
     if (cohesion.isNaN || cohesion.isInfinite) cohesion = 0
-    println("cohesion: " + cohesion)
-
     cohesion
   }
 }

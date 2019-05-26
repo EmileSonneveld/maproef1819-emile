@@ -9,9 +9,10 @@ import org.apache.commons.io.filefilter.{DirectoryFileFilter, TrueFileFilter}
 import scalafix.internal.v1.InternalSemanticDoc
 import scalafix.v1.{SemanticDocument, Symbol, SyntacticDocument}
 
+import scala.collection.mutable.ListBuffer
 import scala.meta.Tree
 import scala.meta.inputs.Input
-import scala.meta.internal.semanticdb.{Locator, TextDocument}
+import scala.meta.internal.semanticdb.{Locator, SymbolInformation, TextDocument}
 import scala.meta.internal.symtab.GlobalSymbolTable
 import scala.meta.io.{AbsolutePath, Classpath}
 
@@ -40,7 +41,7 @@ class SemanticDB(val projectPath: File) {
 
   val symbolTable = GlobalSymbolTable(classPath)
 
-  val documents: Seq[DocumentTuple] = {
+  private val documentsFirstPass: Seq[DocumentTuple] = {
     var documents: Seq[DocumentTuple] = List.empty
 
     // Locator will find all *.semanticdb files
@@ -61,9 +62,9 @@ class SemanticDB(val projectPath: File) {
     documents
   }
 
-  // Todo: Find out what was this for?
-  def reload(uri: String): DocumentTuple = {
-    val document = documents.find(d => d.tdoc.uri.equals(uri)).get
+  // This kind of adds some more high level semantics to the types.
+  private def reload(uri: String): DocumentTuple = {
+    val document = documentsFirstPass.find(d => d.tdoc.uri.equals(uri)).get
 
     val input = Input.File(AbsolutePath(projectPath).resolve(document.tdoc.uri))
     val syntacticDoc = SyntacticDocument.fromInput(input)
@@ -74,11 +75,19 @@ class SemanticDB(val projectPath: File) {
     new DocumentTuple(document.path, document.tdoc, sdoc)
   }
 
+  val documents: Seq[DocumentTuple] = {
+    var documents: ListBuffer[DocumentTuple] = new ListBuffer()
+    for (main_doc <- documentsFirstPass) {
+      documents += reload(main_doc.tdoc.uri)
+    }
+    documents
+  }
+
   def getFromSymbolTable(tree: Tree, sdoc: SemanticDocument): Symbol = {
     sdoc.internal.symbol(tree)
   }
 
-  def getInfo(sym: Symbol, sdoc: SemanticDocument) = {
+  def getInfo(sym: Symbol, sdoc: SemanticDocument): SymbolInformation = {
     sdoc.internal.info(sym).get.info
   }
 

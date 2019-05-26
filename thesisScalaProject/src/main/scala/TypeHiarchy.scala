@@ -1,15 +1,16 @@
 import java.text.{DecimalFormat, DecimalFormatSymbols}
 import java.util.Locale
 
-import scalafix.DocumentTuple
+import scalafix.{DocumentTuple, SemanticDB}
 import scalafix.v1._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.meta.{Defn, _}
-import scala.meta.internal.semanticdb
+//import scala.meta.internal.semanticdb
 import scala.meta.internal.symtab.GlobalSymbolTable
 
-class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
+class TypeHiarchy(semanticDB: SemanticDB) {
+  val symbolTable: GlobalSymbolTable = semanticDB.symbolTable
 
   class TypeGraphNode(val symbol: String) {
     def name: String = symbol.toString
@@ -133,10 +134,9 @@ class TypeHiarchy(val symbolTable: GlobalSymbolTable) {
           val s = c.symbol
           val node = addOrReturnSymbol(s.value.toString)
 
-          var symInfo = symbolTable.info(s.value.toString)
-          var parents = symInfo.get.signature.asInstanceOf[scala.meta.internal.semanticdb.ClassSignature].parents
+          var parents = MeasureProject.getParents(semanticDB, s.value.toString)
           for (p <- parents) {
-            node.linksTo += addOrReturnSymbol(p.asInstanceOf[semanticdb.TypeRef].symbol)
+            node.linksTo += addOrReturnSymbol(p)
           }
           //println(parents)
         } catch {
