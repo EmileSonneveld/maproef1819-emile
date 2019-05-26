@@ -3,7 +3,7 @@ import java.text._
 
 import scalafix.v1.SemanticDocument
 import scalafix.{DocumentTuple, SemanticDB}
-
+import scalafix.v1._ // for the symbol magic
 
 import scala.collection.mutable.ArrayBuffer
 import scala.language.postfixOps
@@ -170,6 +170,7 @@ object MeasureProject {
     }
 
     for (doc <- semanticDB.documents) {
+      implicit val semisdufjgdsifughsidf: SemanticDocument = doc.sdoc
       println("\n Doc: " + doc.tdoc.uri)
 
       if (true) {
@@ -193,7 +194,7 @@ object MeasureProject {
           commitStats.cc += CC
         }
       }
-
+/*
       if (true) { // Check design smells
         doc.sdoc.tree.collect {
           case c: Defn.Class => {
@@ -205,7 +206,8 @@ object MeasureProject {
               for (pair <- methodMap) {
                 cc += CfgPerMethod.calculateCC(pair._2)
               }
-              val classExternalProps = externalProperties(c, semanticDB, doc.sdoc)
+              val classExternalPropsSet = externalProperties(c.symbol.value, c, semanticDB, doc.sdoc)
+              val classExternalProps = classExternalPropsSet.size
               val cohesion = calculateCohesion(c, semanticDB, doc.sdoc)
 
               if (classExternalProps > 20
@@ -269,6 +271,7 @@ object MeasureProject {
           }
         }
       }
+      */
     }
 
 
@@ -281,7 +284,7 @@ object MeasureProject {
       idx = math.max(idx, e.lastIndexOf("."))
     return e.substring(0, idx)
   }
-
+/*
   def externalProperties(c: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
     var externalProps: Set[String] = Set.empty[String]
 
@@ -293,34 +296,7 @@ object MeasureProject {
     //println("externalProperties in class: \n\t" + externalProps.mkString("\n\t"))
     externalProps.size
   }
-
-
-  def externalProperties(c: Tree, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
-    var collectedProperties: Set[String] = Set.empty[String]
-
-    d.body.collect({
-      case term: Term.Name => {
-        val semanticDB_ = semanticDB
-        val sdoc_ = sdoc
-        val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
-        if (!termSymbol.isNone) {
-          if (!termSymbol.isLocal && !termSymbol.value.startsWith(cSymbol.value)) {
-            val decodedPropName = termSymbol.value
-            // TODO: Check if in parent hiarchy
-            // TODO: Ignore properies from nested classes
-            if (doWeOwnThisClass(decodedPropName)) {
-              val info = semanticDB.getInfo(termSymbol, sdoc)
-              if (info.kind != SymbolInformation.Kind.OBJECT) {
-                collectedProperties += decodedPropName
-              }
-            }
-          }
-        }
-      }
-    })
-    collectedProperties
-  }
+*/
 
   def getParents(semanticDB: SemanticDB, symbolString: String): Seq[String] = {
     var symInfo = semanticDB.symbolTable.info(symbolString).get
@@ -336,7 +312,7 @@ object MeasureProject {
     def collectParentsRecurse(currentSymbol: String): Unit = {
       if (!collectedParents.contains(currentSymbol)) {
         collectedParents += currentSymbol
-        println(" " * depth + currentSymbol)
+        //println(" " * depth + currentSymbol)
 
         val parents = getParents(semanticDB, currentSymbol)
         depth += 1
@@ -352,19 +328,30 @@ object MeasureProject {
     collectedParents
   }
 
-  // Shares many LOC with externalProperties
-  def internalProperties(c: Tree, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
+  def traitOrClassName(tree: Tree) = {
+    tree match {
+      case value: Defn.Trait => value.name.value
+      case value: Defn.Class => value.name.value
+      case _ => throw new Exception("Not a trait Or Class Name.")
+    }
+  }
+
+  def symbolInParentHiarchy(semanticDB: SemanticDB, className:String, termString:String) = {
+    val parents = getAllParentSymbs(semanticDB, className)
+    parents.exists(p => termString.startsWith(p))
+  }
+
+  def externalProperties(className:String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     var collectedProperties: Set[String] = Set.empty[String]
 
-    d.body.collect({
+    tree.collect({
       case term: Term.Name => {
-        val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
-        if (!termSymbol.isNone) {
-          if (!termSymbol.isLocal && !termSymbol.value.startsWith(cSymbol.value)) {
-          } else {
+        val termSymbol = term.symbol(sdoc)
+        if (!termSymbol.isNone && !term.isDefinition) {
+
+          if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
             val decodedPropName = termSymbol.value
-            // TODO: Check if in parent hiarchy
+
             // TODO: Ignore properies from nested classes
             if (doWeOwnThisClass(decodedPropName)) {
               val info = semanticDB.getInfo(termSymbol, sdoc)
@@ -373,6 +360,36 @@ object MeasureProject {
               }
             }
           }
+
+        }
+      }
+    })
+    collectedProperties
+  }
+
+  // Shares many LOC with externalProperties
+  // Pure internal properties, local variables are not counted
+  def internalProperties(className:String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+    var collectedProperties: Set[String] = Set.empty[String]
+
+    tree.collect({
+      case term: Term.Name => {
+        val termSymbol = term.symbol(sdoc)
+        if (!termSymbol.isNone && !term.isDefinition) {
+
+          if (!termSymbol.isLocal && symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
+            val decodedPropName = termSymbol.value
+
+            // TODO: Ignore properies from nested classes
+            if (doWeOwnThisClass(decodedPropName)) {
+
+              val info = semanticDB.getInfo(termSymbol, sdoc)
+              if (info.kind != SymbolInformation.Kind.OBJECT) {
+                collectedProperties += decodedPropName
+              }
+            }
+          }
+
         }
       }
     })
