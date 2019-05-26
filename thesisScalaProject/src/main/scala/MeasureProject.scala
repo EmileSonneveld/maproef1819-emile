@@ -194,11 +194,12 @@ object MeasureProject {
           commitStats.cc += CC
         }
       }
-/*
+
       if (true) { // Check design smells
         doc.sdoc.tree.collect {
           case c: Defn.Class => {
-            if (!c.name.value.endsWith("Test")) { // Naming convension for test classes
+            val className = MeasureProject.traitOrClassName(c)
+            if (!className.endsWith("Test")) { // Naming convension for test classes
               println("Class: " + c.name.value)
 
               var cc = 0
@@ -223,7 +224,7 @@ object MeasureProject {
                 case d: Defn.Def =>
                   println("Def: " + d.name.value)
 
-                  val methodExternalPropsSet = externalProperties(c, d, semanticDB, doc.sdoc)
+                  val methodExternalPropsSet = externalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
                   println("methodExternalPropsSet: " + methodExternalPropsSet)
                   val methodExternalProps = methodExternalPropsSet.size
                   val methodExternalPropsClasses = {
@@ -233,7 +234,7 @@ object MeasureProject {
                     }
                     set
                   }
-                  val methodInternalPropsSet = internalProperties(c, d, semanticDB, doc.sdoc)
+                  val methodInternalPropsSet = internalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
                   val methodInternalProps = methodInternalPropsSet.size
                   println("methodInternalPropsSet: " + methodInternalPropsSet)
 
@@ -271,7 +272,6 @@ object MeasureProject {
           }
         }
       }
-      */
     }
 
 
@@ -284,22 +284,24 @@ object MeasureProject {
       idx = math.max(idx, e.lastIndexOf("."))
     return e.substring(0, idx)
   }
-/*
-  def externalProperties(c: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
-    var externalProps: Set[String] = Set.empty[String]
 
-    c.collect({
-      case d: Defn.Def => {
-        externalProps ++= externalProperties(c, d, semanticDB, sdoc)
-      }
-    })
-    //println("externalProperties in class: \n\t" + externalProps.mkString("\n\t"))
-    externalProps.size
-  }
-*/
+  /*
+    def externalProperties(c: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
+      var externalProps: Set[String] = Set.empty[String]
+
+      c.collect({
+        case d: Defn.Def => {
+          externalProps ++= externalProperties(c, d, semanticDB, sdoc)
+        }
+      })
+      //println("externalProperties in class: \n\t" + externalProps.mkString("\n\t"))
+      externalProps.size
+    }
+  */
 
   def getParents(semanticDB: SemanticDB, symbolString: String): Seq[String] = {
     var symInfo = semanticDB.symbolTable.info(symbolString).get
+    if (!symInfo.signature.isInstanceOf[scala.meta.internal.semanticdb.ClassSignature]) return Seq.empty // Gave an error with "final case class RuntimeException"
     var parents = symInfo.signature.asInstanceOf[scala.meta.internal.semanticdb.ClassSignature].parents
     parents.map(x => x.asInstanceOf[semanticdb.TypeRef].symbol)
   }
@@ -336,12 +338,12 @@ object MeasureProject {
     }
   }
 
-  def symbolInParentHiarchy(semanticDB: SemanticDB, className:String, termString:String) = {
+  def symbolInParentHiarchy(semanticDB: SemanticDB, className: String, termString: String) = {
     val parents = getAllParentSymbs(semanticDB, className)
     parents.exists(p => termString.startsWith(p))
   }
 
-  def externalProperties(className:String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+  def externalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     var collectedProperties: Set[String] = Set.empty[String]
 
     tree.collect({
@@ -369,7 +371,7 @@ object MeasureProject {
 
   // Shares many LOC with externalProperties
   // Pure internal properties, local variables are not counted
-  def internalProperties(className:String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+  def internalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     var collectedProperties: Set[String] = Set.empty[String]
 
     tree.collect({
