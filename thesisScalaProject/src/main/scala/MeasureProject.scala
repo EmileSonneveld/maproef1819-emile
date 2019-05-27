@@ -186,7 +186,7 @@ object MeasureProject {
 
         for (pair <- methodMap) {
           val CC = CfgPerMethod.calculateCC(pair._2)
-          if (CC > 20) {
+          if (CC >= 2) {
             println("Big CC found: " + pair._1 + " -> " + CC)
             println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
           }
@@ -199,7 +199,8 @@ object MeasureProject {
         doc.sdoc.tree.collect {
           case c: Defn.Class => {
             val className = MeasureProject.traitOrClassName(c)
-            if (!className.endsWith("Test")) { // Naming convension for test classes
+            if (!className.endsWith("Test")  // Naming convension for test classes
+              && !c.symbol.isLocal) { // Scala meta doesn't keep semantic onformation about inline classes :(
               println("Class: " + c.name.value)
 
               var cc = 0

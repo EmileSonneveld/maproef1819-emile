@@ -1,3 +1,6 @@
+import java.text.{DecimalFormat, DecimalFormatSymbols}
+import java.util.Locale
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.meta._
@@ -5,7 +8,7 @@ import scala.meta._
 
 object CfgPerMethod {
 
-  class DirectedGraphNode(val debugString: String, val nodeId: String) {
+  class DirectedGraphNode(val debugString: String, val nodeId: String, val depth: Int) {
     val linksTo: ArrayBuffer[DirectedGraphNode] = ArrayBuffer.empty[DirectedGraphNode]
   }
 
@@ -47,11 +50,20 @@ object CfgPerMethod {
     sb.toString()
   }
 
+  def depthToColor(depth: Int) = {
+    val percent = 1 - Math.min(1, depth.toDouble / 10)
+
+    val otherSymbols = new DecimalFormatSymbols(Locale.getDefault())
+    otherSymbols.setDecimalSeparator('.')
+    val df = new DecimalFormat("0.###", otherSymbols)
+    "0.650 0.200 " + df.format(0.25 + percent * 0.75)
+  }
+
   private def methodToGraphviz(nodes: ArrayBuffer[DirectedGraphNode]): String = {
     var sb = new StringBuilder()
     for (node <- nodes) {
       val n1 = Utils.escapeGraphVizName(node.debugString)
-      sb ++= "	\"" + node.nodeId + "\" [label=\"" + n1 + "\"]\n"
+      sb ++= "	\"" + node.nodeId + "\" [label=\"" + n1 + "\" color=\"" + depthToColor(node.depth) + "\" ]\n"
       for (next <- node.linksTo) {
         sb ++= "	\"" + node.nodeId + "\"->\"" + next.nodeId + "\"\n"
       }
@@ -65,18 +77,19 @@ object CfgPerMethod {
     val methodMap = mutable.Map.empty[String, ArrayBuffer[DirectedGraphNode]]
 
     var nodeNr = 1
+    var depth = 0
 
     def newNode(nodes: ArrayBuffer[DirectedGraphNode], debugString: String) = {
-      val tmp = new DirectedGraphNode(debugString, "n_" + nodeNr)
+      val tmp = new DirectedGraphNode(debugString, "n_" + nodeNr, depth)
       nodes += tmp
       nodeNr += 1
       tmp
     }
 
-
     // returns last created node
     def doBlock(nodes: ArrayBuffer[DirectedGraphNode], begin: DirectedGraphNode, returnPointsToThis: DirectedGraphNode, statements: scala.List[scala.meta.Stat]): DirectedGraphNode = {
       var lastNode = begin
+      depth += 1
 
       def clickNewNode(debugString: String) = {
         var n = newNode(nodes, debugString)
@@ -101,7 +114,8 @@ object CfgPerMethod {
             // Do nothing here
           }
           case t: Term.Name => {
-            clickNewNode(t.toString())
+            clickNewNode("TERMNAME" + t.toString())
+            //        lastNode.linksTo += n
           }
           case t: Term.Assign => {
             clickNewNode(t.toString())
@@ -116,7 +130,12 @@ object CfgPerMethod {
             clickNewNode(t.toString()) // TODO: Exapnd
           }
           case Term.If(cond, cons, alt) => {
-            clickNewNode("IF " + cond.toString()) // Todo: Expand
+            //clickNewNode("IF " + cond.toString()) // Todo: Expand
+            clickNewNode("IF")
+            val afterConditional = newNode(nodes, "IF-BRANCHING-POINT")
+            doBlock(nodes, lastNode, returnPointsToThis, scala.List[scala.meta.Stat](cond)).linksTo += afterConditional
+            lastNode = afterConditional
+
             val after = newNode(nodes, "AFTER IF")
             doBlock(nodes, lastNode, returnPointsToThis, scala.List[scala.meta.Stat](cons)).linksTo += after
             doBlock(nodes, lastNode, returnPointsToThis, scala.List[scala.meta.Stat](alt)).linksTo += after
@@ -171,7 +190,7 @@ object CfgPerMethod {
           case Term.Return(term) => {
             clickNewNode("RETURN " + term.toString()) // todo: Expand
             lastNode.linksTo += returnPointsToThis
-            return new DirectedGraphNode("BOGUS NODE", "BOGUS NODE ID")
+            return new DirectedGraphNode("BOGUS NODE", "BOGUS NODE ID", depth)
           }
           case d: Defn.Def => {
             // Ignore, as all 'def's are already passed by the tree.collect
@@ -179,15 +198,17 @@ object CfgPerMethod {
           }
           case anyOtherStatement => {
             println("nothing for this statement") // + anyOtherStatement.toString())
-            clickNewNode(anyOtherStatement.toString()) // Showing something in the graph
+            clickNewNode("UNSUPPORTED: " + anyOtherStatement.toString()) // Showing something in the graph
           }
         }
       }
       //lastNode.linksTo += end
+      depth -= 1
       lastNode
     }
 
     def doMethod(d: Defn.Def) = {
+      depth = 0 // Otherwise, there is an obscure bug.
       val methodName = d.name.toString()
 
       if (methodMap.keySet.contains(methodName)) // Dont know why this happens

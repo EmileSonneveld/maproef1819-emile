@@ -132,18 +132,20 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       {
         try {
           val s = c.symbol
-          val node = addOrReturnSymbol(s.value.toString)
+          if (!s.isLocal && !s.isNone) {
+            val node = addOrReturnSymbol(s.value.toString)
 
-          var parents = MeasureProject.getParents(semanticDB, s.value.toString)
-          for (p <- parents) {
-            node.linksTo += addOrReturnSymbol(p)
+            var parents = MeasureProject.getParents(semanticDB, s.value.toString)
+            for (p <- parents) {
+              node.linksTo += addOrReturnSymbol(p)
+            }
+            //println(parents)
           }
-          //println(parents)
         } catch {
           case _: scala.meta.internal.classpath.MissingSymbolException =>
           // ignore
-          case ex: Throwable =>
-            println("EX: " + ex)
+          //case ex: Throwable =>
+          //  println("EX: " + ex)
         }
       }
     }
