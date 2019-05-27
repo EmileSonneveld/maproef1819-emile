@@ -50,7 +50,7 @@ object CfgPerMethod {
     sb.toString()
   }
 
-  def depthToColor(depth: Int) = {
+  def depthToColor(depth: Int): String = {
     val percent = 1 - Math.min(1, depth.toDouble / 10)
 
     val otherSymbols = new DecimalFormatSymbols(Locale.getDefault())
@@ -69,6 +69,17 @@ object CfgPerMethod {
       }
     }
     sb.toString()
+  }
+
+  def numberOfLazyBinaryOperators(tree: Tree) = {
+    var count = 0
+    tree.collect {
+      case t@Term.ApplyInfix(_, name, types, terms) => {
+        if (name.value == "&&" || name.value == "||")
+          count += 1
+      }
+    }
+    count
   }
 
   def compute(tree: Tree): mutable.Map[String, ArrayBuffer[DirectedGraphNode]] = {
@@ -105,7 +116,14 @@ object CfgPerMethod {
             lastNode = doBlock(nodes, lastNode, returnPointsToThis, sts)
           }
           case t@Term.ApplyInfix(_, name, types, terms) => {
-            clickNewNode(t.toString())
+            val tmp = clickNewNode(t.toString())
+            var count = numberOfLazyBinaryOperators(t)
+            if (count > 0) {
+              clickNewNode("AFTER LAZY BINARY OPERATORS")
+              for (_ <- 0 until count) {
+                tmp.linksTo += lastNode
+              }
+            }
           }
           case t@Term.Apply(term, args) => {
             clickNewNode(t.fun.toString()) // TODO: Expand
