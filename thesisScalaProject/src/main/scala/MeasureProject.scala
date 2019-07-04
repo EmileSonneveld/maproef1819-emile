@@ -186,10 +186,10 @@ object MeasureProject {
 
         for (pair <- methodMap) {
           val CC = CfgPerMethod.calculateCC(pair._2)
-          if (CC >= 2) {
-            println("Big CC found: " + pair._1 + " -> " + CC)
-            println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
-          }
+          //if (CC >= 2) {
+          //  println("Big CC found: " + pair._1 + " -> " + CC)
+          //  println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
+          //}
           //println(pair._1 + ": CC= " + CC)
           commitStats.cc += CC
         }
@@ -199,7 +199,7 @@ object MeasureProject {
         doc.sdoc.tree.collect {
           case c: Defn.Class => {
             val className = MeasureProject.traitOrClassName(c)
-            if (!className.endsWith("Test")  // Naming convension for test classes
+            if (!className.endsWith("Test") // Naming convension for test classes
               && !c.symbol.isLocal) { // Scala meta doesn't keep semantic onformation about inline classes :(
               println("Class: " + c.name.value)
 
@@ -215,10 +215,10 @@ object MeasureProject {
               if (classExternalProps > 20
                 && cc > 30
                 && cohesion < 0.3) {
-                println("\nGodclass detected! " + c.name.toString())
-                println("    cc: " + cc)
-                println("    classExternalProps: " + classExternalProps)
-                println("    cohesion: " + cohesion)
+                println("\nGodclass detected! " + c.name.toString()
+                  + " cc: " + cc
+                  + " classExternalProps: " + classExternalProps
+                  + " cohesion: " + cohesion)
               }
 
               c.collect {
@@ -352,6 +352,11 @@ object MeasureProject {
         val termSymbol = term.symbol(sdoc)
         if (!termSymbol.isNone && !term.isDefinition) {
 
+          if (className.endsWith("ConnectionTool#")) {
+            if (termSymbol.value.contains("displayBox")) {
+              print("")
+            }
+          }
           if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
             val decodedPropName = termSymbol.value
 
@@ -359,6 +364,21 @@ object MeasureProject {
             if (doWeOwnThisClass(decodedPropName)) {
               val info = semanticDB.getInfo(termSymbol, sdoc)
               if (info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
+
+                val dbgDumptermSymbol = Utils.toStringRecursive(termSymbol)
+                val dbgDumpinfo = Utils.toStringRecursive(info)
+
+                if (className.endsWith("ConnectionTool#")) {
+                  if (termSymbol.value.contains("displayBox")) {
+                    print("")
+                  }
+                  if (termSymbol.value.contains("updateConnection")) {
+                    print("")
+                  }
+                  if (info.kind != SymbolInformation.Kind.METHOD) {
+                    println("")
+                  }
+                }
                 collectedProperties += decodedPropName
               }
             }
@@ -367,6 +387,9 @@ object MeasureProject {
         }
       }
     })
+    if (className.endsWith("ConnectionTool#")) {
+      println("")
+    }
     collectedProperties
   }
 

@@ -4,9 +4,11 @@ import java.nio.file._
 import java.util
 import java.util.{ArrayList, List}
 import java.util.stream.{Collectors, Stream}
+import java.lang.reflect.{Field, Modifier}
 
 import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
+
 
 object Utils {
 
@@ -106,5 +108,44 @@ object Utils {
       bufferedSource.close
     }
     return result
+  }
+
+  private val LEAVES = util.Arrays.asList(classOf[Boolean], classOf[Character], classOf[Byte], classOf[Short], classOf[Integer], classOf[Long], classOf[Float], classOf[Double], classOf[Void], classOf[String])
+
+  def isValueType(clazz: Class[_]): Boolean = {
+    if (clazz == null) return false
+    // classOf[AnyVal].toString <- This contains a bug in scala
+    if (clazz.toString.equals("class scala.AnyVal")
+      || clazz.getTypeName.equals("java.lang.Number"))
+      return true
+    return isValueType(clazz.getSuperclass)
+  }
+
+  def getAllFields(clazz: Class[_], fields: ListBuffer[Field] = ListBuffer()): ListBuffer[Field] = {
+    fields.appendAll(clazz.getDeclaredFields)
+    if (clazz.getSuperclass != null) getAllFields(clazz.getSuperclass, fields)
+    fields
+  }
+
+  def toStringRecursive(o: Any, depth: Int = 0): String = {
+    if (o == null) return "null"
+    if (depth >= 5)
+      return "too deep!"
+    if (isValueType(o.getClass))
+      return o.toString
+    if (LEAVES.contains(o.getClass))
+      return o.toString
+    val sb = new StringBuilder
+    sb.append("  " * depth).append(o.getClass.getName).append(": [\n")
+    var fields = getAllFields(o.getClass)
+    for (f <- fields) {
+      if (!Modifier.isStatic(f.getModifiers)) {
+        f.setAccessible(true)
+        sb.append("  " * (depth + 1)).append(f.getName).append(": ")
+        sb.append("  " * (depth + 1)).append(toStringRecursive(f.get(o), depth + 1)).append("\n")
+      }
+    }
+    sb.append("  " * depth).append("]")
+    return sb.toString
   }
 }
