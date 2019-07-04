@@ -358,7 +358,7 @@ object MeasureProject {
             // TODO: Ignore properies from nested classes
             if (doWeOwnThisClass(decodedPropName)) {
               val info = semanticDB.getInfo(termSymbol, sdoc)
-              if (info.kind != SymbolInformation.Kind.OBJECT) {
+              if (info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
                 collectedProperties += decodedPropName
               }
             }
@@ -387,7 +387,7 @@ object MeasureProject {
             if (doWeOwnThisClass(decodedPropName)) {
 
               val info = semanticDB.getInfo(termSymbol, sdoc)
-              if (info.kind != SymbolInformation.Kind.OBJECT) {
+              if (info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
                 collectedProperties += decodedPropName
               }
             }
@@ -414,7 +414,7 @@ object MeasureProject {
             // TODO: Ignore properies from nested classes
             //if (doWeOwnThisClass(decodedPropName)){
             val info = semanticDB.getInfo(termSymbol, sdoc)
-            if (info.kind != SymbolInformation.Kind.OBJECT) {
+            if (info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
               collectedProperties += decodedPropName
             }
             //}
