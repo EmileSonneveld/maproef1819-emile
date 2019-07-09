@@ -80,6 +80,7 @@ object main extends App {
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\maproef1819-emile\\thesisScalaProject")) // dangerous meta stuff
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\CTT-editor"))
   //calculationsOnProjectWrap(new File("D:\\github_download\\scalameta"))
+  //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\HotDraw\\SHotDraw [Scala]"))
   calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\Desktop\\github_download\\SHotDraw\\SHotDraw"))
 }

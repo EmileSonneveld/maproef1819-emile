@@ -88,6 +88,7 @@ class SemanticDB(val projectPath: File) {
   }
 
   def getInfo(sym: Symbol, sdoc: SemanticDocument): SymbolInformation = {
+    if (!sdoc.internal.info(sym).isDefined) return null
     sdoc.internal.info(sym).get.info
   }
 

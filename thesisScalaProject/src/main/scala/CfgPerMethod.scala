@@ -215,7 +215,7 @@ object CfgPerMethod {
             //doMethod(d)
           }
           case anyOtherStatement => {
-            println("nothing for this statement") // + anyOtherStatement.toString())
+            //println("nothing for this statement") // + anyOtherStatement.toString())
             clickNewNode("UNSUPPORTED: " + anyOtherStatement.toString()) // Showing something in the graph
           }
         }

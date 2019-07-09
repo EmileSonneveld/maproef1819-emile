@@ -1,11 +1,12 @@
 import java.io.File
 import java.text._
 
+import org.apache.commons.lang3.StringUtils
 import scalafix.v1.SemanticDocument
 import scalafix.{DocumentTuple, SemanticDB}
 import scalafix.v1._ // for the symbol magic
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.language.postfixOps
 import scala.meta._
 import scala.meta.internal.semanticdb
@@ -142,7 +143,7 @@ object MeasureProject {
     * Todo: Use project data.
     */
   def doWeOwnThisClass(classUri: String): Boolean = {
-    !classUri.startsWith("java/") &&
+    !classUri.startsWith("java/lang") &&
       !classUri.startsWith("javax/") &&
       !classUri.startsWith("scala/")
   }
@@ -200,7 +201,7 @@ object MeasureProject {
           case c: Defn.Class => {
             val className = MeasureProject.traitOrClassName(c)
             if (!className.endsWith("Test") // Naming convension for test classes
-              && !c.symbol.isLocal) { // Scala meta doesn't keep semantic onformation about inline classes :(
+              && !c.symbol.isLocal) { // Scala meta doesn't keep semantic information about inline classes :(
               println("Class: " + c.name.value)
 
               var cc = 0
@@ -211,8 +212,14 @@ object MeasureProject {
               val classExternalPropsSet = externalProperties(c.symbol.value, c, semanticDB, doc.sdoc)
               val classExternalProps = classExternalPropsSet.size
               val cohesion = calculateCohesion(c, semanticDB, doc.sdoc)
+              /*if (className.contains("PolygonFigure")) {
+                print("")
+              }*/
 
-              if (classExternalProps > 20
+              {
+                println("classExternalPropsSet[" + classExternalPropsSet.size + "]: " + classExternalPropsSet)
+              }
+              if (classExternalProps > 10
                 && cc > 30
                 && cohesion < 0.3) {
                 println("\nGodclass detected! " + c.name.toString()
@@ -226,7 +233,7 @@ object MeasureProject {
                   println("Def: " + d.name.value)
 
                   val methodExternalPropsSet = externalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
-                  println("methodExternalPropsSet: " + methodExternalPropsSet)
+
                   val methodExternalProps = methodExternalPropsSet.size
                   val methodExternalPropsClasses = {
                     var set: Set[String] = Set.empty[String]
@@ -237,7 +244,7 @@ object MeasureProject {
                   }
                   val methodInternalPropsSet = internalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
                   val methodInternalProps = methodInternalPropsSet.size
-                  println("methodInternalPropsSet: " + methodInternalPropsSet)
+                  //println("methodInternalPropsSet: " + methodInternalPropsSet)
 
                   if (methodExternalProps > 11
                     && methodExternalProps > methodInternalProps * 3
@@ -340,46 +347,54 @@ object MeasureProject {
   }
 
   def symbolInParentHiarchy(semanticDB: SemanticDB, className: String, termString: String) = {
-    val parents = getAllParentSymbs(semanticDB, className)
+    var parents = getAllParentSymbs(semanticDB, className)
+    parents = parents.map(p => {
+      assert(p.endsWith("#"));
+      p.substring(0, p.length - 1)
+    })
     parents.exists(p => termString.startsWith(p))
   }
 
-  def externalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    var collectedProperties: Set[String] = Set.empty[String]
+  def isGetterSetterCall(methodOrAttributeName: String): Boolean = {
+    return methodOrAttributeName != null && StringUtils.startsWithAny(methodOrAttributeName, "get", "is", "set")
+  }
+
+  def externalProperties(className: String, tree: Tree, semanticDBArg: SemanticDB, sdoc: SemanticDocument) = {
+    var collectedProperties: ListBuffer[String] = ListBuffer.empty[String]
 
     tree.collect({
       case term: Term.Name => {
         val termSymbol = term.symbol(sdoc)
+        val semanticDB = semanticDBArg
         if (!termSymbol.isNone && !term.isDefinition) {
 
-          if (className.endsWith("ConnectionTool#")) {
-            if (termSymbol.value.contains("displayBox")) {
+          /*if (className.endsWith("DrawApplication#")) {
+            if (termSymbol.value.contains("PRIMARY")) {
               print("")
             }
-          }
+          }*/
+
           if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
             val decodedPropName = termSymbol.value
 
             // TODO: Ignore properies from nested classes
-            if (doWeOwnThisClass(decodedPropName)) {
+            //if (doWeOwnThisClass(decodedPropName))
+            {
               val info = semanticDB.getInfo(termSymbol, sdoc)
-              if (info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
+              if (info != null) {
+                if (info.kind == SymbolInformation.Kind.FIELD) {
+                  collectedProperties += decodedPropName
+                }
+                else if (info.kind == SymbolInformation.Kind.METHOD) {
+                  val dbgDumptermSymbol = Utils.toStringRecursive(termSymbol)
+                  val dbgDumpinfo = Utils.toStringRecursive(info)
+                  val params = info.signature.asInstanceOf[semanticdb.MethodSignature].parameterLists
+                  val noBraces = params == scala.collection.immutable.Nil
 
-                val dbgDumptermSymbol = Utils.toStringRecursive(termSymbol)
-                val dbgDumpinfo = Utils.toStringRecursive(info)
-
-                if (className.endsWith("ConnectionTool#")) {
-                  if (termSymbol.value.contains("displayBox")) {
-                    print("")
-                  }
-                  if (termSymbol.value.contains("updateConnection")) {
-                    print("")
-                  }
-                  if (info.kind != SymbolInformation.Kind.METHOD) {
-                    println("")
+                  if (noBraces || isGetterSetterCall(info.displayName)) {
+                    collectedProperties += decodedPropName
                   }
                 }
-                collectedProperties += decodedPropName
               }
             }
           }
@@ -387,9 +402,6 @@ object MeasureProject {
         }
       }
     })
-    if (className.endsWith("ConnectionTool#")) {
-      println("")
-    }
     collectedProperties
   }
 

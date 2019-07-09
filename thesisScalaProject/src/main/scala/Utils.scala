@@ -6,6 +6,8 @@ import java.util.{ArrayList, List}
 import java.util.stream.{Collectors, Stream}
 import java.lang.reflect.{Field, Modifier}
 
+import net.bytebuddy.dynamic.scaffold.TypeInitializer.None
+
 import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
 
@@ -127,25 +129,35 @@ object Utils {
     fields
   }
 
-  def toStringRecursive(o: Any, depth: Int = 0): String = {
-    if (o == null) return "null"
-    if (depth >= 5)
-      return "too deep!"
-    if (isValueType(o.getClass))
-      return o.toString
-    if (LEAVES.contains(o.getClass))
-      return o.toString
+  def toStringRecursive(inst: Any): String = {
     val sb = new StringBuilder
-    sb.append("  " * depth).append(o.getClass.getName).append(": [\n")
-    var fields = getAllFields(o.getClass)
-    for (f <- fields) {
-      if (!Modifier.isStatic(f.getModifiers)) {
-        f.setAccessible(true)
-        sb.append("  " * (depth + 1)).append(f.getName).append(": ")
-        sb.append("  " * (depth + 1)).append(toStringRecursive(f.get(o), depth + 1)).append("\n")
+    var depth = 0
+
+    def recurse(o: Any): Unit = {
+      if (o == null) sb.append("null")
+      else if (depth >= 5) sb.append("too deep!")
+      else if (isValueType(o.getClass)) sb.append(o.toString)
+      else if (LEAVES.contains(o.getClass))
+        sb.append(o.toString)
+      else {
+        sb.append("  " * depth).append(o.getClass.getName).append(": [\n")
+        depth += 1
+        var fields = getAllFields(o.getClass)
+        for (f <- fields) {
+          if (!Modifier.isStatic(f.getModifiers)) {
+            f.setAccessible(true)
+            sb.append("  " * depth).append(f.getName).append(": ")
+            recurse(f.get(o))
+            sb.append("\n")
+          }
+        }
+        depth -= 1
+        sb.append("  " * depth).append("]")
       }
     }
-    sb.append("  " * depth).append("]")
+
+    recurse(inst)
     return sb.toString
   }
+
 }
