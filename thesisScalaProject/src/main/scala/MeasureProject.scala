@@ -109,12 +109,12 @@ object MeasureProject {
     var uniqueCallsPerFunction = 0
     var uniqueCalledClassesPerFunction = 0
     tree.collect {
-      case c: Defn.Def =>
+      case clazz: Defn.Def =>
         var calls = Set.empty[String]
         var classes = Set.empty[String]
-        //var defSymbol = sDb.getFromSymbolTable(c, sdoc)
+        //var defSymbol = sDb.getFromSymbolTable(clazz, sdoc)
         //println("\ndefSymbol: " + defSymbol)
-        c.collect {
+        clazz.collect {
           case a: Term.Apply => {
             implicit var implicit_sdoc: SemanticDocument = sdoc
 
@@ -171,7 +171,7 @@ object MeasureProject {
     }
 
     for (doc <- semanticDB.documents) {
-      implicit val semisdufjgdsifughsidf: SemanticDocument = doc.sdoc
+      implicit val implicit_ksjndflidbfkurhgb: SemanticDocument = doc.sdoc
       println("\n Doc: " + doc.tdoc.uri)
 
       if (true) {
@@ -198,20 +198,20 @@ object MeasureProject {
 
       if (true) { // Check design smells
         doc.sdoc.tree.collect {
-          case c: Defn.Class => {
-            val className = MeasureProject.traitOrClassName(c)
+          case clazz: Defn.Class => {
+            val className = MeasureProject.traitOrClassName(clazz)
             if (!className.endsWith("Test") // Naming convension for test classes
-              && !c.symbol.isLocal) { // Scala meta doesn't keep semantic information about inline classes :(
-              println("Class: " + c.name.value)
+              && !clazz.symbol.isLocal) { // Scala meta doesn't keep semantic information about inline classes :(
+              println("Class: " + clazz.name.value)
 
               var cc = 0
-              val methodMap = CfgPerMethod.compute(c) //doc.sdoc.tree)
+              val methodMap = CfgPerMethod.compute(clazz) //doc.sdoc.tree)
               for (pair <- methodMap) {
                 cc += CfgPerMethod.calculateCC(pair._2)
               }
-              val classExternalPropsSet = externalProperties(c.symbol.value, c, semanticDB, doc.sdoc)
+              val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, doc.sdoc)
               val classExternalProps = classExternalPropsSet.size
-              val cohesion = calculateCohesion(c, semanticDB, doc.sdoc)
+              val cohesion = calculateCohesion(clazz, semanticDB, doc.sdoc)
               /*if (className.contains("PolygonFigure")) {
                 print("")
               }*/
@@ -222,17 +222,17 @@ object MeasureProject {
               if (classExternalProps > 10
                 && cc > 30
                 && cohesion < 0.3) {
-                println("\nGodclass detected! " + c.name.toString()
+                println("\nGodclass detected! " + clazz.name.toString()
                   + " cc: " + cc
                   + " classExternalProps: " + classExternalProps
                   + " cohesion: " + cohesion)
               }
 
-              c.collect {
+              clazz.collect {
                 case d: Defn.Def =>
                   println("Def: " + d.name.value)
 
-                  val methodExternalPropsSet = externalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
+                  val methodExternalPropsSet = externalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
 
                   val methodExternalProps = methodExternalPropsSet.size
                   val methodExternalPropsClasses = {
@@ -242,7 +242,7 @@ object MeasureProject {
                     }
                     set
                   }
-                  val methodInternalPropsSet = internalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
+                  val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
                   val methodInternalProps = methodInternalPropsSet.size
                   //println("methodInternalPropsSet: " + methodInternalPropsSet)
 
@@ -261,7 +261,7 @@ object MeasureProject {
 
                   val loc = d.toString.count(x => x == '\n')
 
-                  val methodLocalPropsSet = localProperties(c, d, semanticDB, doc.sdoc)
+                  val methodLocalPropsSet = localProperties(clazz, d, semanticDB, doc.sdoc)
                   val totalVars = methodLocalPropsSet.size + methodInternalProps + methodExternalProps
 
                   if (loc > 50 // arbitrary number
@@ -356,24 +356,19 @@ object MeasureProject {
   }
 
   def isGetterSetterCall(methodOrAttributeName: String): Boolean = {
-    return methodOrAttributeName != null && StringUtils.startsWithAny(methodOrAttributeName, "get", "is", "set")
+    return methodOrAttributeName != null && (StringUtils.startsWithAny(methodOrAttributeName, "get", "is", "set")
+      || StringUtils.endsWith(methodOrAttributeName, "_=") // Needed for org/shotdraw/application/DrawApplication#`fDefaultToolButton_=`().
+      //                                                              Probably becouse var is private, it gets wrapped
+      )
   }
 
-  def externalProperties(className: String, tree: Tree, semanticDBArg: SemanticDB, sdoc: SemanticDocument) = {
+  def externalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
     var collectedProperties: ListBuffer[String] = ListBuffer.empty[String]
 
     tree.collect({
       case term: Term.Name => {
         val termSymbol = term.symbol(sdoc)
-        val semanticDB = semanticDBArg
         if (!termSymbol.isNone && !term.isDefinition) {
-
-          /*if (className.endsWith("DrawApplication#")) {
-            if (termSymbol.value.contains("PRIMARY")) {
-              print("")
-            }
-          }*/
-
           if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
             val decodedPropName = termSymbol.value
 
@@ -386,8 +381,6 @@ object MeasureProject {
                   collectedProperties += decodedPropName
                 }
                 else if (info.kind == SymbolInformation.Kind.METHOD) {
-                  val dbgDumptermSymbol = Utils.toStringRecursive(termSymbol)
-                  val dbgDumpinfo = Utils.toStringRecursive(info)
                   val params = info.signature.asInstanceOf[semanticdb.MethodSignature].parameterLists
                   val noBraces = params == scala.collection.immutable.Nil
 
@@ -398,36 +391,55 @@ object MeasureProject {
               }
             }
           }
-
         }
       }
     })
     collectedProperties
   }
 
-  // Shares many LOC with externalProperties
+  // Shares many LOC with externalProperties. Only symbolInParentHiarchy isn't negated
   // Pure internal properties, local variables are not counted
   def internalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    var collectedProperties: Set[String] = Set.empty[String]
-
+    var collectedProperties: ListBuffer[String] = ListBuffer.empty[String]
+    if (className.contains("DrawApplication")) {
+      if (tree.toString().contains("def setDefaultTool")) {
+        println()
+      }
+    }
     tree.collect({
       case term: Term.Name => {
         val termSymbol = term.symbol(sdoc)
+        if (className.contains("DrawApplication")) {
+          if (tree.toString().contains("def setDefaultTool")) {
+            println(termSymbol.value)
+            if (termSymbol.value.contains("fDefaultToolButton")) {
+              println()
+            }
+          }
+        }
         if (!termSymbol.isNone && !term.isDefinition) {
-
           if (!termSymbol.isLocal && symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
             val decodedPropName = termSymbol.value
 
             // TODO: Ignore properies from nested classes
-            if (doWeOwnThisClass(decodedPropName)) {
-
+            //if (doWeOwnThisClass(decodedPropName))
+            {
               val info = semanticDB.getInfo(termSymbol, sdoc)
-              if (info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
-                collectedProperties += decodedPropName
+              if (info != null) {
+                if (info.kind == SymbolInformation.Kind.FIELD) {
+                  collectedProperties += decodedPropName
+                }
+                else if (info.kind == SymbolInformation.Kind.METHOD) {
+                  val params = info.signature.asInstanceOf[semanticdb.MethodSignature].parameterLists
+                  val noBraces = params == scala.collection.immutable.Nil
+
+                  if (noBraces || isGetterSetterCall(info.displayName)) {
+                    collectedProperties += decodedPropName
+                  }
+                }
               }
             }
           }
-
         }
       }
     })
@@ -435,8 +447,8 @@ object MeasureProject {
   }
 
   // Shares many LOC with externalProperties
-  def localProperties(c: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
+  def localProperties(clazz: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+    val cSymbol = semanticDB.getFromSymbolTable(clazz, sdoc)
     var collectedProperties: Set[String] = Set.empty[String]
 
     d.body.collect({
@@ -460,29 +472,45 @@ object MeasureProject {
     collectedProperties
   }
 
-  def calculateCohesion(c: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
+  class MethodNodeWithUsages(val name: String) {
+    var usesProperty: ListBuffer[String] = ListBuffer.empty[String]
 
-    val cSymbol = semanticDB.getFromSymbolTable(c, sdoc)
-
-    class MethodNodeWithUsages(val name: String) {
-      var usesProperty: Set[String] = Set.empty[String]
-
-      override def toString: String = {
-        "MethodNodeWithUsages(" + name + ")\n" +
-          usesProperty.mkString("\n")
-      }
+    override def toString: String = {
+      "MethodNodeWithUsages(" + name + ")\n" +
+        usesProperty.mkString("\n")
     }
-    var methods = Set.empty[MethodNodeWithUsages]
+  }
 
-    c.collect({
+  /**
+    * TCC
+    */
+  def calculateCohesion(clazz: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
+
+    implicit val implicit_ksjndflidbfkurhgb: SemanticDocument = sdoc
+    val cSymbol = semanticDB.getFromSymbolTable(clazz, sdoc)
+
+    var methods = ListBuffer.empty[MethodNodeWithUsages]
+
+    clazz.collect({
       case d: Defn.Def => {
         val dSymbol = semanticDB.getFromSymbolTable(d, sdoc)
-        var mNode = new MethodNodeWithUsages(dSymbol.value)
+        if (!dSymbol.isLocal) {
+          var mNode = new MethodNodeWithUsages(dSymbol.value)
+          if (dSymbol.value.startsWith("local")) {
+            println()
+          }
 
-        d.body.collect({
+          val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, sdoc)
+          mNode.usesProperty = methodInternalPropsSet
+          if (clazz.toString().contains("DrawApplication")) {
+            if (d.toString().contains("def setDefaultTool")) {
+              println(d.toString())
+            }
+          }
+          /*d.body.collect({
           case term: Term.Name => {
             val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
-            if (termSymbol.owner == cSymbol) {
+            if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, clazz.symbol.value, termSymbol.value)) {
               val decodedPropName = termSymbol.value
                 .replace(cSymbol.value + "`", "")
                 .replace(cSymbol.value, "")
@@ -491,24 +519,40 @@ object MeasureProject {
               mNode.usesProperty += decodedPropName
             }
           }
-        })
-        methods += mNode
+        })*/
+          methods += mNode
+        }
       }
     })
-    //println(methods.mkString("\n\n"))
+    println(("methods: \n" + methods.map(x => x.toString.replace("\n", "\n\t")).mkString("\n"))
+      .replace("\n", "\n\t"))
 
-    var pairsWithCommon = 0
-    for (m1 <- methods) {
-      for (m2 <- methods) {
-        if (m1 != m2) {
-          val intersection = m1.usesProperty.intersect(m2.usesProperty)
+    val pairsWithCommon = numMethodsRelatedByAttributeAccess(methods)
+    val maxPairs = methods.size * (methods.size - 1) / 2
+
+    var cohesion = pairsWithCommon.toDouble / maxPairs
+    if (clazz.toString().contains("DrawApplication")) {
+      println()
+    }
+
+    if (cohesion.isNaN || cohesion.isInfinite) cohesion = 0
+    cohesion
+  }
+
+  def numMethodsRelatedByAttributeAccess(methods: ListBuffer[MethodNodeWithUsages]): Int = {
+    var methodCount = methods.size
+    var pairs = 0
+    if (methodCount > 1) {
+      for (i <- 0 until (methodCount - 1)) {
+        for (j <- i + 1 until methodCount) {
+          var firstMethod = methods(i)
+          val secondMethod = methods(j)
+          val intersection = firstMethod.usesProperty.intersect(secondMethod.usesProperty)
           if (intersection.size > 0)
-            pairsWithCommon += 1
+            pairs += 1
         }
       }
     }
-    var cohesion = pairsWithCommon.toDouble / (methods.size * (methods.size - 1))
-    if (cohesion.isNaN || cohesion.isInfinite) cohesion = 0
-    cohesion
+    pairs
   }
 }

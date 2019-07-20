@@ -11,6 +11,13 @@ import scala.io.Source
 import scala.meta.{Defn, Tree}
 
 class TypesTest extends FunSuite {
+  def EmileAssert(b: Boolean) = {
+    if (!b) {
+      println("Oops!")
+    }
+    assert(b)
+  }
+
   test("test1") {
 
     val semanticDB = new SemanticDB(new File("..\\testScala"))
@@ -48,16 +55,19 @@ class TypesTest extends FunSuite {
               println("Def: " + d.name.value)
 
               val methodExternalPropsSet = externalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
-              println("methodExternalPropsSet: " + methodExternalPropsSet)
 
               val methodInternalPropsSet = internalProperties(c.symbol.value, d, semanticDB, doc.sdoc)
-              println("methodInternalPropsSet: " + methodInternalPropsSet)
 
               (className, d.name.value) match {
                 case ("D", "methodInD") =>
-                  assert(methodExternalPropsSet.exists(p => p.contains("property_ObjectType")))
-                  assert(methodInternalPropsSet.exists(p => p.contains("propA")))
-                  assert(methodInternalPropsSet.exists(p => p.contains("propD")))
+                  println("methodExternalPropsSet: " + methodExternalPropsSet)
+                  println("methodInternalPropsSet: " + methodInternalPropsSet)
+                  EmileAssert(methodExternalPropsSet.exists(p => p.contains("property_ObjectType")))
+                  EmileAssert(methodInternalPropsSet.exists(p => p.contains("propA")))
+                  EmileAssert(methodInternalPropsSet.exists(p => p.contains("propD")))
+                  EmileAssert(methodInternalPropsSet.exists(p => !p.contains("external")))
+                  EmileAssert(methodInternalPropsSet.exists(p => !p.contains("totallyLocal")))
+                  EmileAssert(!methodInternalPropsSet.contains(""))
                 case _ => // ignore
               }
           }

@@ -230,7 +230,7 @@ object CfgPerMethod {
       val methodName = d.name.toString()
 
       if (methodMap.keySet.contains(methodName)) // Dont know why this happens
-        println("Method name: " + methodName + " was already considered.")
+        println("Method was already considered: " + methodName)
       methodMap(methodName) = ArrayBuffer.empty[DirectedGraphNode]
       val nodes = methodMap(methodName)
 

@@ -26,7 +26,7 @@ trait C extends A {
 }
 
 class D extends A with B {
-  val propD = "D"
+  private val propD = "D"
 
   def methodInD: String = {
     val external = new ObjectType()
