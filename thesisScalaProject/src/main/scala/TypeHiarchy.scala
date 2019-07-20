@@ -151,8 +151,8 @@ class TypeHiarchy(semanticDB: SemanticDB) {
     }
 
     tree.collect {
-      case c: Defn.Class => consumeTraitOrClass(c)
-      case c: Defn.Trait => consumeTraitOrClass(c)
+      case clazz: Defn.Class => consumeTraitOrClass(clazz)
+      case clazz: Defn.Trait => consumeTraitOrClass(clazz)
       //case q: Defn.Object => q.name
     }
 

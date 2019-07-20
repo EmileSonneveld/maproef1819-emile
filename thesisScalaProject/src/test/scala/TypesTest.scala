@@ -13,7 +13,7 @@ import scala.meta.{Defn, Tree}
 class TypesTest extends FunSuite {
   test("test1") {
 
-    val semanticDB = new SemanticDB(new File("C:\\Users\\emill\\dev\\testScala"))
+    val semanticDB = new SemanticDB(new File("..\\testScala"))
     for (doc <- semanticDB.documents) {
       implicit val sdlifhbduogdfhg: SemanticDocument = doc.sdoc
       println("\n Doc: " + doc.tdoc.uri)
