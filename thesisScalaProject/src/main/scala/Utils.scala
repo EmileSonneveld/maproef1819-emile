@@ -135,7 +135,7 @@ object Utils {
 
     def recurse(o: Any): Unit = {
       if (o == null) sb.append("null")
-      else if (depth >= 5) sb.append("too deep!")
+      else if (depth >= 7) sb.append("too deep!")
       else if (isValueType(o.getClass)) sb.append(o.toString)
       else if (LEAVES.contains(o.getClass))
         sb.append(o.toString)

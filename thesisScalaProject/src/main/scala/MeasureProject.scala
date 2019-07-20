@@ -198,6 +198,16 @@ object MeasureProject {
 
       if (true) { // Check design smells
         doc.sdoc.tree.collect {
+
+          case clazz: Defn.Object => {
+
+            val className = MeasureProject.traitOrClassName(clazz)
+            if (className.contains("PolygonFigure")) {
+              var clazzSymbol = clazz.symbol
+              var symInfo = semanticDB.symbolTable.info(clazzSymbol.value).get
+              print("")
+            }
+          }
           case clazz: Defn.Class => {
             val className = MeasureProject.traitOrClassName(clazz)
             if (!className.endsWith("Test") // Naming convension for test classes
@@ -212,16 +222,18 @@ object MeasureProject {
               val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, doc.sdoc)
               val classExternalProps = classExternalPropsSet.size
               val cohesion = calculateCohesion(clazz, semanticDB, doc.sdoc)
-              /*if (className.contains("PolygonFigure")) {
+              if (className.contains("PolygonFigure")) {
                 print("")
-              }*/
+              }
 
               {
                 println("classExternalPropsSet[" + classExternalPropsSet.size + "]: " + classExternalPropsSet)
               }
-              if (classExternalProps > 10
-                && cc > 30
-                && cohesion < 0.3) {
+              //if (classExternalProps > 10
+              //  && cc > 30
+              //  && cohesion < 0.3)
+
+              {
                 println("\nGodclass detected! " + clazz.name.toString()
                   + " cc: " + cc
                   + " classExternalProps: " + classExternalProps
@@ -342,6 +354,7 @@ object MeasureProject {
     tree match {
       case value: Defn.Trait => value.name.value
       case value: Defn.Class => value.name.value
+      case value: Defn.Object => value.name.value
       case _ => throw new Exception("Not a trait Or Class Name.")
     }
   }
@@ -489,41 +502,63 @@ object MeasureProject {
     implicit val implicit_ksjndflidbfkurhgb: SemanticDocument = sdoc
     val cSymbol = semanticDB.getFromSymbolTable(clazz, sdoc)
 
+
+    val className = MeasureProject.traitOrClassName(clazz)
+    var clazzSymbol = clazz.symbol
+    assert(clazzSymbol.value.endsWith("#"))
+    val compagnionRefString = clazzSymbol.value.substring(0, clazzSymbol.value.length - 1) + "."
+    val compagnionTree = semanticDB.getClassTraitObjectTree(compagnionRefString)
+
+    if (className.contains("PolygonFigure")) {
+      /*var symInfoOpt = semanticDB.symbolTable.info(clazzSymbol.value)
+      if (symInfoOpt.isDefined) {
+        var symInfo = symInfoOpt.get
+        val dbg = Utils.toStringRecursive(symInfo)
+        //symInfo.withProperties()
+        var comp = symInfo.companion
+      }*/
+      print("")
+    }
+
     var methods = ListBuffer.empty[MethodNodeWithUsages]
 
-    clazz.collect({
-      case d: Defn.Def => {
-        val dSymbol = semanticDB.getFromSymbolTable(d, sdoc)
-        if (!dSymbol.isLocal) {
-          var mNode = new MethodNodeWithUsages(dSymbol.value)
-          if (dSymbol.value.startsWith("local")) {
-            println()
-          }
+    def collectDefn(d: Defn.Def) = {
+      val dSymbol = semanticDB.getFromSymbolTable(d, sdoc)
+      if (!dSymbol.isLocal) {
+        var mNode = new MethodNodeWithUsages(dSymbol.value)
 
-          val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, sdoc)
-          mNode.usesProperty = methodInternalPropsSet
-          if (clazz.toString().contains("DrawApplication")) {
-            if (d.toString().contains("def setDefaultTool")) {
-              println(d.toString())
-            }
+        val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, sdoc)
+        mNode.usesProperty = methodInternalPropsSet
+        if (clazz.toString().contains("DrawApplication")) {
+          if (d.toString().contains("def setDefaultTool")) {
+            println(d.toString())
           }
-          /*d.body.collect({
-          case term: Term.Name => {
-            val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
-            if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, clazz.symbol.value, termSymbol.value)) {
-              val decodedPropName = termSymbol.value
-                .replace(cSymbol.value + "`", "")
-                .replace(cSymbol.value, "")
-                .replace("_=`().", "")
-                .replace("().", "")
-              mNode.usesProperty += decodedPropName
-            }
-          }
-        })*/
-          methods += mNode
         }
+        /*d.body.collect({
+        case term: Term.Name => {
+          val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
+          if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, clazz.symbol.value, termSymbol.value)) {
+            val decodedPropName = termSymbol.value
+              .replace(cSymbol.value + "`", "")
+              .replace(cSymbol.value, "")
+              .replace("_=`().", "")
+              .replace("().", "")
+            mNode.usesProperty += decodedPropName
+          }
+        }
+      })*/
+        methods += mNode
       }
+    }
+
+    clazz.collect({
+      case d: Defn.Def => collectDefn(d)
     })
+    if (compagnionTree != null) {
+      compagnionTree.collect({
+        case d: Defn.Def => collectDefn(d)
+      })
+    }
     println(("methods: \n" + methods.map(x => x.toString.replace("\n", "\n\t")).mkString("\n"))
       .replace("\n", "\n\t"))
 

@@ -8,9 +8,10 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.{DirectoryFileFilter, TrueFileFilter}
 import scalafix.internal.v1.InternalSemanticDoc
 import scalafix.v1.{SemanticDocument, Symbol, SyntacticDocument}
+import scalafix.v1._ // for the symbol magic
 
 import scala.collection.mutable.ListBuffer
-import scala.meta.Tree
+import scala.meta.{Defn, Tree}
 import scala.meta.inputs.Input
 import scala.meta.internal.semanticdb.{Locator, SymbolInformation, TextDocument}
 import scala.meta.internal.symtab.GlobalSymbolTable
@@ -92,4 +93,37 @@ class SemanticDB(val projectPath: File) {
     sdoc.internal.info(sym).get.info
   }
 
+  /**
+    * Heavy lifting
+    */
+  def getClassTraitObjectTree(uniqueName: String): Tree = {
+    for (doc <- this.documents) {
+      implicit val implicit_ksjndflidbfkurhgb: SemanticDocument = doc.sdoc
+      doc.sdoc.tree.collect {
+
+        case clazz: Defn.Class => {
+          var clazzSymbol = clazz.symbol
+          //var symInfo = this.symbolTable.info(clazzSymbol.value).get
+          if (clazzSymbol.value == uniqueName) {
+            return clazz
+          }
+        }
+        case clazz: Defn.Object => {
+          var clazzSymbol = clazz.symbol
+          //var symInfo = this.symbolTable.info(clazzSymbol.value).get
+          if (clazzSymbol.value == uniqueName) {
+            return clazz
+          }
+        }
+        case clazz: Defn.Trait => {
+          var clazzSymbol = clazz.symbol
+          //var symInfo = this.symbolTable.info(clazzSymbol.value).get
+          if (clazzSymbol.value == uniqueName) {
+            return clazz
+          }
+        }
+      }
+    }
+    return null
+  }
 }
