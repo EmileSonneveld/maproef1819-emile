@@ -59,28 +59,28 @@ object main extends App {
     if (f.exists())
       calculationsOnProject(f)
     else {
-      println("calculationsOnProjectWrap sbt path not standard")
+      println("calculationsOnProjectWrap sbt path not standard: " + sbtProjectPath.toString)
       //calculationsOnProject(sbtProjectPath)
     }
   }
 
-/*
-  var projects = LargeScaleDb.getSuccesfullProjects()
-    .map(x => x.buildPath)
-    .distinct
-    .filter(x => Utils.normalizeDirectoryPath(x.toString).count(x => x == '/') <= 3) // assume only one project per reposetory
-    .filter(x => new File(Utils.normalizeDirectoryPath(x.toString) + "src\\main\\scala").exists()) // Only do standard paths
+  /*
+    var projects = LargeScaleDb.getSuccesfullProjects()
+      .map(x => x.buildPath)
+      .distinct
+      .filter(x => Utils.normalizeDirectoryPath(x.toString).count(x => x == '/') <= 3) // assume only one project per reposetory
+      .filter(x => new File(Utils.normalizeDirectoryPath(x.toString) + "src\\main\\scala").exists()) // Only do standard paths
 
-  for (file <- projects) {
-    calculationsOnProjectWrap(file)
-  }*/
+    for (file <- projects) {
+      calculationsOnProjectWrap(file)
+    }*/
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\MoVE"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\scalafixtemplate"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\testScala"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\maproef1819-emile\\thesisScalaProject")) // dangerous meta stuff
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\CTT-editor"))
   //calculationsOnProjectWrap(new File("D:\\github_download\\scalameta"))
-  //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\HotDraw\\SHotDraw [Scala]"))
-  calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
+  calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
+  //calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
   //calculationsOnProjectWrap(new File("C:\\Users\\emill\\Desktop\\github_download\\SHotDraw\\SHotDraw"))
 }
