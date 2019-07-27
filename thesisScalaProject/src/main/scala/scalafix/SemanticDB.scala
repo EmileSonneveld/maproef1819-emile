@@ -79,7 +79,13 @@ class SemanticDB(val projectPath: File) {
   val documents: Seq[DocumentTuple] = {
     var documents: ListBuffer[DocumentTuple] = new ListBuffer()
     for (main_doc <- documentsFirstPass) {
-      documents += reload(main_doc.tdoc.uri)
+      try {
+        var test = main_doc.sdoc.tree // Try this, and don't add document if it throws
+        documents += reload(main_doc.tdoc.uri)
+      } catch {
+        case _ =>
+          println("Ignored document that throws when parsed" + main_doc.path)
+      }
     }
     documents
   }
@@ -88,9 +94,16 @@ class SemanticDB(val projectPath: File) {
     sdoc.internal.symbol(tree)
   }
 
-  def getInfo(sym: Symbol, sdoc: SemanticDocument): SymbolInformation = {
-    if (!sdoc.internal.info(sym).isDefined) return null
-    sdoc.internal.info(sym).get.info
+  def getInfo(symString: String): SymbolInformation = {
+    try {
+      var opt = symbolTable.info(symString)
+      if (!opt.isDefined) return null
+      opt.get
+    } catch {
+      case _: scala.meta.internal.classpath.MissingSymbolException =>
+        // ignore
+        null
+    }
   }
 
   /**

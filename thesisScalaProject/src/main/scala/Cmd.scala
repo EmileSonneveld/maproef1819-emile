@@ -28,10 +28,15 @@ object Cmd {
     else return tmp.substring(0, firstSlah)
   }
 
-  def getCommitHashesFromLog(gitTopLevel: File): Iterator[String] = {
+  def getCurrentCommitHash(gitTopLevel: File): String = {
+    val logString = execCommandWithTimeout("git rev-parse HEAD", gitTopLevel)
+    logString.trim
+  }
+
+  def getCommitHashesFromLog(gitTopLevel: File): List[String] = {
     val logString = execCommandWithTimeout("git log --format=\"commit %H\"", gitTopLevel)
     val re = """commit ([\w]+)""".r
-    re.findAllIn(logString).map(x => x.substring(7))
+    re.findAllIn(logString).map(x => x.substring(7)).toList
   }
 
   def getGitTopLevel(path: File): File = {
@@ -74,11 +79,20 @@ object Cmd {
     println("> " + command)
 
     val outputBuffer = ListBuffer[String]()
-    val p = Process(command, cd, "JAVA_HOME" -> "C:\\Program Files\\Java\\jdk1.8.0_131") // SBT likes it like this
-      .run(ProcessLogger(outputBuffer append _)) // start asynchronously
+    val JAVA_HOME = "C:\\Program Files\\Java\\jdk1.8.0_191" // C:\\Program Files\\Java\\jdk1.8.0_131"
+    val p = Process(command, cd,
+      "JAVA_HOME" -> JAVA_HOME, // SBT works best with java 1.8
+      "SBT_OPTS" -> "-Xms512M -Xmx1024M -Xss2M -XX:MaxMetaspaceSize=1024M", // SBT runs out of memory for some larger projects
+      "PATH" -> (sys.env("Path") + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => {
+      outputBuffer append str
+      if (str.contains("Project loading failed: (r)etry, (q)uit, (l)ast, or (i)gnore?")) {
+        // No use to go further
+        //p.destroy()
+      }
+    })) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
-      val exitValue: Int = Await.result(f, duration.Duration(5 * 60, "sec"))
+      val exitValue: Int = Await.result(f, duration.Duration(2 * 60, "sec"))
       if (exitValue != 0)
         println("exitValue: " + exitValue)
 
@@ -119,10 +133,10 @@ object Cmd {
   }
 
 
-  def gitSoftClean(gitTopLevel: File): Unit = {
-    Cmd.execCommandWithTimeout("git clean -f", gitTopLevel) // for untracked files
-    Cmd.execCommandWithTimeout("git checkout .", gitTopLevel) // for modified files
-  }
+  //def gitSoftClean(gitTopLevel: File): Unit = {
+  //  Cmd.execCommandWithTimeout("git clean -f", gitTopLevel) // for untracked files
+  //  Cmd.execCommandWithTimeout("git checkout .", gitTopLevel) // for modified files
+  //}
 
   def clearGitRepo(gitTopLevel: File): Unit = {
     val filesAndFolders: Array[File] = gitTopLevel.listFiles //isFile to find files
@@ -133,7 +147,11 @@ object Cmd {
         deleteRecursively(f)
       }
     }
-    execCommandWithTimeout("git checkout master", gitTopLevel)
+  }
+
+  def gitForceCheckout(commitHash: String, gitTopLevel: File): Unit = {
+    clearGitRepo(gitTopLevel)
+    execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
     execCommandWithTimeout("git checkout .", gitTopLevel)
   }
 }

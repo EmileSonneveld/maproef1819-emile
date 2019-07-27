@@ -22,6 +22,35 @@ class CommitStats {
     //val avg_cc = this.cc_set.sum / this.cc_set.size
     val timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance.getTime)
 
-    this.commitHash + ", " + nop + ", " + noc + ", " + nom + ", " + loc + ", " + cc + ", " + timeStamp + "\n"
+    commitHash + ", " +
+      nop + ", " +
+      noc + ", " +
+      nom + ", " +
+      loc + ", " +
+      cc + ", " +
+      andc + ", " +
+      ahh + ", " +
+      timeStamp + "\n"
+  }
+
+}
+
+object CommitStats {
+
+  /**
+    * This is a lossy conversion
+    */
+  def fromCsvLine(line: Array[String]): CommitStats = {
+    val n = new CommitStats
+    n.commitHash = line(0)
+    //n.nop= line(1)
+    //n.noc= line(2)
+    //n.nom = line(3)
+    n.loc = line(4).toInt
+    n.cc = line(5).toInt
+    //n.andc = line(6).toDouble
+    //n.ahh = line(7).toDouble
+    //timeStamp + "\n"
+    n
   }
 }

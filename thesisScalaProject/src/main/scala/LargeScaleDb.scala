@@ -73,9 +73,19 @@ object LargeScaleDb {
     aggregate
   }
 
+  def hadSed(buildPath: File): Boolean = {
+    var builds = getBuildTry(buildPath)
+    builds.exists(x => x.stdOutput.contains("[success]"))
+  }
+
   def hadSuccesfullBuild(buildPath: File): Boolean = {
     var builds = getBuildTry(buildPath)
     builds.exists(x => x.stdOutput.contains("[success]"))
+  }
+
+  def hadSuccesfullBuild(buildPath: File, buildType: String): Boolean = {
+    var builds = getBuildTry(buildPath)
+    builds.exists(x => x.stdOutput.contains("[success]") && x.buildType == buildType)
   }
 
   def rowToBuildTry(result: ResultSet): BuildTry = {

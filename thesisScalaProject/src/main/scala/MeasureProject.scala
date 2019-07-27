@@ -46,6 +46,7 @@ object MeasureProject {
     svg = svg.replaceAll("%CALLS/NOM%", df.format(commitStats.calls.toDouble / nom))
     svg = svg.replaceAll("%FANOUT/CALLS%", df.format(commitStats.fanout.toDouble / commitStats.calls))
 
+    svg = svg.replaceAll("%commitHash%", commitStats.commitHash)
 
     val redStr = "fill:#ff2700;"
     val greenStr = "fill:#008f00;"
@@ -211,7 +212,8 @@ object MeasureProject {
           case clazz: Defn.Class => {
             val className = MeasureProject.traitOrClassName(clazz)
             if (!className.endsWith("Test") // Naming convension for test classes
-              && !clazz.symbol.isLocal) { // Scala meta doesn't keep semantic information about inline classes :(
+              && !clazz.symbol.isLocal
+              && !clazz.symbol.isNone) { // Scala meta doesn't keep semantic information about inline classes :(
               println("Class: " + clazz.name.value)
 
               var cc = 0
@@ -320,8 +322,12 @@ object MeasureProject {
   */
 
   def getParents(semanticDB: SemanticDB, symbolString: String): Seq[String] = {
-    var symInfo = semanticDB.symbolTable.info(symbolString).get
-    if (!symInfo.signature.isInstanceOf[scala.meta.internal.semanticdb.ClassSignature]) return Seq.empty // Gave an error with "final case class RuntimeException"
+    if (symbolString == "io/x100/colstore/ColumnarStoreSpec#") {
+      println()
+    }
+    var symInfo = semanticDB.getInfo(symbolString)
+    //var symInfo = semanticDB.symbolTable.info(symbolString).get
+    if (symInfo == null || !symInfo.signature.isInstanceOf[scala.meta.internal.semanticdb.ClassSignature]) return Seq.empty // Gave an error with "final case class RuntimeException"
     var parents = symInfo.signature.asInstanceOf[scala.meta.internal.semanticdb.ClassSignature].parents
     parents.map(x => x.asInstanceOf[semanticdb.TypeRef].symbol)
   }
@@ -332,7 +338,7 @@ object MeasureProject {
     var depth = 0
 
     def collectParentsRecurse(currentSymbol: String): Unit = {
-      if (!collectedParents.contains(currentSymbol)) {
+      if (currentSymbol != null && currentSymbol != "" && !collectedParents.contains(currentSymbol)) {
         collectedParents += currentSymbol
         //println(" " * depth + currentSymbol)
 
@@ -388,7 +394,7 @@ object MeasureProject {
             // TODO: Ignore properies from nested classes
             //if (doWeOwnThisClass(decodedPropName))
             {
-              val info = semanticDB.getInfo(termSymbol, sdoc)
+              val info = semanticDB.getInfo(termSymbol.value)
               if (info != null) {
                 if (info.kind == SymbolInformation.Kind.FIELD) {
                   collectedProperties += decodedPropName
@@ -437,7 +443,7 @@ object MeasureProject {
             // TODO: Ignore properies from nested classes
             //if (doWeOwnThisClass(decodedPropName))
             {
-              val info = semanticDB.getInfo(termSymbol, sdoc)
+              val info = semanticDB.getInfo(termSymbol.value)
               if (info != null) {
                 if (info.kind == SymbolInformation.Kind.FIELD) {
                   collectedProperties += decodedPropName
@@ -473,8 +479,8 @@ object MeasureProject {
             // TODO: Check if in parent hiarchy
             // TODO: Ignore properies from nested classes
             //if (doWeOwnThisClass(decodedPropName)){
-            val info = semanticDB.getInfo(termSymbol, sdoc)
-            if (info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
+            val info = semanticDB.getInfo(termSymbol.value)
+            if (info != null && info.kind != SymbolInformation.Kind.OBJECT && info.kind != SymbolInformation.Kind.PACKAGE) {
               collectedProperties += decodedPropName
             }
             //}
