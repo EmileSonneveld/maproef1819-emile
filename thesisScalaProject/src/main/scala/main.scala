@@ -66,7 +66,7 @@ object main extends App {
     if (f.exists())
       calculationsOnProject(f)
     else {
-      println("calculationsOnProjectWrap sbt path not standard")
+      println("calculationsOnProjectWrap sbt path not standard: " + sbtProjectPath.toString)
       //calculationsOnProject(sbtProjectPath)
     }
   }
