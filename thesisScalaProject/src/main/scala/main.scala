@@ -74,7 +74,7 @@ object main extends App {
 
   if (true) {
     var projects = LargeScaleDb.getSuccesfullProjects()
-      .map(x => x.buildPath)
+      .map(x => new File(x.buildpath))
       .distinct
       .filter(x => Utils.normalizeDirectoryPath(x.toString).count(x => x == '/') <= 3) // assume only one project per repository
       .filter(x => new File(Utils.normalizeDirectoryPath(x.toString) + "src\\main\\scala").exists()) // Only do standard paths

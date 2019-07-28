@@ -2,27 +2,21 @@ import java.awt.Color
 import java.io.File
 import java.nio.file._
 
-//#imports
+import Cmd.killProccesHiarchy
+import slickEmileProfile.Tables
+
+import scala.concurrent.{TimeoutException, duration}
+
 // Use H2Profile to connect to an H2 database
-import slick.jdbc.H2Profile.api._
+import slick.jdbc.SQLiteProfile.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-//#imports
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
-import scala.collection.mutable.ArrayBuffer
 
 object LargeScaleCompilation {
 
   def main(args: Array[String]): Unit = {
-    val db = Database.forConfig("h2mem1")
-    try {
-      // val resultFuture: Future[_] = { ... }
-      //Await.result(resultFuture, Duration.Inf)
-      //lines.foreach(Predef.println _)
-    } finally db.close
 
+    LargeScaleDb.insertBuildTry(new File("C:\\Users\\emill\\Desktop\\test.txt"), "out", "type")
     /*
     /*var s_console = Enigma.getConsole("Hellow World!")
     val attrs = new Nothing(Color.BLUE, Color.WHITE)
@@ -53,4 +47,5 @@ object LargeScaleCompilation {
       }
     }*/
   }
+
 }

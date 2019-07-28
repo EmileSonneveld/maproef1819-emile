@@ -1,4 +1,4 @@
-package 
+package slickEmileProfile
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
 object Tables extends {
@@ -14,7 +14,7 @@ trait Tables {
   import slick.jdbc.{GetResult => GR}
 
   /** DDL for all tables. Call .create to execute. */
-  lazy val schema: profile.SchemaDescription = BuildTries.schema
+  lazy val schema: profile.SchemaDescription = BuildTries.schema ++ PyramidStats.schema
   @deprecated("Use .schema instead of .ddl", "3.0")
   def ddl = schema
 
@@ -49,4 +49,51 @@ trait Tables {
   }
   /** Collection-like TableQuery object for table BuildTries */
   lazy val BuildTries = new TableQuery(tag => new BuildTries(tag))
+
+  /** Entity class storing rows of table PyramidStats
+   *  @param project Database column project SqlType(TEXT)
+   *  @param commithash Database column commitHash SqlType(TEXT)
+   *  @param nop Database column nop SqlType(INTEGER)
+   *  @param noc Database column noc SqlType(INTEGER)
+   *  @param nom Database column nom SqlType(INTEGER)
+   *  @param loc Database column loc SqlType(INTEGER)
+   *  @param cc Database column cc SqlType(INTEGER)
+   *  @param andc Database column andc SqlType(NUMERIC)
+   *  @param ahh Database column ahh SqlType(NUMERIC)
+   *  @param timestamp Database column timestamp SqlType(INTEGER) */
+  case class PyramidStatsRow(project: String, commithash: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], timestamp: Int)
+  /** GetResult implicit for fetching PyramidStatsRow objects using plain SQL queries */
+  implicit def GetResultPyramidStatsRow(implicit e0: GR[String], e1: GR[Int], e2: GR[Option[Double]]): GR[PyramidStatsRow] = GR{
+    prs => import prs._
+    PyramidStatsRow.tupled((<<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<[Int]))
+  }
+  /** Table description of table pyramid_stats. Objects of this class serve as prototypes for rows in queries. */
+  class PyramidStats(_tableTag: Tag) extends profile.api.Table[PyramidStatsRow](_tableTag, "pyramid_stats") {
+    def * = (project, commithash, nop, noc, nom, loc, cc, andc, ahh, timestamp) <> (PyramidStatsRow.tupled, PyramidStatsRow.unapply)
+    /** Maps whole row to an option. Useful for outer joins. */
+    def ? = ((Rep.Some(project), Rep.Some(commithash), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), andc, ahh, Rep.Some(timestamp))).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8, _9, _10.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+
+    /** Database column project SqlType(TEXT) */
+    val project: Rep[String] = column[String]("project")
+    /** Database column commitHash SqlType(TEXT) */
+    val commithash: Rep[String] = column[String]("commitHash")
+    /** Database column nop SqlType(INTEGER) */
+    val nop: Rep[Int] = column[Int]("nop")
+    /** Database column noc SqlType(INTEGER) */
+    val noc: Rep[Int] = column[Int]("noc")
+    /** Database column nom SqlType(INTEGER) */
+    val nom: Rep[Int] = column[Int]("nom")
+    /** Database column loc SqlType(INTEGER) */
+    val loc: Rep[Int] = column[Int]("loc")
+    /** Database column cc SqlType(INTEGER) */
+    val cc: Rep[Int] = column[Int]("cc")
+    /** Database column andc SqlType(NUMERIC) */
+    val andc: Rep[Option[Double]] = column[Option[Double]]("andc")
+    /** Database column ahh SqlType(NUMERIC) */
+    val ahh: Rep[Option[Double]] = column[Option[Double]]("ahh")
+    /** Database column timestamp SqlType(INTEGER) */
+    val timestamp: Rep[Int] = column[Int]("timestamp")
+  }
+  /** Collection-like TableQuery object for table PyramidStats */
+  lazy val PyramidStats = new TableQuery(tag => new PyramidStats(tag))
 }

@@ -16,8 +16,8 @@ object SlickBinding {
     val profile = "slick.jdbc.SQLiteProfile"
     val jdbcDriver = applicationConfig.getString("slickEmileProfile.driver") //"org.sqlite.JDBC"
     val url = applicationConfig.getString("slickEmileProfile.url") // "jdbc:sqlite:C:\\Use...st.sqlite"
-    val pkg = ""
-    val outputFolder = "src\\main\\scala\\slickEmileProfile"
+    val pkg = "slickEmileProfile"
+    val outputFolder = "src\\main\\scala"
 
     slick.codegen.SourceCodeGenerator.main(
       Array(profile, jdbcDriver, url, outputFolder, pkg)
