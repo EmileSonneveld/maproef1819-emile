@@ -83,12 +83,14 @@ object main extends App {
       calculationsOnProjectWrap(file)
     }
   } else {
+    calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\HotDraw\\SHotDraw [Scala]"))
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\scalafixtemplate"))
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\testScala"))
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\maproef1819-emile\\thesisScalaProject")) // dangerous meta stuff
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\CTT-editor"))
-    //calculationsOnProjectWrap(new File("D:\\github_download\\scalameta"))
-    calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\HotDraw\\SHotDraw [Scala]"))
+    calculationsOnProjectWrap(new File("D:\\github_download\\CTT-editor"))
+    calculationsOnProjectWrap(new File("D:\\github_download\\scalameta"))
+    calculationsOnProjectWrap(new File("D:\\github_download\\scala-async"))
     calculationsOnProjectWrap(new File("D:\\github_download\\MoVE"))
     calculationsOnProjectWrap(new File("D:\\github_download\\SHotDraw\\SHotDraw"))
     calculationsOnProjectWrap(new File("D:\\github_download\\100x.io"))
