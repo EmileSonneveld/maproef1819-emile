@@ -21,6 +21,7 @@ object Cmd {
     var tmp = path.toString
     tmp = tmp.replace("C:\\Users\\emill\\dev\\", "")
     tmp = tmp.replace("D:\\github_download\\", "")
+    tmp = tmp.replace("C:\\github_download\\", "")
     tmp = tmp.replace("C:\\Users\\emill\\Desktop\\github_download\\", "")
     tmp = tmp.replace("D:\\dev\\", "")
     var firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))

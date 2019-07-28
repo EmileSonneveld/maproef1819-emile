@@ -2,15 +2,33 @@ import java.awt.Color
 import java.io.File
 import java.nio.file._
 
+//#imports
+// Use H2Profile to connect to an H2 database
+import slick.jdbc.H2Profile.api._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+//#imports
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+import scala.collection.mutable.ArrayBuffer
+
 object LargeScaleCompilation {
 
   def main(args: Array[String]): Unit = {
+    val db = Database.forConfig("h2mem1")
+    try {
+      // val resultFuture: Future[_] = { ... }
+      //Await.result(resultFuture, Duration.Inf)
+      //lines.foreach(Predef.println _)
+    } finally db.close
 
+    /*
     /*var s_console = Enigma.getConsole("Hellow World!")
     val attrs = new Nothing(Color.BLUE, Color.WHITE)
     s_console.setTextAttributes(attrs)
     System.out.println("Hello World!")*/
-    var github_path = new File("D:/github_download")
+    var github_path = new File("C:/github_download")
     //var projects = Utils.getFoldersFromDirectory(github_path)
     //var projects = List(new File("D:\\github_download\\100x.io"))
     var projects = Utils.recursiveListFilesWithName(github_path, "build.sbt")
@@ -33,6 +51,6 @@ object LargeScaleCompilation {
       } else {
         println("Skipped: " + p)
       }
-    }
+    }*/
   }
 }

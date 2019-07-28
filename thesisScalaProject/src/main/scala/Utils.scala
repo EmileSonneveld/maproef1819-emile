@@ -38,6 +38,7 @@ object Utils {
       // Only make leading directories in places we know
       if (dir.contains("C:/Users/emill/dev/")
         || dir.contains("D:/github_download/")
+        || dir.contains("C:/github_download/")
         || dir.contains("D:/dev/")
         || dir.contains("C:/Users/emill/Dropbox/slimmerWorden/2018-2019-Semester2/THESIS/out/")) {
         directory.mkdirs
