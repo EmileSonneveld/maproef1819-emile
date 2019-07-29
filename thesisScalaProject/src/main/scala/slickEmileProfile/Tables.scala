@@ -58,14 +58,14 @@ trait Tables {
    *  @param nom Database column nom SqlType(INTEGER)
    *  @param loc Database column loc SqlType(INTEGER)
    *  @param cc Database column cc SqlType(INTEGER)
-   *  @param andc Database column andc SqlType(NUMERIC)
-   *  @param ahh Database column ahh SqlType(NUMERIC)
-   *  @param timestamp Database column timestamp SqlType(INTEGER) */
-  case class PyramidStatsRow(project: String, commithash: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], timestamp: Int)
+   *  @param andc Database column andc SqlType(REAL)
+   *  @param ahh Database column ahh SqlType(REAL)
+   *  @param timestamp Database column timestamp SqlType(TEXT) */
+  case class PyramidStatsRow(project: String, commithash: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], timestamp: String)
   /** GetResult implicit for fetching PyramidStatsRow objects using plain SQL queries */
   implicit def GetResultPyramidStatsRow(implicit e0: GR[String], e1: GR[Int], e2: GR[Option[Double]]): GR[PyramidStatsRow] = GR{
     prs => import prs._
-    PyramidStatsRow.tupled((<<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<[Int]))
+    PyramidStatsRow.tupled((<<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<[String]))
   }
   /** Table description of table pyramid_stats. Objects of this class serve as prototypes for rows in queries. */
   class PyramidStats(_tableTag: Tag) extends profile.api.Table[PyramidStatsRow](_tableTag, "pyramid_stats") {
@@ -87,12 +87,12 @@ trait Tables {
     val loc: Rep[Int] = column[Int]("loc")
     /** Database column cc SqlType(INTEGER) */
     val cc: Rep[Int] = column[Int]("cc")
-    /** Database column andc SqlType(NUMERIC) */
+    /** Database column andc SqlType(REAL) */
     val andc: Rep[Option[Double]] = column[Option[Double]]("andc")
-    /** Database column ahh SqlType(NUMERIC) */
+    /** Database column ahh SqlType(REAL) */
     val ahh: Rep[Option[Double]] = column[Option[Double]]("ahh")
-    /** Database column timestamp SqlType(INTEGER) */
-    val timestamp: Rep[Int] = column[Int]("timestamp")
+    /** Database column timestamp SqlType(TEXT) */
+    val timestamp: Rep[String] = column[String]("timestamp")
   }
   /** Collection-like TableQuery object for table PyramidStats */
   lazy val PyramidStats = new TableQuery(tag => new PyramidStats(tag))

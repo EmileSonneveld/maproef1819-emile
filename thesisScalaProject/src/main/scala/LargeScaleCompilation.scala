@@ -16,8 +16,6 @@ object LargeScaleCompilation {
 
   def main(args: Array[String]): Unit = {
 
-    LargeScaleDb.insertBuildTry(new File("C:\\Users\\emill\\Desktop\\test.txt"), "out", "type")
-    /*
     /*var s_console = Enigma.getConsole("Hellow World!")
     val attrs = new Nothing(Color.BLUE, Color.WHITE)
     s_console.setTextAttributes(attrs)
@@ -33,7 +31,7 @@ object LargeScaleCompilation {
 
     for (p <- projects) {
       if (!LargeScaleDb.hadSuccesfullBuild(p)) {
-      //if (LargeScaleDb.getBuildTry(p).length == 0) {
+        //if (LargeScaleDb.getBuildTry(p).length == 0) {
         println("Compiling: " + p)
         //Cmd.execCommand("cd " + p )//+ " && java -jar \"C:/Program Files (x86)/sbt/bin/sbt-launch.jar\"")
         //var gitTopLevel = Cmd.getGitTopLevel(p)
@@ -45,7 +43,7 @@ object LargeScaleCompilation {
       } else {
         println("Skipped: " + p)
       }
-    }*/
+    }
   }
 
 }

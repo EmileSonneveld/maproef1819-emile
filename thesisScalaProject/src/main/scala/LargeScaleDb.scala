@@ -16,7 +16,8 @@ object LargeScaleDb {
   val db = Database.forConfig("slickEmileProfile")
   // Should call this if database must close: finally db.close
 
-  val build_tries: TableQuery[Tables.BuildTries] = TableQuery[Tables.BuildTries]
+  val build_tries = TableQuery[Tables.BuildTries]
+  val pyramid_stats = TableQuery[Tables.PyramidStats]
 
   //private var conn: Connection = _
   //try {
@@ -54,6 +55,18 @@ object LargeScaleDb {
   def hadSuccesfullBuild(buildPath: File, buildType: String): Boolean = {
     var builds = getBuildTry(buildPath)
     builds.exists(x => x.stdoutput.contains("[success]") && x.buildtype == buildType)
+  }
+
+  def getPyramidStatsForProj(project: String): Seq[Tables.PyramidStatsRow] = {
+    var query = pyramid_stats.filter(_.project.like(project))
+    var f = db.run(query.result)
+    Await.result(f, duration.Duration(30, "sec"))
+  }
+
+  def insertPyramidStats(row: Tables.PyramidStatsRow): Unit = {
+    var query = (pyramid_stats += row)
+    var f = db.run(query)
+    Await.result(f, duration.Duration(5, "sec"))
   }
 }
 

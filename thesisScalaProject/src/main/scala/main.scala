@@ -20,20 +20,20 @@ object main extends App {
       Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
     }
     else {
-      val csvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\csv_log\\" + projectName + ".csv"
-      val result = Utils.parseCsvFromFile(new File(csvPath))
-      val hashesFromCsv: Seq[String] = result.map(x => CommitStats.fromCsvLine(x).commitHash)
+      val hashesFromDb =
+        LargeScaleDb.getPyramidStatsForProj(projectName)
+          .map(_.commithash)
 
       Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
       execCommandWithTimeout("git checkout master", gitTopLevel) // To get a good git log
 
       var hashes = Cmd.getCommitHashesFromLog(gitTopLevel)
-      //hashes = hashes.slice(0, Math.min(2, hashes.length))
+      hashes = hashes.slice(0, Math.min(2, hashes.length))
       //hashes = List("821b2307a02cf68fd608d098be807876fd320563")
       for (hash <- hashes) {
         var commitStats: CommitStats = null
         try {
-          if (!hashesFromCsv.contains(hash)) {
+          if (!hashesFromDb.contains(hash)) {
             Cmd.gitForceCheckout(hash, gitTopLevel)
 
             println(hash)
@@ -52,10 +52,9 @@ object main extends App {
         }
 
         if (commitStats != null) {
+          commitStats.projectName = projectName
           commitStats.commitHash = hash
-
-          val str = projectName + ", " + commitStats.toCsvLine
-          Utils.appendToFile(csvPath, str)
+          LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats())
         }
       }
     }
@@ -73,7 +72,7 @@ object main extends App {
 
 
   if (true) {
-    var projects = LargeScaleDb.getSuccesfullProjects()
+    var projects = LargeScaleDb.getSuccesfullProjects
       .map(x => new File(x.buildpath))
       .distinct
       .filter(x => Utils.normalizeDirectoryPath(x.toString).count(x => x == '/') <= 3) // assume only one project per repository
