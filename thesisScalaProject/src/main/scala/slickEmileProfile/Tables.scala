@@ -51,8 +51,10 @@ trait Tables {
   lazy val BuildTries = new TableQuery(tag => new BuildTries(tag))
 
   /** Entity class storing rows of table PyramidStats
+   *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
    *  @param project Database column project SqlType(TEXT)
    *  @param commithash Database column commitHash SqlType(TEXT)
+   *  @param timestamp Database column timestamp SqlType(TEXT)
    *  @param nop Database column nop SqlType(INTEGER)
    *  @param noc Database column noc SqlType(INTEGER)
    *  @param nom Database column nom SqlType(INTEGER)
@@ -60,23 +62,28 @@ trait Tables {
    *  @param cc Database column cc SqlType(INTEGER)
    *  @param andc Database column andc SqlType(REAL)
    *  @param ahh Database column ahh SqlType(REAL)
-   *  @param timestamp Database column timestamp SqlType(TEXT) */
-  case class PyramidStatsRow(project: String, commithash: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], timestamp: String)
+   *  @param calls Database column calls SqlType(INTEGER)
+   *  @param fanout Database column fanout SqlType(INTEGER) */
+  case class PyramidStatsRow(id: Int, project: String, commithash: String, timestamp: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], calls: Option[Int], fanout: Option[Int])
   /** GetResult implicit for fetching PyramidStatsRow objects using plain SQL queries */
-  implicit def GetResultPyramidStatsRow(implicit e0: GR[String], e1: GR[Int], e2: GR[Option[Double]]): GR[PyramidStatsRow] = GR{
+  implicit def GetResultPyramidStatsRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[Double]], e3: GR[Option[Int]]): GR[PyramidStatsRow] = GR{
     prs => import prs._
-    PyramidStatsRow.tupled((<<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<[String]))
+    PyramidStatsRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<?[Int], <<?[Int]))
   }
   /** Table description of table pyramid_stats. Objects of this class serve as prototypes for rows in queries. */
   class PyramidStats(_tableTag: Tag) extends profile.api.Table[PyramidStatsRow](_tableTag, "pyramid_stats") {
-    def * = (project, commithash, nop, noc, nom, loc, cc, andc, ahh, timestamp) <> (PyramidStatsRow.tupled, PyramidStatsRow.unapply)
+    def * = (id, project, commithash, timestamp, nop, noc, nom, loc, cc, andc, ahh, calls, fanout) <> (PyramidStatsRow.tupled, PyramidStatsRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(project), Rep.Some(commithash), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), andc, ahh, Rep.Some(timestamp))).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8, _9, _10.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(commithash), Rep.Some(timestamp), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), andc, ahh, calls, fanout)).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10, _11, _12, _13)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
+    /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
     /** Database column project SqlType(TEXT) */
     val project: Rep[String] = column[String]("project")
     /** Database column commitHash SqlType(TEXT) */
     val commithash: Rep[String] = column[String]("commitHash")
+    /** Database column timestamp SqlType(TEXT) */
+    val timestamp: Rep[String] = column[String]("timestamp")
     /** Database column nop SqlType(INTEGER) */
     val nop: Rep[Int] = column[Int]("nop")
     /** Database column noc SqlType(INTEGER) */
@@ -91,8 +98,10 @@ trait Tables {
     val andc: Rep[Option[Double]] = column[Option[Double]]("andc")
     /** Database column ahh SqlType(REAL) */
     val ahh: Rep[Option[Double]] = column[Option[Double]]("ahh")
-    /** Database column timestamp SqlType(TEXT) */
-    val timestamp: Rep[String] = column[String]("timestamp")
+    /** Database column calls SqlType(INTEGER) */
+    val calls: Rep[Option[Int]] = column[Option[Int]]("calls")
+    /** Database column fanout SqlType(INTEGER) */
+    val fanout: Rep[Option[Int]] = column[Option[Int]]("fanout")
   }
   /** Collection-like TableQuery object for table PyramidStats */
   lazy val PyramidStats = new TableQuery(tag => new PyramidStats(tag))

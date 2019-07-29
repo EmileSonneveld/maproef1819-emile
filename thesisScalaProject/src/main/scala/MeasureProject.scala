@@ -101,7 +101,7 @@ object MeasureProject {
     val functionCollection = tree.collect {
       case q: Defn.Def => q.name
     }
-    functionCollection.foreach(x => commitStats.nom_set += x.toString)
+    functionCollection.foreach(x => commitStats.nom_set += x.toString) // TODO: verify if no duplicates
 
 
     commitStats.loc += tree.toString.count(x => x == '\n')
@@ -197,7 +197,7 @@ object MeasureProject {
         }
       }
 
-      if (true) { // Check design smells
+      if (false) { // Check design smells
         doc.sdoc.tree.collect {
 
           case clazz: Defn.Object => {

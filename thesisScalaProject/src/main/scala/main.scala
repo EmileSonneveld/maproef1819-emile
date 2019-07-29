@@ -33,7 +33,7 @@ object main extends App {
       for (hash <- hashes) {
         var commitStats: CommitStats = null
         try {
-          if (!hashesFromDb.contains(hash)) {
+          if (!hashesFromDb.contains(hash) || LargeScaleDb.commitWorthRetaking(hash)) {
             Cmd.gitForceCheckout(hash, gitTopLevel)
 
             println(hash)

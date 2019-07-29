@@ -5,6 +5,7 @@ import java.sql._
 import java.time.ZonedDateTime
 import java.util
 
+import slick.ast.LiteralNode
 import slick.jdbc.SQLiteProfile.api._
 import slickEmileProfile.Tables
 import slickEmileProfile.Tables.BuildTriesRow
@@ -61,6 +62,41 @@ object LargeScaleDb {
     var query = pyramid_stats.filter(_.project.like(project))
     var f = db.run(query.result)
     Await.result(f, duration.Duration(30, "sec"))
+  }
+
+  def getDistinctCommits() = {
+    var query = pyramid_stats.map(_.commithash).distinct
+    var f = db.run(query.result)
+    Await.result(f, duration.Duration(30, "sec"))
+  }
+
+  def getCommitRows(commitHash: String): Seq[Tables.PyramidStatsRow] = {
+    var query = pyramid_stats.filter(_.commithash === commitHash)
+    var f = db.run(query.result)
+    Await.result(f, duration.Duration(30, "sec"))
+  }
+
+  def removePyramidRow(id: Int) = {
+    var query = pyramid_stats.filter(_.id === id).delete
+    var f = db.run(query)
+    Await.result(f, duration.Duration(30, "sec"))
+  }
+
+  def commitWorthRetaking(commitHash: String): Boolean = {
+    {
+      var query = pyramid_stats.filter(_.commithash.like(commitHash)).filter(_.noc === 0).filter(_.cc === 0)
+      var f = db.run(query.result)
+      val res = Await.result(f, duration.Duration(30, "sec"))
+      if (res.length > 0)
+        return false // We already got a failed try, not worth repeating
+    }
+    {
+      var query = pyramid_stats.filter(_.commithash.like(commitHash)) // Should best filter on NULL here
+    var f = db.run(query.result)
+      val res = Await.result(f, duration.Duration(30, "sec"))
+      val res2 = res.filter(x => x.calls != Option.empty && x.ahh != Option.empty)
+      res2.length == 0 // Not yet full result, so worth repeating!
+    }
   }
 
   def insertPyramidStats(row: Tables.PyramidStatsRow): Unit = {
