@@ -22,6 +22,10 @@ object Utils {
       .replace("\r", "")
   }
 
+  def readFile(path: File): String = {
+    scala.io.Source.fromFile(path).getLines.mkString("\n")
+  }
+
   def readFile(path: String): String = {
     scala.io.Source.fromFile(path).getLines.mkString("\n")
   }
@@ -48,13 +52,36 @@ object Utils {
     Files.write(path, content.getBytes(StandardCharsets.UTF_8))
   }
 
-  def recursiveListFilesWithName(f: File, name: String, currentDepth: Int = 0): Array[File] = {
+  def recursiveGetFoldersThatContainFile(f: File, name: String, currentDepth: Int = 0): Array[File] = {
     if (currentDepth >= 3) return Array()
     val childs = f.listFiles()
-    var these: Array[File] = childs.filter(_.isDirectory).flatMap(ff => recursiveListFilesWithName(ff, name, currentDepth + 1))
+    var these: Array[File] = childs.filter(_.isDirectory).flatMap(ff => recursiveGetFoldersThatContainFile(ff, name, currentDepth + 1))
     if (f.listFiles.exists(a => a.getName.endsWith(name)))
       these :+= f
     these
+  }
+
+  def recursiveGetFiles(folder: File, name: String): ListBuffer[File] = {
+    var currentDepth: Int = 0
+
+    var results = new ListBuffer[File]
+
+    def itteration(folder: File): Unit = {
+      val childs = folder.listFiles()
+      if (currentDepth <= 12) {
+        val childFolders = childs.filter(_.isDirectory)
+        currentDepth += 1
+        for (childFolder <- childFolders) {
+          itteration(childFolder)
+        }
+        currentDepth -= 1
+      }
+      val childFiles = childs.filter(_.isFile)
+      results ++= childFiles.filter(_.getName.endsWith(name))
+    }
+
+    itteration(folder)
+    results
   }
 
   def getFilesFromDirectory(d: File): scala.List[File] = {
@@ -97,22 +124,23 @@ object Utils {
     val these = f.listFiles()
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
-/*
-  def parseCsvFromFile(file: File): immutable.Seq[Array[String]] = {
-    var result = scala.List[Array[String]]()
-    if (file.exists) {
-      val bufferedSource = scala.io.Source.fromFile(file)
-      for (line <- bufferedSource.getLines) {
-        if (line != "") {
-          val cols: Array[String] = line.split(",").map(_.trim)
-          result = cols :: result
+
+  /*
+    def parseCsvFromFile(file: File): immutable.Seq[Array[String]] = {
+      var result = scala.List[Array[String]]()
+      if (file.exists) {
+        val bufferedSource = scala.io.Source.fromFile(file)
+        for (line <- bufferedSource.getLines) {
+          if (line != "") {
+            val cols: Array[String] = line.split(",").map(_.trim)
+            result = cols :: result
+          }
         }
+        bufferedSource.close
       }
-      bufferedSource.close
+      return result
     }
-    return result
-  }
-*/
+  */
   private val LEAVES = util.Arrays.asList(classOf[Boolean], classOf[Character], classOf[Byte], classOf[Short], classOf[Integer], classOf[Long], classOf[Float], classOf[Double], classOf[Void], classOf[String])
 
   def isValueType(clazz: Class[_]): Boolean = {

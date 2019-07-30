@@ -23,7 +23,7 @@ object LargeScaleCompilation {
     var github_path = new File("C:/github_download")
     //var projects = Utils.getFoldersFromDirectory(github_path)
     //var projects = List(new File("D:\\github_download\\100x.io"))
-    var projects = Utils.recursiveListFilesWithName(github_path, "build.sbt")
+    var projects = Utils.recursiveGetFoldersThatContainFile(github_path, "build.sbt")
     //var projects = LargeScaleDb.getSuccesfullProjects().map(x => x.buildPath).distinct
     println("Will examine following paths:")
     //println(projects.mkString("\n"))

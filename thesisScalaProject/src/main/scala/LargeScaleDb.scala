@@ -104,6 +104,13 @@ object LargeScaleDb {
     var f = db.run(query)
     Await.result(f, duration.Duration(5, "sec"))
   }
+
+  def updatePyramidStats(row: Tables.PyramidStatsRow): Unit = {
+    val res = pyramid_stats.filter(_.id === row.id)
+    val action = res.update(row)
+    var f = db.run(action)
+    Await.result(f, duration.Duration(5, "sec"))
+  }
 }
 
 

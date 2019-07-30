@@ -90,9 +90,6 @@ class SemanticDB(val projectPath: File) {
     documents
   }
 
-  def getFromSymbolTable(tree: Tree, sdoc: SemanticDocument): Symbol = {
-    sdoc.internal.symbol(tree)
-  }
 
   def getInfo(symString: String): SymbolInformation = {
     try {
@@ -138,5 +135,15 @@ class SemanticDB(val projectPath: File) {
       }
     }
     return null
+  }
+}
+
+object SemanticDB {
+
+  /**
+    * Proxy to avoid namespace issue
+    */
+  def getFromSymbolTable(tree: Tree, sdoc: SemanticDocument): Symbol = {
+    sdoc.internal.symbol(tree)
   }
 }

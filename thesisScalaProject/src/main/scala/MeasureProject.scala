@@ -81,35 +81,39 @@ object MeasureProject {
   }
 
 
-  private def consumeFile(commitStats: CommitStats, sDb: SemanticDB, sdoc: SemanticDocument): Unit = {
-    val tree = sdoc.tree
+  private def consumeFile(commitStats: CommitStats, sdoc: SemanticDocument): Unit = {
 
-
-    val packageCollection = tree.collect {
+    val packageCollection = sdoc.tree.collect {
       case q: Pkg => q.name
     }
     packageCollection.foreach(x => commitStats.nop_set += x.toString)
 
 
-    val classCollection = tree.collect {
+    val classCollection = sdoc.tree.collect {
       case q: Defn.Class => q.name
       case q: Defn.Object => q.name
+      //case q: Defn.Trait => q.name // TODO: Yes/No?
     }
     classCollection.foreach(x => commitStats.noc_set += x.toString)
 
 
-    val functionCollection = tree.collect {
-      case q: Defn.Def => q.name
+    sdoc.tree.collect {
+      case q: Defn.Def =>
+        val symb = SemanticDB.getFromSymbolTable(q, sdoc)
+        //q.name
+        if (!symb.isLocal && !symb.isNone)
+          commitStats.nom_set += symb.value
+      //symb.value
     }
-    functionCollection.foreach(x => commitStats.nom_set += x.toString) // TODO: verify if no duplicates
+    //functionCollection.foreach(x => commitStats.nom_set += x.toString) // TODO: verify if no duplicates
 
 
-    commitStats.loc += tree.toString.count(x => x == '\n')
+    commitStats.loc += sdoc.tree.toString.count(x => x == '\n')
 
 
     var uniqueCallsPerFunction = 0
     var uniqueCalledClassesPerFunction = 0
-    tree.collect {
+    sdoc.tree.collect {
       case clazz: Defn.Def =>
         var calls = Set.empty[String]
         var classes = Set.empty[String]
@@ -119,7 +123,7 @@ object MeasureProject {
           case a: Term.Apply => {
             implicit var implicit_sdoc: SemanticDocument = sdoc
 
-            var s = sDb.getFromSymbolTable(a.fun, sdoc)
+            var s = SemanticDB.getFromSymbolTable(a.fun, sdoc)
 
             try {
               //var symInfo = sDb.symbolTable.info(s.value.toString)
@@ -152,6 +156,10 @@ object MeasureProject {
   def doStatsForProject(projectPath: File, projectName: String): CommitStats = {
     val commitStats = new CommitStats
 
+    commitStats.projectName = projectName
+    commitStats.powershell_LOC = Cmd.getPowershellLoc(projectPath)
+    commitStats.regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
+
     var scalaRoot = Utils.normalizeDirectoryPath(projectPath.getAbsolutePath)
     if (scalaRoot.endsWith("src/main/scala/"))
       scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/scala/".length)
@@ -176,7 +184,7 @@ object MeasureProject {
       println("\n Doc: " + doc.tdoc.uri)
 
       if (true) {
-        consumeFile(commitStats, semanticDB, doc.sdoc)
+        consumeFile(commitStats, doc.sdoc)
       }
 
       if (true) { // CC and Code Flow Graph
@@ -467,12 +475,12 @@ object MeasureProject {
 
   // Shares many LOC with externalProperties
   def localProperties(clazz: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    val cSymbol = semanticDB.getFromSymbolTable(clazz, sdoc)
+    val cSymbol = SemanticDB.getFromSymbolTable(clazz, sdoc)
     var collectedProperties: Set[String] = Set.empty[String]
 
     d.body.collect({
       case term: Term.Name => {
-        val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
+        val termSymbol = SemanticDB.getFromSymbolTable(term, sdoc)
         if (!termSymbol.isNone) {
           if (termSymbol.isLocal) {
             val decodedPropName = termSymbol.value
@@ -506,7 +514,7 @@ object MeasureProject {
   def calculateCohesion(clazz: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
 
     implicit val implicit_ksjndflidbfkurhgb: SemanticDocument = sdoc
-    val cSymbol = semanticDB.getFromSymbolTable(clazz, sdoc)
+    val cSymbol = SemanticDB.getFromSymbolTable(clazz, sdoc)
 
 
     val className = MeasureProject.traitOrClassName(clazz)
@@ -529,7 +537,7 @@ object MeasureProject {
     var methods = ListBuffer.empty[MethodNodeWithUsages]
 
     def collectDefn(d: Defn.Def) = {
-      val dSymbol = semanticDB.getFromSymbolTable(d, sdoc)
+      val dSymbol = SemanticDB.getFromSymbolTable(d, sdoc)
       if (!dSymbol.isLocal) {
         var mNode = new MethodNodeWithUsages(dSymbol.value)
 
@@ -595,5 +603,16 @@ object MeasureProject {
       }
     }
     pairs
+  }
+
+  def getRegexDefMatchesInFolder(projectPath: File): Int = {
+    var regexDefMatches = 0
+    var scalaFiles = Utils.recursiveGetFiles(projectPath, ".scala")
+    for (file <- scalaFiles) {
+      var content = Utils.readFile(file)
+      var matches = """\bdef \w""".r.findAllIn(content)
+      regexDefMatches += matches.length
+    }
+    regexDefMatches
   }
 }

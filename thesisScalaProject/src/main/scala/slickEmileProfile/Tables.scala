@@ -63,18 +63,20 @@ trait Tables {
    *  @param andc Database column andc SqlType(REAL)
    *  @param ahh Database column ahh SqlType(REAL)
    *  @param calls Database column calls SqlType(INTEGER)
-   *  @param fanout Database column fanout SqlType(INTEGER) */
-  case class PyramidStatsRow(id: Int, project: String, commithash: String, timestamp: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], calls: Option[Int], fanout: Option[Int])
+   *  @param fanout Database column fanout SqlType(INTEGER)
+   *  @param powershellLoc Database column powershell_LOC SqlType(INTEGER)
+   *  @param regexdefmatches Database column regexDefMatches SqlType(INTEGER) */
+  case class PyramidStatsRow(id: Int, project: String, commithash: String, timestamp: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], calls: Option[Int], fanout: Option[Int], powershellLoc: Option[Int], regexdefmatches: Option[Int])
   /** GetResult implicit for fetching PyramidStatsRow objects using plain SQL queries */
   implicit def GetResultPyramidStatsRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[Double]], e3: GR[Option[Int]]): GR[PyramidStatsRow] = GR{
     prs => import prs._
-    PyramidStatsRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<?[Int], <<?[Int]))
+    PyramidStatsRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<?[Int], <<?[Int], <<?[Int], <<?[Int]))
   }
   /** Table description of table pyramid_stats. Objects of this class serve as prototypes for rows in queries. */
   class PyramidStats(_tableTag: Tag) extends profile.api.Table[PyramidStatsRow](_tableTag, "pyramid_stats") {
-    def * = (id, project, commithash, timestamp, nop, noc, nom, loc, cc, andc, ahh, calls, fanout) <> (PyramidStatsRow.tupled, PyramidStatsRow.unapply)
+    def * = (id, project, commithash, timestamp, nop, noc, nom, loc, cc, andc, ahh, calls, fanout, powershellLoc, regexdefmatches) <> (PyramidStatsRow.tupled, PyramidStatsRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(commithash), Rep.Some(timestamp), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), andc, ahh, calls, fanout)).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10, _11, _12, _13)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(commithash), Rep.Some(timestamp), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), andc, ahh, calls, fanout, powershellLoc, regexdefmatches)).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10, _11, _12, _13, _14, _15)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -102,6 +104,10 @@ trait Tables {
     val calls: Rep[Option[Int]] = column[Option[Int]]("calls")
     /** Database column fanout SqlType(INTEGER) */
     val fanout: Rep[Option[Int]] = column[Option[Int]]("fanout")
+    /** Database column powershell_LOC SqlType(INTEGER) */
+    val powershellLoc: Rep[Option[Int]] = column[Option[Int]]("powershell_LOC")
+    /** Database column regexDefMatches SqlType(INTEGER) */
+    val regexdefmatches: Rep[Option[Int]] = column[Option[Int]]("regexDefMatches")
   }
   /** Collection-like TableQuery object for table PyramidStats */
   lazy val PyramidStats = new TableQuery(tag => new PyramidStats(tag))

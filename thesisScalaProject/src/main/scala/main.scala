@@ -1,7 +1,6 @@
 import java.io.File
 import java.nio.file._
 
-import Cmd.execCommandWithTimeout
 
 import scala.language.postfixOps
 
@@ -9,23 +8,52 @@ object main extends App {
 
   def calculationsOnProject(projectPath: File): Any = {
     var gitTopLevel = Cmd.getGitTopLevel(projectPath)
-
     val projectName = Cmd.getProjectName(projectPath.toPath)
 
+    /*
     if (false) {
+      val commitHash = Cmd.getCurrentCommitHash(projectPath)
+      var rows = LargeScaleDb.getCommitRows(commitHash)
+        .filter(_.loc != Option.empty) // Not worth, becouse nothing to compare with
+        .filter(x => x.powershellLoc == Option.empty || x.regexdefmatches == Option.empty)
+      if (rows.nonEmpty) {
+        Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
+        Cmd.execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
+        Cmd.execCommandWithTimeout("git checkout .", gitTopLevel)
+
+        val powershell_LOC = Cmd.getPowershellLoc(projectPath)
+        val regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
+        for (row <- rows) {
+          val newRow = row
+            .copy(powershellLoc = Option(powershell_LOC))
+            .copy(regexdefmatches = Option(regexDefMatches))
+          LargeScaleDb.updatePyramidStats(newRow)
+        }
+      }
+    }
+    else */
+    if (true) {
+      val commitHash = Cmd.getCurrentCommitHash(projectPath)
+      Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
+      Cmd.execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
+      Cmd.execCommandWithTimeout("git checkout .", gitTopLevel)
+
       var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
-      commitStats.commitHash = Cmd.getCurrentCommitHash(projectPath)
+      commitStats.commitHash = commitHash
+      commitStats.projectName += "_NOM_CORRELATION_TEST"
+      println(commitStats.nom_set)
       var svg = Utils.readFile("..\\svg\\pyramid.svg")
       svg = MeasureProject.fillInPyramidTemplate(svg, commitStats, projectName)
-      Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
+      //Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
+      LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
     }
     else {
       val hashesFromDb =
         LargeScaleDb.getPyramidStatsForProj(projectName)
-          .map(_.commithash)
+      //.map(_.commithash)
 
       Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
-      execCommandWithTimeout("git checkout master", gitTopLevel) // To get a good git log
+      Cmd.execCommandWithTimeout("git checkout master", gitTopLevel) // To get a good git log
 
       var hashes = Cmd.getCommitHashesFromLog(gitTopLevel)
       hashes = hashes.slice(0, Math.min(2, hashes.length))
@@ -33,7 +61,7 @@ object main extends App {
       for (hash <- hashes) {
         var commitStats: CommitStats = null
         try {
-          if (!hashesFromDb.contains(hash) || LargeScaleDb.commitWorthRetaking(hash)) {
+          if (!hashesFromDb.exists(_.commithash == hash) || LargeScaleDb.commitWorthRetaking(hash)) {
             Cmd.gitForceCheckout(hash, gitTopLevel)
 
             println(hash)
@@ -54,7 +82,7 @@ object main extends App {
         if (commitStats != null) {
           commitStats.projectName = projectName
           commitStats.commitHash = hash
-          LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats())
+          LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
         }
       }
     }
@@ -82,16 +110,16 @@ object main extends App {
       calculationsOnProjectWrap(file)
     }
   } else {
-    calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\HotDraw\\SHotDraw [Scala]"))
+    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\HotDraw\\SHotDraw [Scala]"))
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\scalafixtemplate"))
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\testScala"))
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\maproef1819-emile\\thesisScalaProject")) // dangerous meta stuff
     //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\CTT-editor"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\scalameta"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\scala-async"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\100x.io"))
+    calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\100x.io"))
   }
 }

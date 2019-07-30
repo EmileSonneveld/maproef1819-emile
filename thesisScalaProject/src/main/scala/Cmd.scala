@@ -40,6 +40,15 @@ object Cmd {
     re.findAllIn(logString).map(x => x.substring(7)).toList
   }
 
+  def getPowershellLoc(projectPath: File): Int = {
+    var result = Cmd.execCommandWithTimeout("powershell \"dir -Recurse *.scala | Get-Content | Measure-Object -Line\"", projectPath)
+    var linesPos = result.indexOf("Lines")
+    result = result.substring(linesPos)
+
+    val re = """[0-9]+""".r
+    re.findFirstIn(result).get.toInt
+  }
+
   def getGitTopLevel(path: File): File = {
     val res = execCommandWithTimeout("git rev-parse --show-toplevel", path).trim
     new File(res)
