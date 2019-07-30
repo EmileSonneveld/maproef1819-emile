@@ -40,11 +40,11 @@ object main extends App {
 
       var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
       commitStats.commitHash = commitHash
-      commitStats.projectName += "_NOM_CORRELATION_TEST"
+      commitStats.projectName += "_BETTER_CALLS"
       println(commitStats.nom_set)
       var svg = Utils.readFile("..\\svg\\pyramid.svg")
       svg = MeasureProject.fillInPyramidTemplate(svg, commitStats, projectName)
-      //Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
+      Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
       LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
     }
     else {
@@ -110,12 +110,9 @@ object main extends App {
       calculationsOnProjectWrap(file)
     }
   } else {
-    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\HotDraw\\SHotDraw [Scala]"))
-    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\scalafixtemplate"))
-    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\testScala"))
-    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\maproef1819-emile\\thesisScalaProject")) // dangerous meta stuff
-    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\CTT-editor"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
+    // Don't mess in the /dev folder!
+    calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))

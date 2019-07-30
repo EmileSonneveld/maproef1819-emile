@@ -81,7 +81,7 @@ object MeasureProject {
   }
 
 
-  private def consumeFile(commitStats: CommitStats, sdoc: SemanticDocument): Unit = {
+  private def consumeFile(commitStats: CommitStats, sdoc: SemanticDocument, semanticDB: SemanticDB): Unit = {
 
     val packageCollection = sdoc.tree.collect {
       case q: Pkg => q.name
@@ -97,51 +97,64 @@ object MeasureProject {
     classCollection.foreach(x => commitStats.noc_set += x.toString)
 
 
-    sdoc.tree.collect {
-      case q: Defn.Def =>
-        val symb = SemanticDB.getFromSymbolTable(q, sdoc)
-        //q.name
-        if (!symb.isLocal && !symb.isNone)
-          commitStats.nom_set += symb.value
-      //symb.value
-    }
-    //functionCollection.foreach(x => commitStats.nom_set += x.toString) // TODO: verify if no duplicates
+    def descendDefOrCtor(tree: Tree, symb: Symbol): Unit = {
+
+      if (!symb.isLocal && !symb.isNone)
+        commitStats.nom_set += symb.value
+
+      commitStats.loc += tree.toString().count(x => x == '\n')
 
 
-    commitStats.loc += sdoc.tree.toString.count(x => x == '\n')
+      var calls = Set.empty[String]
+      var classes = Set.empty[String] // if a method calls a function 3 times, it should only be mesured once
+      tree.collect {
+        case a: Term.Name => {
 
+          val s = SemanticDB.getFromSymbolTable(a, sdoc)
+          if (!s.isLocal && !s.isNone && doWeOwnThisClass(s.value)) {
+            val info = semanticDB.getInfo(s.value)
+            if (info != null && info.kind == SymbolInformation.Kind.METHOD) {
+              println("s: " + s.value)
 
-    var uniqueCallsPerFunction = 0
-    var uniqueCalledClassesPerFunction = 0
-    sdoc.tree.collect {
-      case clazz: Defn.Def =>
-        var calls = Set.empty[String]
-        var classes = Set.empty[String]
-        //var defSymbol = sDb.getFromSymbolTable(clazz, sdoc)
-        //println("\ndefSymbol: " + defSymbol)
-        clazz.collect {
-          case a: Term.Apply => {
-            implicit var implicit_sdoc: SemanticDocument = sdoc
-
-            var s = SemanticDB.getFromSymbolTable(a.fun, sdoc)
-
-            try {
-              //var symInfo = sDb.symbolTable.info(s.value.toString)
-              if (doWeOwnThisClass(s.value)) {
-                classes += s.owner.toString()
+              if (sdoc.toString().contains("JPanelDesktop")) {
+                println()
               }
-            } catch {
-              case ex: Throwable => println("EXCEPTION: " + ex)
+              calls += s.value
             }
-            calls += a.fun.toString()
           }
         }
-        //println("classes: \n" + classes.mkString("\n"))
-        uniqueCalledClassesPerFunction += classes.size
-        uniqueCallsPerFunction += calls.size
+
+        case a: Term.Apply => {
+
+          var s = SemanticDB.getFromSymbolTable(a.fun, sdoc)
+          //calls += s.value
+
+          try {
+            if (doWeOwnThisClass(s.value)) {
+              classes += s.owner.value
+            }
+          } catch {
+            case ex: Throwable => println("EXCEPTION: " + ex)
+          }
+        }
+      }
+      commitStats.calls += calls.size
+      commitStats.fanout += classes.size
     }
-    commitStats.calls += uniqueCallsPerFunction
-    commitStats.fanout += uniqueCalledClassesPerFunction
+
+    sdoc.tree.collect {
+      //case a: Ctor.Primary => {
+      //  descendDefOrCtor(a)
+      //}
+      case a: Ctor.Secondary =>
+        val symb: Symbol = SemanticDB.getFromSymbolTable(a, sdoc)
+        for (stat <- a.stats)
+          descendDefOrCtor(stat, symb)
+
+      case defn: Defn.Def =>
+        val symb: Symbol = SemanticDB.getFromSymbolTable(defn, sdoc)
+        descendDefOrCtor(defn.body, symb)
+    }
   }
 
   /**
@@ -184,7 +197,7 @@ object MeasureProject {
       println("\n Doc: " + doc.tdoc.uri)
 
       if (true) {
-        consumeFile(commitStats, doc.sdoc)
+        consumeFile(commitStats, doc.sdoc, semanticDB)
       }
 
       if (true) { // CC and Code Flow Graph
