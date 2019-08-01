@@ -2,7 +2,7 @@
 echo Insider started ...
 @echo off
 
-set JAVA_HOME=.\jre1502
+::set JAVA_HOME=.\jre1502
 
 @echo off
 set LOCALCLASSPATH="%JAVA_HOME%\lib\tools.jar";"%JAVA_HOME%\lib\rt.jar";./classes;liquidlnf.jar;intellij.jar;memoria.jar;metrics.jar;common.jar;dude.jar;java2html.jar;recoder.jar;jmondrian.jar

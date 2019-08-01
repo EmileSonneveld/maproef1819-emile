@@ -1,0 +1,9 @@
+/*
+--
+-- Configuration for ObjectStore 5.x
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+%OPEN_LOOP_FUNC_MACRO : OS_BEGIN_TXN ;
+%CLOSE_LOOP_FUNC_MACRO : OS_END_TXN ;
+%END_C_CONFIGURATION

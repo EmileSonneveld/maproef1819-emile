@@ -1,0 +1,32 @@
+/*
+--
+-- Predefined Configuration for C++
+--
+*/
+%START_C_CONFIGURATION = copy EMPTY ;
+%ACCESS_SPECIFIER : protected ;
+%STORAGE_CLASS : register ;
+%STORAGE_CLASS : explicit ;
+%TYPE_SPECIFIER : unsigned ;
+%TYPE_QUALIFIER : volatile ;
+%STORAGE_CLASS : mutable ;
+%STORAGE_CLASS : typedef ;
+%STORAGE_CLASS : virtual ;
+%TYPE_SPECIFIER : wchar_t ;
+%ACCESS_SPECIFIER : private ;
+%STORAGE_CLASS : static ;
+%STORAGE_CLASS : friend ;
+%STORAGE_CLASS : inline ;
+%TYPE_SPECIFIER : double ;
+%TYPE_SPECIFIER : signed ;
+%ACCESS_SPECIFIER : public ;
+%TYPE_SPECIFIER : short ;
+%TYPE_SPECIFIER : float ;
+%TYPE_QUALIFIER : const ;
+%STORAGE_CLASS : auto ;
+%TYPE_SPECIFIER : void ;
+%TYPE_SPECIFIER : bool ;
+%TYPE_SPECIFIER : char ;
+%TYPE_SPECIFIER : long ;
+%TYPE_SPECIFIER : int ;
+%END_C_CONFIGURATION

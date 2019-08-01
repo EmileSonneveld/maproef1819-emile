@@ -1,0 +1,12 @@
+/*
+--
+-- Predefined Configuration for IBM C++ 3.1
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+
+%EXPRESSION_FUNC_MACRO : __offsetof ;
+
+%COMMENT_MACRO : _System ;
+
+%END_C_CONFIGURATION

@@ -1,0 +1,12 @@
+/*
+--
+-- Predefined Configuration for DIGITAL C++ 6.0
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+
+%EXPRESSION_FUNC_MACRO : __builtin_sizeof ;
+
+%EXPRESSION_FUNC_MACRO : __builtin_isfloat ;
+
+%END_C_CONFIGURATION

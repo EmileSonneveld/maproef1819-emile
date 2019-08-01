@@ -1,0 +1,40 @@
+/*
+--
+-- Configuration for GNU 2.7 dialect
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+
+%EXPRESSION_FUNC_MACRO : __alignof ;
+%EXPRESSION_FUNC_MACRO : __alignof__ ;
+
+%COMMENT_FUNC_MACRO : asm ;
+%COMMENT_FUNC_MACRO : __asm ;
+%COMMENT_FUNC_MACRO : __asm__ ;
+
+%COMMENT_FUNC_MACRO : __attribute ;
+%COMMENT_FUNC_MACRO : __attribute__ ;
+
+%TYPE_QUALIFIER : __const ;
+%TYPE_QUALIFIER : __const__ ;
+
+%COMMENT_MACRO : __extension__ ;
+
+%STORAGE_CLASS : __inline ;
+%STORAGE_CLASS : __inline__ ;
+
+%COMMENT_MACRO : __label__ ;
+
+%TYPE_SPECIFIER : __signed ;
+%TYPE_SPECIFIER : __signed__ ;
+
+%TYPE_FUNC_MACRO : __typeof ;
+%TYPE_FUNC_MACRO : __typeof__ ;
+%TYPE_FUNC_MACRO : typeof ;
+
+%TYPE_QUALIFIER : __volatile ;
+%TYPE_QUALIFIER : __volatile__ ;
+
+%TYPE_SPECIFIER : __wchar_t ;
+
+%END_C_CONFIGURATION

@@ -1,0 +1,34 @@
+/*
+--
+-- Configuration for BORLAND C++ 3.0 dialect
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+%COMMENT_MACRO : _cdecl ;
+%COMMENT_MACRO : cdecl ;
+
+%COMMENT_MACRO : _far ;
+%COMMENT_MACRO : far ;
+
+%COMMENT_MACRO : _fastcall ;
+%COMMENT_MACRO : fastcall ;
+
+%COMMENT_MACRO : _huge ;
+%COMMENT_MACRO : huge ;
+
+%COMMENT_MACRO : _interrupt ;
+%COMMENT_MACRO : interrupt ;
+
+%COMMENT_MACRO : _loadds ;
+
+%COMMENT_MACRO : _near ;
+%COMMENT_MACRO : near ;
+
+%COMMENT_MACRO : _pascal ;
+%COMMENT_MACRO : pascal ;
+
+%COMMENT_MACRO : _saveregs ;
+
+%COMMENT_MACRO : _seg ;
+
+%END_C_CONFIGURATION

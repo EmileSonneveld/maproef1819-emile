@@ -1,0 +1,8 @@
+/*
+--
+-- Configuration for Ilog 3.0
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+%TYPE_QUALIFIER : ILVCALLBACK ;
+%END_C_CONFIGURATION

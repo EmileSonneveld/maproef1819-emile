@@ -1,0 +1,45 @@
+/*
+--
+-- Configuration for MICROSOFT C++ 6.0 dialect
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+%COMMENT_FUNC_MACRO : __based ;
+
+%COMMENT_MACRO : __cdecl ;
+
+%COMMENT_FUNC_MACRO : __declspec ;
+
+%COMMENT_MACRO : dllexport ;
+
+%COMMENT_MACRO : dllimport ;
+
+%COMMENT_FUNC_MACRO : __except ;
+
+%COMMENT_MACRO : __fastcall ;
+
+%STORAGE_CLASS : __inline ;
+
+%TYPE_SPECIFIER : __int8 ;
+
+%TYPE_SPECIFIER : __int16 ;
+
+%TYPE_SPECIFIER : __int32 ;
+
+%TYPE_SPECIFIER : __int64 ;
+
+%STATEMENT_MACRO : __leave ;
+
+%COMMENT_MACRO : __multiple_inheritance ;
+
+%COMMENT_MACRO : naked ;
+
+%COMMENT_MACRO : __single_inheritance ;
+
+%COMMENT_MACRO : __stdcall ;
+
+%COMMENT_MACRO : thread ;
+
+%COMMENT_MACRO : __virtual_inheritance ;
+
+%END_C_CONFIGURATION

@@ -1,0 +1,8 @@
+/*
+--
+-- Predefined Configuration for SUN C++
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+
+%END_C_CONFIGURATION

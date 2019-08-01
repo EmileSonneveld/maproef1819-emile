@@ -1,0 +1,57 @@
+/*
+--
+-- Configuration for MICROSOFT C++ 1.5 dialect
+--
+*/
+%START_C_CONFIGURATION = copy C++ ;
+
+%COMMENT_FUNC_MACRO : __based ;
+%COMMENT_FUNC_MACRO : _based ;
+
+%COMMENT_MACRO : __cdecl ;
+%COMMENT_MACRO : _cdecl ;
+%COMMENT_MACRO : cdecl ;
+
+%COMMENT_MACRO : __export ;
+%COMMENT_MACRO : _export ;
+
+%COMMENT_MACRO : __far ;
+%COMMENT_MACRO : _far ;
+%COMMENT_MACRO : far ;
+
+%COMMENT_MACRO : __fastcall ;
+%COMMENT_MACRO : _fastcall ;
+
+%COMMENT_MACRO : __fortran ;
+%COMMENT_MACRO : _fortran ;
+
+%COMMENT_MACRO : __huge ;
+%COMMENT_MACRO : _huge ;
+%COMMENT_MACRO : huge ;
+
+%STORAGE_CLASS : __inline ;
+%STORAGE_CLASS : _inline ;
+
+%COMMENT_MACRO : __interrupt ;
+%COMMENT_MACRO : _interrupt ;
+
+%COMMENT_MACRO : __loadds ;
+%COMMENT_MACRO : _loadds ;
+
+%COMMENT_MACRO : __near ;
+%COMMENT_MACRO : _near ;
+%COMMENT_MACRO : near ;
+
+%COMMENT_MACRO : __pascal ;
+%COMMENT_MACRO : _pascal ;
+
+%COMMENT_MACRO : __saveregs ;
+%COMMENT_MACRO : _saveregs ;
+
+%COMMENT_MACRO : __segment ;
+%COMMENT_MACRO : _segment ;
+
+%COMMENT_MACRO : __segname ;
+%COMMENT_MACRO : _segname ;
+
+%END_C_CONFIGURATION
