@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="lrg.insider.gui.ui.browser.BrowserPageUI">
+  <scrollpane id="1956c" binding="scrollPane">
+    <constraints>
+      <xy x="287" y="186" width="21" height="22"/>
+      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children/>
+  </scrollpane>
+</form>

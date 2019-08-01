@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="lrg.insider.gui.ui.loader.ModelLoaderUI">
+  <grid id="bfaf2" binding="panel" row-count="7" column-count="4" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="42" y="28" width="447" height="185"/>
+      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <component id="68ae1" class="javax.swing.JButton" binding="sourcesButton">
+        <constraints>
+          <xy x="414" y="53" width="20" height="20"/>
+          <grid row="1" column="3" row-span="3" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1">
+            <preferred-size width="20" height="20"/>
+            <maximum-size width="20" height="20"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="..."/>
+          <toolTipText value="Open a directory chooser"/>
+        </properties>
+      </component>
+      <component id="44afb" class="javax.swing.JLabel">
+        <constraints>
+          <xy x="80" y="103" width="92" height="15"/>
+          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0"/>
+        </constraints>
+        <properties>
+          <text value="Cache file name"/>
+        </properties>
+      </component>
+      <component id="3ce78" class="javax.swing.JButton" binding="cacheButton">
+        <constraints>
+          <xy x="414" y="100" width="20" height="20"/>
+          <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1">
+            <preferred-size width="20" height="20"/>
+            <maximum-size width="20" height="20"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="..."/>
+          <toolTipText value="Open a file chooser"/>
+        </properties>
+      </component>
+      <component id="1899" class="javax.swing.JTextField" binding="cacheFile">
+        <constraints>
+          <xy x="182" y="99" width="209" height="22"/>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
+      </component>
+      <grid id="b884a" row-count="1" column-count="1" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <xy x="182" y="33" width="209" height="60"/>
+          <grid row="1" column="2" row-span="3" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="1be92" class="javax.swing.JTextField" binding="sourcesPath">
+            <constraints>
+              <xy x="0" y="19" width="209" height="22"/>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1">
+                <preferred-size width="150" height="-1"/>
+              </grid>
+            </constraints>
+            <properties/>
+          </component>
+        </children>
+      </grid>
+      <component id="17d8c" class="javax.swing.JLabel">
+        <constraints>
+          <xy x="80" y="55" width="68" height="15"/>
+          <grid row="1" column="1" row-span="3" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0"/>
+        </constraints>
+        <properties>
+          <text value="Source path"/>
+        </properties>
+      </component>
+      <component id="304e6" class="javax.swing.JButton" binding="okButton">
+        <constraints>
+          <xy x="80" y="128" width="92" height="25"/>
+          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+        </constraints>
+        <properties>
+          <text value="Ok"/>
+        </properties>
+      </component>
+      <component id="4099b" class="javax.swing.JButton" binding="cancelButton">
+        <constraints>
+          <xy x="182" y="128" width="209" height="25"/>
+          <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+        </constraints>
+        <properties>
+          <text value="Cancel"/>
+        </properties>
+      </component>
+      <hspacer id="81f85">
+        <constraints>
+          <xy x="32" y="42" width="15" height="1"/>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1">
+            <minimum-size width="15" height="1"/>
+            <preferred-size width="15" height="1"/>
+            <maximum-size width="15" height="1"/>
+          </grid>
+        </constraints>
+      </hspacer>
+      <vspacer id="338ac">
+        <constraints>
+          <xy x="286" y="164" width="1" height="10"/>
+          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2">
+            <minimum-size width="1" height="10"/>
+            <preferred-size width="1" height="10"/>
+            <maximum-size width="1" height="10"/>
+          </grid>
+        </constraints>
+      </vspacer>
+      <vspacer id="65337">
+        <constraints>
+          <xy x="120" y="11" width="11" height="10"/>
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2">
+            <preferred-size width="-1" height="10"/>
+            <maximum-size width="-1" height="10"/>
+          </grid>
+        </constraints>
+      </vspacer>
+    </children>
+  </grid>
+</form>
