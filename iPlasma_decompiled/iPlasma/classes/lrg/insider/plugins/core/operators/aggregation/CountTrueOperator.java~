@@ -1,0 +1,28 @@
+package lrg.insider.plugins.core.operators.aggregation;
+
+import lrg.common.abstractions.plugins.operators.AggregationOperator;
+import lrg.common.abstractions.entities.ResultEntity;
+import lrg.common.abstractions.entities.GroupEntity;
+
+import java.util.Iterator;
+
+public class CountTrueOperator extends AggregationOperator {
+    public CountTrueOperator()
+    {
+        super("nrTrue", "boolean");
+    }
+
+    public ResultEntity aggregate(GroupEntity resultGroup)
+    {
+        int size = resultGroup.size();
+        if (size == 0) return new ResultEntity(0);
+        double countTrue = 0;
+
+        Iterator it = resultGroup.iterator();
+
+        while (it.hasNext()) 
+             if (((Boolean) (((ResultEntity) it.next()).getValue())).booleanValue()) countTrue++;
+
+        return new ResultEntity(countTrue);
+    }
+}

@@ -1,0 +1,128 @@
+Using iPlasma is very simple. 
+
+There are two front-end tools that can be used,
+namely:
+	* DUDE
+	* INSIDER
+	
+	
+DUDE
+====
+1. In the current folder, run "dude.bat"
+2. In the main window that opens, do the
+following operation:
+2.1. Click the "House" icon on left or in the 
+"Search" menu select the "Set Root" item to
+choose the root folder of the sources you 
+want to check for duplications
+2.2 Next, choose the parameter either by clicking
+the "Wheel" icon (second from the left) or in the 
+"Search" menu select the "Set Parameters" item. 
+The parameters have the following significance:
+
+  * MinLength - is the minimum number of code lines
+    that a duplication block must have in order to
+    be taken into account. We recommend a value of
+    7-8 lines
+  * MaxLineBias - as Dude tries to put together
+    pieces of duplication that are close to each
+    other, this parameter specifies the maximum
+    allowed distance for two blocks of duplication
+    to still consider them as part of the same 
+    chain. We recommend a value of 2. If you want
+    to avoid the building of any chains, and see
+    only "raw clones" set the parameter to 0.
+  * MinExactChunk - as already mentioned, Dude	
+    builds chains of duplication, but they would
+    be irrelevant if each block would be very 
+    small. This parameter sets how small can 
+    each piece of duplication be. 
+
+2.3 After doing the previous steps you will be
+able to click on the "Magnifying Glass" icon 
+or in "Search" menu select the "Search" item.
+
+3. Duplication will be computed and results
+displayed in the main window. As soon as results
+are there, you can:
+	- browse them 
+	- export them (File|Export Results)
+
+4. Exporting results allows you to import
+the results later one (File|Import Results)
+and thus spare the time-consuming process
+of rerunning the search for duplication 
+at a later moment in time.
+ 
+Enjoy! :)	   
+
+
+INSIDER
+=======
+1. In the current folder, run "insider.bat"
+1b. If you want to have included additional metics 
+    implemented in the SAIL language run 
+    "insider.bat withSAIL" 
+   
+2. In the main window that opens, select 
+the Load|Java Sources to indicate two things:
+	- the root directory of the Java sources
+	that you want to analyze
+	- the name of the "cache" file that
+	INSIDER can use to skip the parsing of the
+	sources, and load the model directly the 
+	cache file directly in INSIDER. 
+
+3. After the sources are parsed and the model is 
+   built you can navigate through the model and
+   run various analyses.    
+
+3b. If you want to be able to have also the duplication 
+metrics computd you need to do at this moment the 
+following: 
+	- RIGHT-CLICK the "system" entity (the only
+	  entity displayed under the "~root[1]" tab)
+	  and select "Run Tool...>Dude". There you 
+	  can specify the three parameters already
+	  described for DUDE. WARNING: this proces
+	  may last several minutes for large systems.
+
+4. The two main items in INSIDER are:
+	- DESIGN ENTITIES - i.e. classs, methods, variables etc.
+	- GROUPS of such entities.
+   In addition to this we must say that:
+   	- DESIGN ENTITIES have PROPERTIES
+   	- there are several "core groups" namely:
+   		* package group
+   		* class group
+   		* method group
+   		* attribute group
+
+   	- starting from these "core groups" customized GROUPS
+   	  can be formed, by using FILTERS
+	 
+5. For any ENTITY (including the root entity which is the 
+   "system", and which is displayed immediately after loading
+   a model) you can:
+   	- RIGHT-CLICK the entity in order to see a group
+   	  of entities that that can be formed starting from
+   	  the clicked entity (e.g. for a class you can display
+   	  its group of methods)
+   	- DOUBLE-CLICK it if you want it displated with various
+          details in the "Browser" placed on the bottom of the
+          screen. Notice that all the "links" in the browser are
+          ENTITIES and consequentely the operations that we just
+          describe apply to them as well.
+
+6. For a GROUP OF ENTITIES you can do the following:
+	- RIGHT-CLICK the TAB and select the option
+	  ("Select Columns") to choose various PROPERTIES 
+	  (i.e. METRICS) to be computed and displayed as 
+	  columns in the table 
+	- RIGHT-CLICK the TAB and select the option
+	  ("Apply Filtering Rule") to choose one of the
+	  FILTERS that could be applied to the group that
+	  you just analyze             
+                         
+For more details on working with INSIDER, check also 
+the enclosed presentation. 
