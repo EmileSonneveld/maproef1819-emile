@@ -10,20 +10,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../maproef1819-emile/iPlasma_decompiled/iPlasma_original/iPlasma/insider_emile.jar!/" />
+          <root url="file://$MODULE_DIR$/../iPlasma_original/iPlasma" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/../maproef1819-emile/iPlasma_decompiled/iPlasma_original/iPlasma" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-        <jarDirectory url="file://$MODULE_DIR$/../maproef1819-emile/iPlasma_decompiled/iPlasma_original/iPlasma" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/../iPlasma_original/iPlasma" recursive="false" />
       </library>
     </orderEntry>
   </component>
