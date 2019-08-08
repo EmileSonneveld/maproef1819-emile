@@ -10,28 +10,6 @@ object main extends App {
     var gitTopLevel = Cmd.getGitTopLevel(projectPath)
     val projectName = Cmd.getProjectName(projectPath.toPath)
 
-    /*
-    if (false) {
-      val commitHash = Cmd.getCurrentCommitHash(projectPath)
-      var rows = LargeScaleDb.getCommitRows(commitHash)
-        .filter(_.loc != Option.empty) // Not worth, becouse nothing to compare with
-        .filter(x => x.powershellLoc == Option.empty || x.regexdefmatches == Option.empty)
-      if (rows.nonEmpty) {
-        Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
-        Cmd.execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
-        Cmd.execCommandWithTimeout("git checkout .", gitTopLevel)
-
-        val powershell_LOC = Cmd.getPowershellLoc(projectPath)
-        val regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
-        for (row <- rows) {
-          val newRow = row
-            .copy(powershellLoc = Option(powershell_LOC))
-            .copy(regexdefmatches = Option(regexDefMatches))
-          LargeScaleDb.updatePyramidStats(newRow)
-        }
-      }
-    }
-    else */
     if (true) {
       val commitHash = Cmd.getCurrentCommitHash(projectPath)
       Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
@@ -48,6 +26,7 @@ object main extends App {
       LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
     }
     else {
+      // Go trough history
       val hashesFromDb =
         LargeScaleDb.getPyramidStatsForProj(projectName)
       //.map(_.commithash)
@@ -99,7 +78,7 @@ object main extends App {
   }
 
 
-  if (true) {
+  if (false) {
     var projects = LargeScaleDb.getSuccesfullProjects
       .map(x => new File(x.buildpath))
       .distinct

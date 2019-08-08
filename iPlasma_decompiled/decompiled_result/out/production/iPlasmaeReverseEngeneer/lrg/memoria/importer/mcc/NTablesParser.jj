@@ -1,0 +1,590 @@
+options {
+  LOOKAHEAD = 2;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = false;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = false;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = true;
+  COMMON_TOKEN_ACTION = true;
+}
+
+PARSER_BEGIN(TablesParser)
+
+package lrg.memoria.importer.mcc.javacc;
+
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import lrg.memoria.core.Package;
+import lrg.memoria.core.Namespace;
+import lrg.memoria.core.Type;
+import lrg.memoria.importer.mcc.loader.*;
+import lrg.memoria.utils.ProgressObserver;
+
+import java.util.*;
+
+public class TablesParser {
+	    private FileInputStream fisAccess;
+    	private FileInputStream fisBody;
+    	private FileInputStream fisCall;
+    	private FileInputStream fisChains;
+    	private FileInputStream fisFuncs;
+    	private FileInputStream fisInh;
+    	private FileInputStream fisNamespaces;
+    	private FileInputStream fisPackages;
+    	private FileInputStream fisTp2t;
+    	private FileInputStream fisTypes;
+    	private FileInputStream fisVars;
+    	private ProgressObserver progressObserver;
+
+    	static private TypeVisitor tt;
+        static private Tp2tVisitor tp2t;
+
+    	private String currentPath;
+    	private static ArrayList temp;
+    	static private int currentTypesLine;
+    	static private int currentFuncsLine;
+    	static private int currentVarsLine;
+    	static private int currentCallLine;
+    	static private int currentAccessLine;
+        static private int currentBodyLine;
+        static private int currentChainsLine;
+        static private int currentNamespacesLine;
+        static private int currentPackagesLine;
+        static private int currentTp2TLine;
+    	static private int currentInhLine;
+
+    	static private final int ACCESS_STEP = 1000;
+    	static private final int BODY_STEP = 500;
+    	static private final int CALL_STEP = 1000;
+    	static private final int CHAINS_STEP = 50;
+    	static private final int FUNCS_STEP = 500;
+    	static private final int INH_STEP = 50;
+	    static private final int NAMESPACES_STEP = 25;
+    	static private final int PACKAGES_STEP = 25;
+    	static private final int TP2T_STEP = 25;
+    	static private final int TYPES_STEP = 100;
+    	static private final int VARS_STEP = 1000;
+    	
+    	public TablesParser(String path, ProgressObserver po) throws FileNotFoundException {
+    	    progressObserver = po;
+        	currentPath = path;
+        	
+        	fisAccess = new FileInputStream(new File(path + File.separatorChar + "access.dat"));
+        	fisBody = new FileInputStream(new File(path + File.separatorChar + "body.dat"));
+        	fisCall = new FileInputStream(new File(path + File.separatorChar + "call.dat"));
+        	fisChains = new FileInputStream(new File(path + File.separatorChar + "chains.dat"));
+        	fisFuncs = new FileInputStream(new File(path + File.separatorChar + "funcs.dat"));
+        	fisInh = new FileInputStream(new File(path + File.separatorChar + "inh.dat"));
+		    fisNamespaces = new FileInputStream(new File(path + File.separatorChar + "namespaces.dat"));
+        	fisPackages = new FileInputStream(new File(path + File.separatorChar + "packages.dat"));
+        	fisTp2t = new FileInputStream(new File(path + File.separatorChar + "tp2t.dat"));
+        	fisTypes = new FileInputStream(new File(path + File.separatorChar + "types.dat"));
+        	fisVars = new FileInputStream(new File(path + File.separatorChar + "vars.dat"));
+
+        	if (progressObserver != null)
+        	    progressObserver.setMaxValue(11);
+
+        //start with the 'packages' table
+        /*if (jj_initialized_once) {
+          System.out.println("ERROR: Second call to constructor of static parser.  You must");
+          System.out.println("       either use ReInit() or set the JavaCC option STATIC to false");
+          System.out.println("       during parser generation.");
+          throw new Error();
+        }
+        
+        jj_initialized_once = true;
+        */
+
+        jj_input_stream = new SimpleCharStream(fisPackages, 1, 1);
+        token_source = new TablesParserTokenManager(jj_input_stream);
+        token = new Token();
+        jj_ntk = -1;
+        jj_gen = 0;
+
+        for (int i = 0; i < 0; i++) jj_la1[i] = -1;
+        for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
+    }
+
+    public void parseTables() throws ParseException {
+        currentTypesLine = currentFuncsLine = currentVarsLine = currentCallLine = 0;
+    	currentAccessLine = currentBodyLine = currentChainsLine = currentNamespacesLine = 0;
+        currentPackagesLine = currentTp2TLine = currentInhLine = 0;
+
+	    System.out.println("Parsing table " + currentPath + File.separatorChar + "packages.dat (DOT = " + PACKAGES_STEP + ")");
+        parsePackagesLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+        
+        ReInit(fisNamespaces);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "namespaces.dat (DOT = " + ACCESS_STEP + ")");
+        parseNamespacesLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisBody);
+	    System.out.println("\nParsing table " + currentPath + File.separatorChar + "body.dat (DOT = " + BODY_STEP + ")");
+        parseBodyLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisTypes);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "types.dat (DOT = " + TYPES_STEP + ")");
+        parseTypesLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisTp2t);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "tp2t.dat (DOT = " + TP2T_STEP + ")");
+        parseTp2tLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisInh);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "inh.dat (DOT = " + INH_STEP + ")");
+        parseInhLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisFuncs);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "funcs.dat (DOT = " + FUNCS_STEP + ")");
+        parseFuncsLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisVars);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "vars.dat (DOT = " + VARS_STEP + ")");
+        parseVarsLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+	    ReInit(fisAccess);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "access.dat (DOT = " + ACCESS_STEP + ")");
+        parseAccessLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisCall);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "call.dat (DOT = " + CALL_STEP + ")");
+        parseCallLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+
+        ReInit(fisChains);
+        System.out.println("\nParsing table " + currentPath + File.separatorChar + "chains.dat (DOT = " + CHAINS_STEP + ")");
+        parseChainsLines();
+        if (progressObserver != null)
+            progressObserver.increment();
+    }
+
+    private static void advanceProgressCounter(String table) {
+        if (table.equals("namespaces") && currentNamespacesLine % NAMESPACES_STEP == 0)
+            System.out.print(".");
+        if (table.equals("packages") && currentPackagesLine % PACKAGES_STEP == 0)
+            System.out.print(".");
+        if (table.equals("types") && currentTypesLine % TYPES_STEP == 0)
+            System.out.print(".");
+        if (table.equals("inh") && currentInhLine % INH_STEP == 0)
+            System.out.print(".");
+        if (table.equals("funcs") && currentFuncsLine % FUNCS_STEP == 0)
+            System.out.print(".");
+        if (table.equals("vars") && currentVarsLine % VARS_STEP == 0)
+            System.out.print(".");
+        if (table.equals("calls") && currentCallLine % CALL_STEP == 0)
+            System.out.print(".");
+        if (table.equals("accesses") && currentAccessLine % ACCESS_STEP == 0)
+            System.out.print(".");
+        if (table.equals("bodies") && currentBodyLine % BODY_STEP == 0)
+            System.out.print(".");
+        if (table.equals("chains") && currentChainsLine % CHAINS_STEP == 0)
+            System.out.print(".");
+        if (table.equals("tp2t") && currentTp2TLine % TP2T_STEP == 0)
+            System.out.print(".");
+    }
+}
+
+PARSER_END(TablesParser)
+
+TOKEN_MGR_DECLS:
+{
+    static void CommonTokenAction(Token t) {
+        if (t.image.equals("\"\""))
+            t.image = "";
+    }
+}
+
+SKIP :
+{
+    "\""
+|   "\t"
+|   "\r"
+}
+
+/**
+ * We consider only two tokens (integer numbers and strings) and exceptions.
+ */
+TOKEN :
+{
+  < EOLN:  "\n" >
+|
+  < ERROR: "<ERROR>" >
+|
+  < ONLY_DECLARED: "<ONLY_DECLARED>" >
+|
+  < NO_ONE: "<NO_ONE>" >
+|
+  < NULL: "NULL" >
+|
+  < NOT_INIT: "<NOT_INIT>" >
+|
+  < NO_NAME: "<NO_NAME>" >
+|
+  < INIT_NULL_BODY: "<INIT_NULL_BODY>" >
+|
+  < UNKNOWN: "<UNKNOWN>" >
+|
+  < INTEGER_NUMBER: (["1"-"9"] | "0") ( ["0"-"9"] )* >
+|
+    < STRING: ( ~["\t","\n","\r"] )+ >
+}
+
+JAVACODE
+boolean error_recovery(ParseException e) {
+    System.out.println(e);
+    Token t;
+    do {
+        t = getNextToken();
+    } while(t.kind != EOLN && t.kind != EOF);
+    if (t.kind == EOF)
+        return true;
+    return false;
+}
+
+void parsePackagesLines():
+{
+boolean eof = false;
+}
+{
+    (
+    	eof = parsePackagesLine() { if (eof) return; currentPackagesLine++; advanceProgressCounter("packages"); }
+    )*
+}
+
+boolean parsePackagesLine():
+{
+PackageVisitor tt = new DefaultPackageVisitor();
+Token t;
+}
+{
+    try {
+        t = <INTEGER_NUMBER> { tt.setId(new Integer(t.image)); }
+        t = <STRING> { tt.setName(t.image); }
+        t = <EOLN> { tt.addPackage(); return false; }
+    }  catch(ParseException e) {
+        return error_recovery(e);
+    }
+
+}
+
+void parseNamespacesLines():
+{
+boolean eof = false;
+}
+{
+    (
+        eof = parseNamespacesLine() { if (eof) return; currentNamespacesLine++; advanceProgressCounter("namespaces"); }
+    )*
+}
+
+boolean parseNamespacesLine():
+{
+NamespaceVisitor tt = new DefaultNamespaceVisitor();
+Token t;
+}
+{
+    try {
+        t = <INTEGER_NUMBER> { tt.setId(new Integer(t.image)); }
+        t = <STRING> { tt.setName(t.image); }
+        t = <EOLN> { tt.addNamespace(); return false; }
+    } catch(ParseException e) {
+        return error_recovery(e);
+    }
+}
+
+void parseTypesLines():
+{
+    tt = new DefaultTypeVisitor();
+    boolean eof = false;
+}
+{
+    ( eof = parseTypesLine() { if (eof) return; currentTypesLine++; advanceProgressCounter("types"); } )*
+}
+
+boolean parseTypesLine():
+{
+Token t, t1, t2;
+}
+{
+    try {
+        (t = <INTEGER_NUMBER> { tt.setId(new Integer(t.image)); }
+        (( t = <STRING> | t = <NULL> )
+        ( t1 = <INTEGER_NUMBER> | t1 = <NULL> )
+        ( t2 = <INTEGER_NUMBER> | t2 = <NULL> )) { tt.setLocation(t.image, t1.image, t2.image); }
+        t = <STRING> { tt.setName(t.image); }
+        t = <STRING> { tt.setKind(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> ) { tt.setPackageId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> | t = <NO_ONE> | t = <ERROR> ) { tt.setNamespaceId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> ) { tt.setIsAbstract(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> ) { tt.setIsInterface(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> ) { tt.setIsGeneric(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> | t = <NO_ONE> | t = <ERROR> ) { tt.setScopeId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> | t = <NO_ONE> | t = <NOT_INIT> ) { tt.setDecoratedType(t.image); }
+        ( t = <EOLN> ) { tt.addType(); return false; })
+        | <EOF> { tt.typesEOF(); return true; }
+     } catch(ParseException e) {
+        boolean eof = error_recovery(e); if (eof) tt.typesEOF(); return eof;
+     }
+}
+
+void parseTp2tLines():
+{
+tp2t = new DefaultTp2tVisitor();
+boolean eof = false;
+}
+{
+    ( parseTp2tLine() { if (eof) return; currentTp2TLine++; advanceProgressCounter("tp2t"); } )*
+}
+
+boolean parseTp2tLine():
+{
+Token t, t1, t2;
+}
+{
+    try {
+        ( t = <INTEGER_NUMBER>  { tp2t.setId(t.image); } )
+    	( t = <INTEGER_NUMBER> | t = <UNKNOWN> | t = <ERROR> ) { tp2t.setTemplateParamID(t.image); }
+    	( t = <INTEGER_NUMBER> | t = <ERROR> ) { tp2t.setInstantiationTypeID(t.image); }
+    	t = <EOLN> { tp2t.addInstantiation(); return false; }
+    } catch(ParseException e) {
+        return error_recovery(e);
+    }
+}
+
+void parseFuncsLines():
+{
+boolean eof;
+}
+{
+    ( eof = parseFuncsLine() { if (eof) return; currentFuncsLine++; advanceProgressCounter("funcs"); } )*
+}
+
+boolean parseFuncsLine():
+{
+FunctionVisitor tt = new DefaultFunctionVisitor();
+Token t;
+}
+{
+    try {
+        t = <INTEGER_NUMBER> { tt.setId(new Integer(t.image)); }
+        ( t = <STRING> | t = <ERROR> ) { tt.setName(t.image); }
+        t = <STRING> { tt.setKind(t.image); }
+        t = <STRING> { tt.setSignature(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NO_ONE> | t = <ERROR>) { tt.setReturnType(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NO_ONE> | t = <ERROR>) { tt.setScopeId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> | t = <NO_ONE> | t = <ERROR>) { tt.setNamespaceId(t.image); }
+        ( t = <STRING> | t = <NULL> ) { tt.setAccess(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> ) { tt.setIsStatic(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> ) { tt.setIsVirtual(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <ONLY_DECLARED> | t = <ERROR> | t = <INIT_NULL_BODY> | t = <NULL>) { tt.setBodyId(t.image); }
+        t = <EOLN> { tt.addFunction(); return false; }
+	} catch(ParseException e) {
+        return error_recovery(e);
+    }
+}
+
+void parseBodyLines():
+{
+boolean eof = false;
+}
+{
+    ( eof = parseBodyLine() { if (eof) return; currentBodyLine++; advanceProgressCounter("bodies"); } )*
+    <EOF>
+}
+
+boolean parseBodyLine():
+{
+BodyVisitor tt = new DefaultBodyVisitor();
+Token t, t1, t2;
+}
+{
+    try {
+        t = <INTEGER_NUMBER> { tt.setId(new Integer(t.image)); }
+        t = <STRING>
+        t1 = <INTEGER_NUMBER>
+        t2 = <INTEGER_NUMBER>
+        { tt.setLocation(t.image, new Integer(t1.image), new Integer(t2.image)); }
+        t = <INTEGER_NUMBER> { tt.setPackageId(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoDecisions(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoLoops(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoAnd(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoOr(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setCyclomaticNumber(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoReturn(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoCatch(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setMaxNesting(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoStatements(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { tt.setNoCodeLine(new Integer(t.image)); }        
+        t = <EOLN> { tt.addBody(); return false; }
+	} catch(ParseException e) {
+        return error_recovery(e);
+    }
+}
+
+void parseVarsLines():
+{
+VariableVisitor vv  = new DefaultVariableVisitor();
+boolean eof = false;
+}
+{
+    ( eof = parseVarsLine(vv) { if (eof) return; currentVarsLine++; advanceProgressCounter("vars"); } )*
+}
+
+boolean parseVarsLine(VariableVisitor vv):
+{
+Token t;
+}
+{
+    try {
+        (t = <INTEGER_NUMBER> { vv.setId(new Integer(t.image)); }
+        ( t = <STRING> | t = <NULL> ) { vv.setFileName(t.image); }
+        t = <INTEGER_NUMBER> { vv.setDeclarationLine(new Integer(t.image)); }
+        ( t = <STRING> | t = <NO_NAME> ) { vv.setVariableName(t.image); }
+        t = <STRING> { vv.setKindOf(t.image); }
+        (t = <INTEGER_NUMBER> | t = <ERROR> | t = <NO_ONE>) { vv.setTypeId(t.image); }
+        ( t = <STRING> | t = <NULL> ) { vv.setAccess(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> | t = <ERROR>) { vv.setClassId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> | t = <ERROR>) { vv.setBodyId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <NULL> ) { vv.setPackageId(t.image); }
+        (t = <INTEGER_NUMBER> | t = <ERROR> | t = <NO_ONE> | t = <NULL>) { vv.setNamespaceId(t.image); }
+        t = <INTEGER_NUMBER> { vv.setIsStatic(new Integer(t.image)); }
+        t = <INTEGER_NUMBER> { vv.setIsConst(new Integer(t.image)); }
+        (t = <INTEGER_NUMBER> | t = <ERROR> | t = <NO_ONE> | t = <NULL> | t = <NOT_INIT>) { vv.setRefersTo(t.image); }
+        t = <EOLN> { vv.addVariable(); return false; })
+        | <EOF> { vv.variablesEOF(); return true; }
+    } catch(ParseException e) {
+        boolean eof = error_recovery(e); if (eof) vv.variablesEOF(); return eof;
+    }
+}
+
+void parseAccessLines():
+{
+boolean eof = false;
+}
+{
+    ( eof = parseAccessLine() { if (eof) return; currentAccessLine++; advanceProgressCounter("accesses"); } )*
+}
+
+boolean parseAccessLine():
+{
+AccessVisitor av = new DefaultAccessVisitor();
+Token t;
+}
+{
+    try {
+        t = <INTEGER_NUMBER> { av.setId(new Integer(t.image)); }
+        ( t = <INTEGER_NUMBER> | t = "<ERROR>" ) { av.setBodyId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = "<ERROR>" ) { av.setVarId(t.image); }
+        t = <INTEGER_NUMBER> { av.setCounter(new Integer(t.image)); }
+        t = <EOLN> { av.addAccess(); return false; }
+    } catch(ParseException e) {
+        return error_recovery(e);
+    }
+}
+
+void parseCallLines():
+{
+boolean eof = false;
+}
+{
+    ( eof = parseCallLine() { if (eof) return; currentCallLine++; advanceProgressCounter("calls"); } )*
+}
+
+boolean parseCallLine():
+{
+CallVisitor cv = new DefaultCallVisitor();
+Token t;
+}
+{
+    try {
+        t = <INTEGER_NUMBER> { cv.setId(new Integer(t.image)); }
+        ( t = <INTEGER_NUMBER> | t = "<ERROR>" ) { cv.setBodyId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = "<ERROR>" ) { cv.setFuncId(t.image); }
+        t = <INTEGER_NUMBER> { cv.setCounter(new Integer(t.image)); }
+        t = <EOLN> { cv.addCall(); return false; }
+    } catch(ParseException e) {
+        return error_recovery(e);
+    }
+}
+
+void parseChainsLines():
+{
+boolean eof = false;
+}
+{
+    ( eof = parseChainsLine() { if (eof) return; currentChainsLine++; advanceProgressCounter("chains"); } )*
+}
+
+boolean parseChainsLine():
+{
+ChainVisitor cv = new DefaultChainVisitor();
+Token t;
+}
+{
+    try {
+    	t = <INTEGER_NUMBER> { cv.setId(new Integer(t.image)); }
+    	( t = <INTEGER_NUMBER> | t = <ERROR>) { cv.setTemplateInstanceId(t.image); }
+    	( t = <INTEGER_NUMBER> | t = <ERROR>) { cv.setT2TRelationId(t.image); }
+    	t = <EOLN> { cv.addChain(); } { return false; }
+    } catch(ParseException e) {
+        return error_recovery(e);
+    }
+
+}
+
+void parseInhLines():
+{
+boolean eof = false;
+}
+{
+    ( eof = parseInhLine() { if (eof) return; currentInhLine++; advanceProgressCounter("inh"); } )*
+}
+
+boolean parseInhLine():
+{
+InheritanceVisitor iv = new DefaultInheritanceVisitor();
+Token t;
+}
+{
+    try {
+        t = <INTEGER_NUMBER> { iv.setId(new Integer(t.image)); }
+        ( t = <INTEGER_NUMBER> | t = <ERROR> ) { iv.setDescendentId(t.image); }
+        ( t = <INTEGER_NUMBER> | t = <ERROR> ) { iv.setParentId(t.image); }
+        ( t = <STRING> | t = <NULL> ) { iv.setAttribute(t.image); }
+        t = <INTEGER_NUMBER> { iv.setDepth(new Integer(t.image)); }
+        t = <EOLN> { iv.addInh(); return false; }
+    } catch(ParseException e) {
+        return error_recovery(e);
+    }
+}

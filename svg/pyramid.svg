@@ -48,14 +48,14 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.979899"
-     inkscape:cx="208.4059"
-     inkscape:cy="573.76373"
+     inkscape:zoom="1.4"
+     inkscape:cx="207.58775"
+     inkscape:cy="667.82953"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1147"
+     inkscape:window-height="1116"
      inkscape:window-x="1912"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -78,6 +78,27 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-97)">
+    <rect
+       style="fill:#e0e2fc;fill-opacity:1;stroke:none;stroke-width:0.16586457;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1041"
+       width="40.357693"
+       height="10.824415"
+       x="158.49083"
+       y="152.4072" />
+    <rect
+       style="fill:#e8fce4;fill-opacity:1;stroke:none;stroke-width:0.15054971;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1039"
+       width="50.113037"
+       height="9.0871639"
+       x="153.94724"
+       y="122.74027" />
+    <rect
+       style="fill:#fefccf;fill-opacity:1;stroke:none;stroke-width:0.18209626;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect1035"
+       width="49.730846"
+       height="23.675608"
+       x="3.5029953"
+       y="138.66573" />
     <rect
        style="fill:#008f00;fill-opacity:1;stroke:none;stroke-width:0.13988391;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect826"
@@ -585,17 +606,61 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333311px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:0.56279069;stroke:none;stroke-width:0.26458332"
-       x="5.543088"
+       x="4.4847546"
        y="119.46111"
        id="text1205-8"><tspan
          sodipodi:role="line"
-         x="5.543088"
+         x="4.4847546"
          y="119.46111"
          id="tspan1203-6"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333311px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:0.56279069;stroke-width:0.26458332"><tspan
-           x="5.543088"
+           x="4.4847546"
            y="119.46111"
            id="tspan1201-2"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333311px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:0.56279069;stroke-width:0.26458332">%commitHash%</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="155.01631"
+       y="129.95654"
+       id="text1021"><tspan
+         sodipodi:role="line"
+         id="tspan1019"
+         x="155.01631"
+         y="129.95654"
+         style="stroke-width:0.26458332;font-size:8.46666667px">Inheritance</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="4.7057014"
+       y="146.68382"
+       id="text1025"><tspan
+         sodipodi:role="line"
+         x="4.7057014"
+         y="146.68382"
+         style="font-size:8.46666622px;stroke-width:0.26458332"
+         id="tspan1037">Size and </tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="160.09444"
+       y="160.69254"
+       id="text1033"><tspan
+         sodipodi:role="line"
+         id="tspan1031"
+         x="160.09444"
+         y="160.69254"
+         style="font-size:8.46666622px;fill:#000000;fill-opacity:1;stroke-width:0.26458332">Coupling</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="4.3467264"
+       y="157.52679"
+       id="text1043"><tspan
+         sodipodi:role="line"
+         id="tspan1041"
+         x="4.3467264"
+         y="157.52679"
+         style="font-size:8.46666622px;stroke-width:0.26458332">Complexity</tspan></text>
   </g>
 </svg>

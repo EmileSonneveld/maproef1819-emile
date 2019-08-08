@@ -170,7 +170,7 @@ object MeasureProject {
     val commitStats = new CommitStats
 
     commitStats.projectName = projectName
-    commitStats.powershell_LOC = Cmd.getPowershellLoc(projectPath)
+    commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"))
     commitStats.regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
 
     var scalaRoot = Utils.normalizeDirectoryPath(projectPath.getAbsolutePath)

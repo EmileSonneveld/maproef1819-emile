@@ -36,15 +36,9 @@ path.toPath.getParent
 
 q"function(argument)".structure
 
-val db = Database.forConfig("slickEmileProfile")
-try {
-  val build_tries: TableQuery[Tables.BuildTries] = TableQuery[Tables.BuildTries]
-  var test = build_tries.findBy(_.stdoutput.like("%[success]%"))
-  for (lol <- test) {
-    println(lol)
-  }
 
-  // val resultFuture: Future[_] = { ... }
-  //Await.result(resultFuture, Duration.Inf)
-  //lines.foreach(Predef.println _)
-} finally db.close
+var files = Utils.recursiveGetFiles(
+  new File("C:\\Users\\emill\\dev\\maproef1819-emile\\iPlasma_decompiled\\iPlasma_original\\iPlasma\\classes"),
+  ".class")
+println(files.mkString(" "))
+
