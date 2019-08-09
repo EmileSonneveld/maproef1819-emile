@@ -12,16 +12,14 @@ object main extends App {
 
     if (true) {
       val commitHash = Cmd.getCurrentCommitHash(projectPath)
-      Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
-      Cmd.execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
-      Cmd.execCommandWithTimeout("git checkout .", gitTopLevel)
+      Cmd.makeCommitStateClean(gitTopLevel)
 
       var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
       commitStats.commitHash = commitHash
       commitStats.projectName += "_BETTER_CALLS"
       println(commitStats.nom_set)
       var svg = Utils.readFile("..\\svg\\pyramid.svg")
-      svg = MeasureProject.fillInPyramidTemplate(svg, commitStats, projectName)
+      svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
       Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
       LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
     }

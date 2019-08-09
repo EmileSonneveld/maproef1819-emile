@@ -8,7 +8,7 @@ import java.util
 import slick.ast.LiteralNode
 import slick.jdbc.SQLiteProfile.api._
 import slickEmileProfile.Tables
-import slickEmileProfile.Tables.BuildTriesRow
+import slickEmileProfile.Tables.{BuildTriesRow, JavaPyramidRow, PyramidStatsRow}
 
 import scala.concurrent.{Await, duration}
 
@@ -19,6 +19,8 @@ object LargeScaleDb {
 
   val build_tries = TableQuery[Tables.BuildTries]
   val pyramid_stats = TableQuery[Tables.PyramidStats]
+  val java_pyramid = TableQuery[Tables.JavaPyramid]
+  val pyramid_stats_java = TableQuery[Tables.PyramidStatsJava]
 
   //private var conn: Connection = _
   //try {
@@ -31,21 +33,37 @@ object LargeScaleDb {
   //}
 
   def insertBuildTry(buildPath: File, stdOutput: String, buildType: String): Unit = {
-
     var f = db.run(build_tries += BuildTriesRow(0, new Timestamp(new Date().getTime).toString, buildPath.toString, stdOutput, null))
-    Await.result(f, duration.Duration(30, "sec"))
+    Await.result(f, duration.Duration(10, "sec"))
+  }
+
+  def insertJavaPyramidTry(buildPath: File, stdOutput: String): Unit = {
+    var f = db.run(java_pyramid += JavaPyramidRow(0, new Timestamp(new Date().getTime).toString, buildPath.toString, stdOutput))
+    Await.result(f, duration.Duration(10, "sec"))
   }
 
   def getSuccesfullProjects: Seq[Tables.BuildTriesRow] = {
     var query = build_tries.filter(_.stdoutput.like("%[success]%"))
     var f = db.run(query.result)
-    Await.result(f, duration.Duration(30, "sec"))
+    Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def getBuildTry(buildPath: File): Seq[_root_.slickEmileProfile.Tables.BuildTriesRow] = {
+  def getBuildTry(buildPath: File): Seq[Tables.BuildTriesRow] = {
     var query = build_tries.filter(_.buildpath.like(buildPath.toString))
     var f = db.run(query.result)
-    Await.result(f, duration.Duration(30, "sec"))
+    Await.result(f, duration.Duration(10, "sec"))
+  }
+
+  def getAllJavaIPlasma: Seq[Tables.JavaPyramidRow] = {
+    var query = java_pyramid
+    var f = db.run(query.result)
+    Await.result(f, duration.Duration(10, "sec"))
+  }
+
+  def getPyramidStatJava(projectPath: String): Seq[Tables.PyramidStatsJavaRow] = {
+    var query = pyramid_stats_java.filter(_.project === projectPath)
+    var f = db.run(query.result)
+    Await.result(f, duration.Duration(10, "sec"))
   }
 
   def hadSuccesfullBuild(buildPath: File): Boolean = {
@@ -61,39 +79,39 @@ object LargeScaleDb {
   def getPyramidStatsForProj(project: String): Seq[Tables.PyramidStatsRow] = {
     var query = pyramid_stats.filter(_.project.like(project))
     var f = db.run(query.result)
-    Await.result(f, duration.Duration(30, "sec"))
+    Await.result(f, duration.Duration(10, "sec"))
   }
 
   def getDistinctCommits() = {
     var query = pyramid_stats.map(_.commithash).distinct
     var f = db.run(query.result)
-    Await.result(f, duration.Duration(30, "sec"))
+    Await.result(f, duration.Duration(10, "sec"))
   }
 
   def getCommitRows(commitHash: String): Seq[Tables.PyramidStatsRow] = {
     var query = pyramid_stats.filter(_.commithash === commitHash)
     var f = db.run(query.result)
-    Await.result(f, duration.Duration(30, "sec"))
+    Await.result(f, duration.Duration(10, "sec"))
   }
 
   def removePyramidRow(id: Int) = {
     var query = pyramid_stats.filter(_.id === id).delete
     var f = db.run(query)
-    Await.result(f, duration.Duration(30, "sec"))
+    Await.result(f, duration.Duration(10, "sec"))
   }
 
   def commitWorthRetaking(commitHash: String): Boolean = {
     {
       var query = pyramid_stats.filter(_.commithash.like(commitHash)).filter(_.noc === 0).filter(_.cc === 0)
       var f = db.run(query.result)
-      val res = Await.result(f, duration.Duration(30, "sec"))
+      val res = Await.result(f, duration.Duration(10, "sec"))
       if (res.length > 0)
         return false // We already got a failed try, not worth repeating
     }
     {
       var query = pyramid_stats.filter(_.commithash.like(commitHash)) // Should best filter on NULL here
     var f = db.run(query.result)
-      val res = Await.result(f, duration.Duration(30, "sec"))
+      val res = Await.result(f, duration.Duration(10, "sec"))
       val res2 = res.filter(x => x.calls != Option.empty && x.ahh != Option.empty)
       res2.length == 0 // Not yet full result, so worth repeating!
     }
@@ -101,6 +119,13 @@ object LargeScaleDb {
 
   def insertPyramidStats(row: Tables.PyramidStatsRow): Unit = {
     var query = (pyramid_stats += row)
+    var f = db.run(query)
+    Await.result(f, duration.Duration(5, "sec"))
+  }
+
+
+  def insertPyramidStatsJava(row: Tables.PyramidStatsJavaRow): Unit = {
+    var query = (pyramid_stats_java += row)
     var f = db.run(query)
     Await.result(f, duration.Duration(5, "sec"))
   }

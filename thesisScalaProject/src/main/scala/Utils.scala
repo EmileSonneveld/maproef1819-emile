@@ -52,6 +52,30 @@ object Utils {
     Files.write(path, content.getBytes(StandardCharsets.UTF_8))
   }
 
+
+  def getSrcPaths(folder: File): ListBuffer[File] = {
+    var currentDepth: Int = 0
+
+    var results = new ListBuffer[File]
+
+    def itteration(folder: File): Unit = {
+      val childs = folder.listFiles()
+      if (currentDepth <= 5) {
+        val childFolders = childs.filter(_.isDirectory)
+        currentDepth += 1
+        for (childFolder <- childFolders) {
+          itteration(childFolder)
+        }
+        currentDepth -= 1
+      }
+      if (folder.getName.endsWith("src") || Files.exists(new File(folder.getAbsolutePath + "/main").toPath))
+        results += folder
+    }
+
+    itteration(folder)
+    results
+  }
+
   def recursiveGetFoldersThatContainFile(f: File, name: String, currentDepth: Int = 0): Array[File] = {
     if (currentDepth >= 3) return Array()
     val childs = f.listFiles()

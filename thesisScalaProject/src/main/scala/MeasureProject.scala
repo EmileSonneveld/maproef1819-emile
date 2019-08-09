@@ -17,7 +17,7 @@ trait ClassOrTrait extends Tree {}
 
 object MeasureProject {
 
-  def fillInPyramidTemplate(file: String, commitStats: CommitStats, projectName: String): String = {
+  def fillInPyramidTemplate(file: String, commitStats: CommitStats): String = {
     var svg = file
     val nop = commitStats.nop_set.size
     val noc = commitStats.noc_set.size
@@ -27,7 +27,7 @@ object MeasureProject {
 
     val df = new DecimalFormat(".##")
 
-    svg = svg.replaceAll("%PROJECT%", projectName)
+    svg = svg.replaceAll("%PROJECT%", commitStats.projectName)
 
     svg = svg.replaceAll("%NOP%", nop.toString)
     svg = svg.replaceAll("%NOC%", noc.toString)
@@ -170,7 +170,7 @@ object MeasureProject {
     val commitStats = new CommitStats
 
     commitStats.projectName = projectName
-    commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"))
+    commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"), ".scala")
     commitStats.regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
 
     var scalaRoot = Utils.normalizeDirectoryPath(projectPath.getAbsolutePath)

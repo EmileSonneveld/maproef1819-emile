@@ -1,7 +1,8 @@
 package be.emilesonneveld;
 
 
-import javafx.application.Application;
+import com.github.slugify.Slugify;
+//import javafx.application.Application;
 import lrg.common.abstractions.entities.AbstractEntityInterface;
 import lrg.common.abstractions.entities.GroupEntity;
 import lrg.common.abstractions.plugins.tools.AbstractEntityTool;
@@ -15,29 +16,75 @@ import lrg.insider.metamodel.MemoriaJavaModelBuilder;
 import lrg.insider.plugins.tools.OverviewPyramid;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.security.Permission;
 import java.util.ArrayList;
 
-public class Main {
+class Main {
+    private static class ExitTrappedException extends SecurityException { }
 
-    public static void main(String[] args) throws Exception {
-        System.out.println("Working Directory = " +
-                System.getProperty("user.dir"));
-        lrg.insider.gui.InsiderGUIMain.main(new String[]{});
-        //lrg.insider.plugins.tools.OverviewPyramid pyr = new lrg.insider.plugins.tools.OverviewPyramid();
-        //System.out.println(pyr.getToolName());
+    private static void forbidSystemExitCall() {
+        final SecurityManager securityManager = new SecurityManager() {
+            public void checkPermission( Permission permission ) {
+                if( "exitVM".equals( permission.getName() ) ) {
+                    throw new ExitTrappedException() ;
+                }
+            }
+        } ;
+        System.setSecurityManager( securityManager ) ;
     }
-}
+
+    private static void enableSystemExitCall() {
+        System.setSecurityManager( null ) ;
+    }
+
+    public static void main(String[] args) throws IOException {
+        forbidSystemExitCall();
+
+        var outputPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\java_pyramid\\";
+        var alreadyDone = Util.getFilesFromDirectory(new File(outputPath).toPath());
+        var folders = Util.getSrcPaths(new File("D:\\github_java").toPath());
+        for (var folder : folders) {
+
+            Slugify slg = new Slugify();
+            String slug = slg.slugify(folder);
+
+            if (alreadyDone.contains((outputPath + slug + ".html").replace("\\", "/")))
+                continue;
+
+            String html = "no result yet";
+            Util.WriteStringToFile(new File(outputPath + slug + ".html"), html);
+            try {
+                html = calc(folder);
+
+            } catch (Exception e) {
+
+            }
+            Util.WriteStringToFile(new File(outputPath + slug + ".html"), html);
+
+        }
 
 
-class InsiderTextMain {
-    public static void main(String[] args) {
+        //var srcPaths = Util.getSrcPaths(new File("C:\\Users\\emill\\dev\\SHotDraw").toPath());
+//
+        //var folder = "C:\\Users\\emill\\dev\\SHotDraw\\JHotDraw_original\\src";
+        //var html = calc(folder);
+        //Slugify slg = new Slugify();
+        //String slug = slg.slugify(folder);
+        //Util.WriteStringToFile(new File("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\java_pyramid\\" + slug + ".html"), html);
+    }
 
-        args = new String[]{"C:\\Users\\emill\\dev\\SHotDraw\\JHotDraw_original\\src", "OverviewPyramid", "C:\\Users\\emill\\dev\\SHotDraw\\iPlasma.txt"};
+    static String calc(String projectPath) {
 
+        var args = new String[]{projectPath, "OverviewPyramid", "C:\\Users\\emill\\dev\\SHotDraw\\iPlasma.txt"};
+
+        String returnValue = "nothing returned";
         if (args.length < 2) {
             System.out.println("Param Usage: [project source path] [report class name] (result source path)");
 
-            return;
+            return returnValue;
         }
         String strSourcePath = args[0];
         String strReportName = "lrg.insider.plugins.tools." + args[1];
@@ -51,10 +98,10 @@ class InsiderTextMain {
 
         } catch (Exception e2) {
             e2.printStackTrace();
-            JOptionPane.showMessageDialog(StoryTreeUI.instance()
-                            .getTopComponent(), "The model could not be loaded !",
-                    "ERROR", 2);
-            return;
+            //JOptionPane.showMessageDialog(StoryTreeUI.instance()
+            //                .getTopComponent(), "The model could not be loaded !",
+            //        "ERROR", 2);
+            return returnValue;
         } finally {
             progress.close();
         }
@@ -84,9 +131,13 @@ class InsiderTextMain {
 
         try {
             aEntityTool.run(selectedEntity, paramList);
+            OverviewPyramid tool = (OverviewPyramid) aEntityTool;
+            returnValue = tool.buildHTMLPyramid(selectedEntity);
+
         } catch (RuntimeException exc) {
             System.err.println(String.valueOf(aEntityTool.getToolName()) + " could not be run !");
             exc.printStackTrace();
         }
+        return returnValue;
     }
 }

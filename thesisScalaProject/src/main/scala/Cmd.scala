@@ -34,14 +34,21 @@ object Cmd {
     logString.trim
   }
 
+  def makeCommitStateClean(gitTopLevel: File) = {
+    val commitHash = Cmd.getCurrentCommitHash(gitTopLevel)
+    Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
+    Cmd.execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
+    Cmd.execCommandWithTimeout("git checkout .", gitTopLevel)
+  }
+
   def getCommitHashesFromLog(gitTopLevel: File): List[String] = {
     val logString = execCommandWithTimeout("git log --format=\"commit %H\"", gitTopLevel)
     val re = """commit ([\w]+)""".r
     re.findAllIn(logString).map(x => x.substring(7)).toList
   }
 
-  def getPowershellLoc(projectPath: File): Int = {
-    var result = Cmd.execCommandWithTimeout("powershell \"dir -Recurse *.scala | Get-Content | Measure-Object -Line\"", projectPath)
+  def getPowershellLoc(projectPath: File, extention: String): Int = {
+    var result = Cmd.execCommandWithTimeout("powershell \"dir -Recurse *" + extention + " | Get-Content | Measure-Object -Line\"", projectPath)
     var linesPos = result.indexOf("Lines")
     result = result.substring(linesPos)
 
@@ -102,7 +109,7 @@ object Cmd {
     })) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
-      val exitValue: Int = Await.result(f, duration.Duration(2 * 60, "sec"))
+      val exitValue: Int = Await.result(f, duration.Duration(5, "sec")) // 2 * 60
       if (exitValue != 0)
         println("exitValue: " + exitValue)
 
