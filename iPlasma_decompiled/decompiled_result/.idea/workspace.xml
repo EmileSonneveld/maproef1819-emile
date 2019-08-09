@@ -2,10 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c6057e7a-d9f9-411f-8914-ced65ef86d83" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../iPlasma_original/iPlasma/insider.bat" beforeDir="false" afterPath="$PROJECT_DIR$/../iPlasma_original/iPlasma/insider.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../usingIplasma/src/be/emilesonneveld/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../usingIplasma/src/be/emilesonneveld/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../usingIplasma/usingIplasma.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../usingIplasma/usingIplasma.iml" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -50,7 +46,7 @@
     <session id="354090899">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="1" />
+          <entry key="project.closed" value="2" />
           <entry key="project.open.time.0" value="2" />
           <entry key="project.opened" value="2" />
         </counts>
@@ -302,7 +298,7 @@
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1565282981203" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1565284146760" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../usingIplasma" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />

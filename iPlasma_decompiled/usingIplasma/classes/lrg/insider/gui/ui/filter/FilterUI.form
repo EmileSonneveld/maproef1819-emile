@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="lrg.insider.gui.ui.filter.CustomFilterUI">
+  <grid id="18a41" binding="topComponent" row-count="3" column-count="1" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="265" y="64" width="600" height="400"/>
+      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <splitpane id="5918f" binding="splitPane">
+        <constraints>
+          <xy x="0" y="0" width="600" height="340"/>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3">
+            <preferred-size width="200" height="200"/>
+          </grid>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <tabbedpane id="20bf6" binding="validPropertiesTabs">
+            <constraints>
+              <splitpane position="right"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children/>
+          </tabbedpane>
+          <grid id="3b74" row-count="2" column-count="1" hgap="-1" vgap="-1">
+            <margin top="0" left="0" bottom="0" right="0"/>
+            <constraints>
+              <splitpane position="left"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <scrollpane id="ba15">
+                <constraints>
+                  <xy x="0" y="0" width="179" height="310"/>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="7" anchor="0" fill="3"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="ed0c0" class="javax.swing.JTree" binding="filterTree">
+                    <constraints/>
+                    <properties>
+                      <rootVisible value="true"/>
+                      <showsRootHandles value="true"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+              <grid id="5ff1f" row-count="1" column-count="3" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints>
+                  <xy x="0" y="315" width="179" height="25"/>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="1"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="63457" class="javax.swing.JButton" binding="andButton">
+                    <constraints>
+                      <xy x="0" y="0" width="57" height="25"/>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+                    </constraints>
+                    <properties>
+                      <text value="And"/>
+                    </properties>
+                  </component>
+                  <component id="39620" class="javax.swing.JButton" binding="orButton">
+                    <constraints>
+                      <xy x="67" y="0" width="48" height="25"/>
+                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+                    </constraints>
+                    <properties>
+                      <text value="Or"/>
+                    </properties>
+                  </component>
+                  <component id="a200" class="javax.swing.JButton" binding="notButton">
+                    <constraints>
+                      <xy x="125" y="0" width="54" height="25"/>
+                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+                    </constraints>
+                    <properties>
+                      <text value="Not"/>
+                    </properties>
+                  </component>
+                </children>
+              </grid>
+            </children>
+          </grid>
+        </children>
+      </splitpane>
+      <component id="ddf3a" class="javax.swing.JButton" binding="applyButton">
+        <constraints>
+          <xy x="0" y="375" width="600" height="25"/>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+        </constraints>
+        <properties>
+          <text value="Apply"/>
+        </properties>
+      </component>
+      <grid id="e48ad" row-count="1" column-count="2" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <xy x="0" y="345" width="600" height="25"/>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="b47c" class="javax.swing.JButton" binding="unHighlightButton">
+            <constraints>
+              <xy x="299" y="0" width="301" height="25"/>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+            </constraints>
+            <properties>
+              <text value="Unhighlight"/>
+            </properties>
+          </component>
+          <component id="9d0e0" class="javax.swing.JButton" binding="highlightButton">
+            <constraints>
+              <xy x="0" y="0" width="289" height="25"/>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1"/>
+            </constraints>
+            <properties>
+              <text value="Highlight"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+    </children>
+  </grid>
+</form>

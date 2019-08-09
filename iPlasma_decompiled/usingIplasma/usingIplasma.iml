@@ -10,11 +10,22 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../iPlasma_original/iPlasma" />
+          <root url="jar://C:/Program Files/Java/jdk1.8.0_191/lib/tools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://C:/Program Files/Java/jdk1.8.0_191/lib/tools.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-        <jarDirectory url="file://$MODULE_DIR$/../iPlasma_original/iPlasma" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$" recursive="false" />
       </library>
     </orderEntry>
   </component>
