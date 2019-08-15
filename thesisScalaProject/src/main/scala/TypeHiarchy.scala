@@ -4,18 +4,30 @@ import java.util.Locale
 import scalafix.{DocumentTuple, SemanticDB}
 import scalafix.v1._
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.meta.{Defn, _}
 //import scala.meta.internal.semanticdb
 import scala.meta.internal.symtab.GlobalSymbolTable
 
 class TypeHiarchy(semanticDB: SemanticDB) {
-  val symbolTable: GlobalSymbolTable = semanticDB.symbolTable
+
+  //val symbolTable: GlobalSymbolTable = semanticDB.symbolTable
 
   class TypeGraphNode(val symbol: String) {
     def name: String = symbol.toString
 
-    val linksTo: ArrayBuffer[TypeGraphNode] = ArrayBuffer.empty[TypeGraphNode]
+    def addParent(parent: TypeGraphNode) = {
+      parents += parent
+      parent.children += this
+    }
+
+    val parents: ArrayBuffer[TypeGraphNode] = ArrayBuffer.empty[TypeGraphNode]
+    val children: ArrayBuffer[TypeGraphNode] = ArrayBuffer.empty[TypeGraphNode]
+
+    def numberOfChildren = children.length
+
+    override def toString: String = name
   }
 
   private val symbolList = ArrayBuffer.empty[TypeGraphNode]
@@ -28,7 +40,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
     var sum = 0.0
     var count = 0.0
     for (n <- symbolList) {
-      sum += n.linksTo.length
+      sum += n.numberOfChildren
       count += 1
     }
     return sum / count
@@ -37,24 +49,98 @@ class TypeHiarchy(semanticDB: SemanticDB) {
   def calculateAHH(): Double = {
     if (symbolList.length == 0)
       return 0
-    var depthList = ArrayBuffer.empty[Int]
-    for (_ <- symbolList.indices) {
-      depthList += 0
-    }
-    for (i <- symbolList.indices) {
-      rec(0, i)
-    }
 
-    def rec(depth: Int, nodeIdx: Int): Unit = {
-      depthList(nodeIdx) = depth
-      var node = symbolList(nodeIdx)
-      for (node <- node.linksTo) {
-        var childIdx = symbolList.indexOf(node)
-        if (depthList(childIdx) < depth + 1)
-          rec(depth + 1, childIdx)
+
+    var clusterStarers = new ListBuffer[TypeGraphNode]
+
+    // Get only one cluster starter per cluster
+    {
+      var currentClusterId = -1
+      var nodeToClusterId = scala.collection.mutable.Map[TypeGraphNode, Int]()
+      symbolList.foreach(nodeToClusterId += _ -> -666)
+
+      def infectClusterWithId(currentNode: TypeGraphNode, id: Int): Unit = {
+        if (nodeToClusterId(currentNode) >= 0) {
+          assert(nodeToClusterId(currentNode) == id)
+          return // Already infected
+        }
+        nodeToClusterId(currentNode) = id
+
+        for (otherNode <- currentNode.children) {
+          infectClusterWithId(otherNode, id)
+        }
+        for (otherNode <- currentNode.parents) {
+          infectClusterWithId(otherNode, id)
+        }
+      }
+
+      for (node <- symbolList) {
+        var nodeClusterId = nodeToClusterId(node)
+        if (nodeClusterId < 0 && MeasureProject.doWeOwnThisClass(node.name)) {
+          currentClusterId += 1
+          infectClusterWithId(node, currentClusterId)
+          clusterStarers += node
+        }
       }
     }
 
+
+    var depthList = new ArrayBuffer[Int]()
+    for (clusterStarter <- clusterStarers) {
+      var minOffset = 0
+      var maxOffset = 0
+
+      var visitedList = scala.collection.mutable.Map[TypeGraphNode, Boolean]()
+      symbolList.foreach(visitedList += _ -> false)
+
+      def searchExtremeOffsets(currentNode: TypeGraphNode, currentOffset: Int): Unit = {
+        if (!visitedList(currentNode) && MeasureProject.doWeOwnThisClass(currentNode.name)) {
+          visitedList(currentNode) = true
+
+          if (currentNode.name == "org/shotdraw/util/Storable#") {
+            println()
+          }
+
+          if (currentOffset < minOffset) minOffset = currentOffset
+          if (currentOffset > maxOffset) maxOffset = currentOffset
+
+          for (childNode <- currentNode.children) {
+            searchExtremeOffsets(childNode, currentOffset + 1)
+          }
+          for (childNode <- currentNode.parents) {
+            searchExtremeOffsets(childNode, currentOffset - 1)
+          }
+        }
+      }
+
+      searchExtremeOffsets(clusterStarter, 0)
+      val clusterHeight = maxOffset - minOffset
+      depthList += clusterHeight
+    }
+
+    /*
+      var rootNodes = symbolList.filter(node =>
+        MeasureProject.doWeOwnThisClass(node.name)
+          && !node.parents.exists(parentNode => MeasureProject.doWeOwnThisClass(parentNode.name))
+      )
+      var depthList = List.fill(rootNodes.length)(-666).toArray
+
+
+      for (rootNodeIndex <- rootNodes.indices) {
+        var deepestDepth = -1 // no need to know what the deepest element is, only the depth
+
+        def rec(currentNode: TypeGraphNode, depth: Int): Unit = {
+          if (depth > deepestDepth)
+            deepestDepth = depth
+          for (childNode <- currentNode.children) {
+            rec(childNode, depth + 1)
+          }
+        }
+
+        rec(rootNodes(rootNodeIndex), 0)
+        depthList(rootNodeIndex) = deepestDepth
+      }
+    */
     return depthList.sum.toDouble / depthList.length
   }
 
@@ -103,7 +189,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
         //if (node.linksTo.length == 0)
         var nam = getPackageName(node.name)
         sb ++= "	\"" + n1 + "\" [color=\"" + getHlsColorForString(nam) + "\" ]\n"
-        for (next <- node.linksTo) {
+        for (next <- node.parents) {
 
           if (next.name != "scala/AnyRef#") {
             val n2 = Utils.escapeGraphVizName(next.name)
@@ -137,7 +223,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
 
             var parents = MeasureProject.getParents(semanticDB, s.value.toString)
             for (p <- parents) {
-              node.linksTo += addOrReturnSymbol(p)
+              node.addParent(addOrReturnSymbol(p))
             }
             //println(parents)
           }

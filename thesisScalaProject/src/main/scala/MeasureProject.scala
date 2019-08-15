@@ -180,7 +180,7 @@ object MeasureProject {
     * Todo: Use project data.
     */
   def doWeOwnThisClass(classUri: String): Boolean = {
-    !classUri.startsWith("java/lang") &&
+    !classUri.startsWith("java/") &&
       !classUri.startsWith("javax/") &&
       !classUri.startsWith("scala/")
   }

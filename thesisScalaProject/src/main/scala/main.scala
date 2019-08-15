@@ -22,7 +22,7 @@ object main extends App {
 
       var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
       commitStats.commitHash = commitHash
-      commitStats.projectName += "_BETTER_CALLS"
+      commitStats.projectName
       println(commitStats.nom_set)
       var svg = Utils.readFile("..\\svg\\pyramid.svg")
       svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
