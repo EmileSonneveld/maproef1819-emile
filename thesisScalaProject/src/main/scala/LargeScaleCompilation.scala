@@ -27,7 +27,7 @@ object LargeScaleCompilation {
   def runJavaIPlasma(): Unit = {
     val outputPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\java_pyramid\\"
     val alreadyDone = Utils.getFilesFromDirectory(new File(outputPath))
-    val folders = Utils.getSrcPaths(new File("D:\\github_java\\SHotDraw"))
+    val folders = Utils.getSrcMainPaths(new File("D:\\github_java\\SHotDraw"))
     for (p <- folders) {
       val slug = Slug.apply(p.getAbsolutePath)
       if (!alreadyDone.contains(new File(outputPath + slug + ".html"))) {

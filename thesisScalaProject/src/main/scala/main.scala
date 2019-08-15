@@ -7,6 +7,12 @@ import scala.language.postfixOps
 object main extends App {
 
   def calculationsOnProject(projectPath: File): Any = {
+
+    if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
+      println("Don't treat the dev folder as cannon flodder.")
+      System.exit(-1)
+    }
+
     var gitTopLevel = Cmd.getGitTopLevel(projectPath)
     val projectName = Cmd.getProjectName(projectPath.toPath)
 
@@ -89,11 +95,11 @@ object main extends App {
   } else {
     // Don't mess in the /dev folder!
     calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\100x.io"))
   }
 }

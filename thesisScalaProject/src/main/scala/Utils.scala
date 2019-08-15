@@ -53,7 +53,7 @@ object Utils {
   }
 
 
-  def getSrcPaths(folder: File): ListBuffer[File] = {
+  def getSrcMainPaths(folder: File): ListBuffer[File] = {
     var currentDepth: Int = 0
 
     var results = new ListBuffer[File]

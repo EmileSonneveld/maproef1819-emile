@@ -105,8 +105,8 @@ object MeasureProject {
       commitStats.loc += tree.toString().count(x => x == '\n')
 
 
-      var calls = Set.empty[String]
-      var classes = Set.empty[String] // if a method calls a function 3 times, it should only be mesured once
+      var calls = Set.empty[String] // if a method calls a function 3 times, it should only be mesured once
+      var classes = Set.empty[String] // if a method refers a class 3 times, it should only be mesured once
       tree.collect {
         case a: Term.Name => {
 
@@ -124,6 +124,19 @@ object MeasureProject {
           }
         }
 
+        case n: Term.New => {
+          var tpe = n.init.tpe
+
+          var s = SemanticDB.getFromSymbolTable(tpe, sdoc)
+          try {
+            if (doWeOwnThisClass(s.value)) {
+              classes += s.value
+            }
+          } catch {
+            case ex: Throwable => println("EXCEPTION: " + ex)
+          }
+
+        }
         case a: Term.Apply => {
 
           var s = SemanticDB.getFromSymbolTable(a.fun, sdoc)
@@ -131,7 +144,13 @@ object MeasureProject {
 
           try {
             if (doWeOwnThisClass(s.value)) {
-              classes += s.owner.value
+
+              val info = semanticDB.getInfo(s.value)
+              if (info != null && info.kind == SymbolInformation.Kind.OBJECT) {
+                classes += s.value
+              } else {
+                classes += s.owner.value
+              }
             }
           } catch {
             case ex: Throwable => println("EXCEPTION: " + ex)
@@ -170,7 +189,7 @@ object MeasureProject {
     val commitStats = new CommitStats
 
     commitStats.projectName = projectName
-    commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"), ".scala")
+    //commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"), ".scala")
     commitStats.regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
 
     var scalaRoot = Utils.normalizeDirectoryPath(projectPath.getAbsolutePath)

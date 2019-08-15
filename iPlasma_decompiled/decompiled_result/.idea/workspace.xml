@@ -1,19 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c6057e7a-d9f9-411f-8914-ced65ef86d83" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../usingIplasma/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../usingIplasma/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../usingIplasma/src/be/emilesonneveld/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../usingIplasma/src/be/emilesonneveld/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../usingIplasma/usingIplasma.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../usingIplasma/usingIplasma.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/Cmd.scala" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/Cmd.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/LargeScaleCompilation.scala" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/LargeScaleCompilation.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/LargeScaleDb.scala" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/LargeScaleDb.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/MeasureProject.scala" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/MeasureProject.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/Utils.scala" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/Utils.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/main.scala" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/main.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/slickEmileProfile/Tables.scala" beforeDir="false" afterPath="$PROJECT_DIR$/../../thesisScalaProject/src/main/scala/slickEmileProfile/Tables.scala" afterDir="false" />
-    </list>
+    <list default="true" id="c6057e7a-d9f9-411f-8914-ced65ef86d83" name="Default Changelist" comment="" />
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -56,7 +44,7 @@
     <session id="354090899">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="2" />
+          <entry key="project.closed" value="3" />
           <entry key="project.open.time.0" value="3" />
           <entry key="project.opened" value="3" />
         </counts>
