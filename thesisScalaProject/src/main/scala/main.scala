@@ -82,7 +82,7 @@ object main extends App {
   }
 
 
-  if (false) {
+  if (true) {
     var projects = LargeScaleDb.getSuccesfullProjects
       .map(x => new File(x.buildpath))
       .distinct

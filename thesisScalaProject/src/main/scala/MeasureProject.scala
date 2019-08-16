@@ -190,7 +190,7 @@ object MeasureProject {
 
     commitStats.projectName = projectName
     //commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"), ".scala")
-    commitStats.regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
+    //commitStats.regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
 
     var scalaRoot = Utils.normalizeDirectoryPath(projectPath.getAbsolutePath)
     if (scalaRoot.endsWith("src/main/scala/"))

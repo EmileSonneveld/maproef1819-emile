@@ -46,6 +46,10 @@ class TypeHiarchy(semanticDB: SemanticDB) {
     return sum / count
   }
 
+  def ConsiderClassForAHH(name:String): Boolean = {
+    MeasureProject.doWeOwnThisClass(name) && !name.startsWith("test")
+  }
+
   def calculateAHH(): Double = {
     if (symbolList.length == 0)
       return 0
@@ -60,6 +64,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       symbolList.foreach(nodeToClusterId += _ -> -666)
 
       def infectClusterWithId(currentNode: TypeGraphNode, id: Int): Unit = {
+        if (!ConsiderClassForAHH(currentNode.name)) return
         if (nodeToClusterId(currentNode) >= 0) {
           assert(nodeToClusterId(currentNode) == id)
           return // Already infected
@@ -76,8 +81,9 @@ class TypeHiarchy(semanticDB: SemanticDB) {
 
       for (node <- symbolList) {
         var nodeClusterId = nodeToClusterId(node)
-        if (nodeClusterId < 0 && MeasureProject.doWeOwnThisClass(node.name)) {
+        if (nodeClusterId < 0 && ConsiderClassForAHH(node.name)) {
           currentClusterId += 1
+          println("New cluster starter: " + node.name)
           infectClusterWithId(node, currentClusterId)
           clusterStarers += node
         }
@@ -93,9 +99,12 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       var visitedList = scala.collection.mutable.Map[TypeGraphNode, Boolean]()
       symbolList.foreach(visitedList += _ -> false)
 
+      var tabDepth = 0
+
       def searchExtremeOffsets(currentNode: TypeGraphNode, currentOffset: Int): Unit = {
-        if (!visitedList(currentNode) && MeasureProject.doWeOwnThisClass(currentNode.name)) {
+        if (!visitedList(currentNode) && ConsiderClassForAHH(currentNode.name)) {
           visitedList(currentNode) = true
+          println("  " * tabDepth + currentNode.name)
 
           if (currentNode.name == "org/shotdraw/util/Storable#") {
             println()
@@ -105,10 +114,14 @@ class TypeHiarchy(semanticDB: SemanticDB) {
           if (currentOffset > maxOffset) maxOffset = currentOffset
 
           for (childNode <- currentNode.children) {
+            tabDepth += 1
             searchExtremeOffsets(childNode, currentOffset + 1)
+            tabDepth -= 1
           }
           for (childNode <- currentNode.parents) {
+            tabDepth += 1
             searchExtremeOffsets(childNode, currentOffset - 1)
+            tabDepth -= 1
           }
         }
       }
@@ -120,8 +133,8 @@ class TypeHiarchy(semanticDB: SemanticDB) {
 
     /*
       var rootNodes = symbolList.filter(node =>
-        MeasureProject.doWeOwnThisClass(node.name)
-          && !node.parents.exists(parentNode => MeasureProject.doWeOwnThisClass(parentNode.name))
+        ConsiderClassForAHH(node.name)
+          && !node.parents.exists(parentNode => ConsiderClassForAHH(parentNode.name))
       )
       var depthList = List.fill(rootNodes.length)(-666).toArray
 
@@ -179,19 +192,19 @@ class TypeHiarchy(semanticDB: SemanticDB) {
     sb ++= "// You can visualise this file here: http://webgraphviz.com\n"
     sb ++= "digraph {\n"
     sb ++= "  rankdir=BT;\n"
-    sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
+    sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\", fontname = \"arial\"];\n"
 
     for (node <- nodes) {
-      if (node.name != "scala/AnyRef#") {
+      if (node.name != "scala/AnyRef#" && MeasureProject.doWeOwnThisClass(node.name)) {
         // node.nodeId + " " +
         val n1 = Utils.escapeGraphVizName(node.name)
 
         //if (node.linksTo.length == 0)
         var nam = getPackageName(node.name)
         sb ++= "	\"" + n1 + "\" [color=\"" + getHlsColorForString(nam) + "\" ]\n"
-        for (next <- node.parents) {
 
-          if (next.name != "scala/AnyRef#") {
+        for (next <- node.parents) {
+          if (next.name != "scala/AnyRef#" && MeasureProject.doWeOwnThisClass(next.name)) {
             val n2 = Utils.escapeGraphVizName(next.name)
             sb ++= "	\"" + n1 + "\"->\"" + n2 + "\"\n"
           }

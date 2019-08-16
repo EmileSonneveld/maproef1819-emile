@@ -42,3 +42,4 @@ var files = Utils.recursiveGetFiles(
   ".class")
 println(files.mkString(" "))
 
+"Boo"*2

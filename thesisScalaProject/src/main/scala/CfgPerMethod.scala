@@ -27,7 +27,7 @@ object CfgPerMethod {
     var sb = new StringBuilder()
     sb ++= "// You can visualise this file here: http://webgraphviz.com\n"
     sb ++= "digraph {\n"
-    sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
+    sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\", fontname = \"arial\"];\n"
 
     for (nodes <- methodMap.values) {
       sb ++= "\n"
@@ -42,7 +42,7 @@ object CfgPerMethod {
     var sb = new StringBuilder()
     sb ++= "// You can visualise this file here: http://webgraphviz.com\n"
     sb ++= "digraph {\n"
-    sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\"];\n"
+    sb ++= "	node [shape = rectangle, style=filled, color=\"0.650 0.200 1.000\", fontname = \"arial\"];\n"
 
     sb ++= methodToGraphviz(nodes)
 
