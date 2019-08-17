@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 
 import slickEmileProfile.Tables
-import slickEmileProfile.Tables.PyramidStatsRow
+import slickEmileProfile.Tables.PyramidStatsScalaRow
 
 import scala.collection.mutable.ListBuffer
 
@@ -23,12 +23,12 @@ class CommitStats {
   var powershell_LOC = 0 // For seeking correlations with loc
   var regexDefMatches = 0 // For seeking correlations with nom
 
-  def toPyramidStats: Tables.PyramidStatsRow = {
+  def toPyramidStats: Tables.PyramidStatsScalaRow = {
     val nop = this.nop_set.size
     val noc = this.noc_set.size
     val nom = this.nom_set.size
     val timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance.getTime)
-    PyramidStatsRow(0, projectName, commitHash, timeStamp, nop, noc, nom, loc, cc, Option(andc), Option(ahh), Option(calls), Option(fanout), Option(powershell_LOC), Option(regexDefMatches))
+    PyramidStatsScalaRow(0, projectName, commitHash, timeStamp, nop, noc, nom, loc, cc, Option(andc), Option(ahh), Option(calls), Option(fanout), Option(powershell_LOC), Option(regexDefMatches))
   }
 
   /*

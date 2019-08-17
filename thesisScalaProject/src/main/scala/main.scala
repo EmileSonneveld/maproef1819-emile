@@ -7,6 +7,7 @@ import scala.language.postfixOps
 object main extends App {
 
   def calculationsOnProject(projectPath: File): Any = {
+    thesisCommon.main(Array(""))
 
     if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
       println("Don't treat the dev folder as cannon flodder.")
@@ -22,7 +23,6 @@ object main extends App {
 
       var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
       commitStats.commitHash = commitHash
-      commitStats.projectName
       println(commitStats.nom_set)
       var svg = Utils.readFile("..\\svg\\pyramid.svg")
       svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
@@ -82,7 +82,7 @@ object main extends App {
   }
 
 
-  if (true) {
+  if (false) {
     var projects = LargeScaleDb.getSuccesfullProjects
       .map(x => new File(x.buildpath))
       .distinct

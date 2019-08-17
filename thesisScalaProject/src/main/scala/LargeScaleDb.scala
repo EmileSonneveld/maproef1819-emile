@@ -8,7 +8,7 @@ import java.util
 import slick.ast.LiteralNode
 import slick.jdbc.SQLiteProfile.api._
 import slickEmileProfile.Tables
-import slickEmileProfile.Tables.{BuildTriesRow, JavaPyramidRow, PyramidStatsRow}
+import slickEmileProfile.Tables.{BuildTriesRow, JavaPyramidRow, PyramidStatsScalaRow}
 
 import scala.concurrent.{Await, duration}
 
@@ -18,7 +18,7 @@ object LargeScaleDb {
   // Should call this if database must close: finally db.close
 
   val build_tries = TableQuery[Tables.BuildTries]
-  val pyramid_stats = TableQuery[Tables.PyramidStats]
+  val pyramid_stats = TableQuery[Tables.PyramidStatsScala]
   val java_pyramid = TableQuery[Tables.JavaPyramid]
   val pyramid_stats_java = TableQuery[Tables.PyramidStatsJava]
 
@@ -76,7 +76,7 @@ object LargeScaleDb {
     builds.exists(x => x.stdoutput.contains("[success]") && x.buildtype == buildType)
   }
 
-  def getPyramidStatsForProj(project: String): Seq[Tables.PyramidStatsRow] = {
+  def getPyramidStatsForProj(project: String): Seq[Tables.PyramidStatsScalaRow] = {
     var query = pyramid_stats.filter(_.project.like(project))
     var f = db.run(query.result)
     Await.result(f, duration.Duration(10, "sec"))
@@ -88,7 +88,7 @@ object LargeScaleDb {
     Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def getCommitRows(commitHash: String): Seq[Tables.PyramidStatsRow] = {
+  def getCommitRows(commitHash: String): Seq[Tables.PyramidStatsScalaRow] = {
     var query = pyramid_stats.filter(_.commithash === commitHash)
     var f = db.run(query.result)
     Await.result(f, duration.Duration(10, "sec"))
@@ -117,7 +117,7 @@ object LargeScaleDb {
     }
   }
 
-  def insertPyramidStats(row: Tables.PyramidStatsRow): Unit = {
+  def insertPyramidStats(row: Tables.PyramidStatsScalaRow): Unit = {
     var query = (pyramid_stats += row)
     var f = db.run(query)
     Await.result(f, duration.Duration(5, "sec"))
@@ -130,7 +130,7 @@ object LargeScaleDb {
     Await.result(f, duration.Duration(5, "sec"))
   }
 
-  def updatePyramidStats(row: Tables.PyramidStatsRow): Unit = {
+  def updatePyramidStats(row: Tables.PyramidStatsScalaRow): Unit = {
     val res = pyramid_stats.filter(_.id === row.id)
     val action = res.update(row)
     var f = db.run(action)
