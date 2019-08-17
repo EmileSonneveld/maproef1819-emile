@@ -38,5 +38,3 @@ libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.1"
 
 //libraryDependencies += "com.h2database" % "h2" % "1.4.199"
 unmanagedJars in Compile += file(Path.userHome+"C:\\Users\\emill\\dev\\maproef1819-emile\\jars\\sqlite-jdbc-3.27.2.1.jar")
-
-//lazy val thesisCommon = (project in file("../thesisCommon"))

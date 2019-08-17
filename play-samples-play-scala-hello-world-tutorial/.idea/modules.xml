@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-samples-play-scala-hello-world-tutorial_8805.iml" filepath="$PROJECT_DIR$/.idea/modules/play-samples-play-scala-hello-world-tutorial_8805.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-samples-play-scala-hello-world-tutorial_8805-build.iml" filepath="$PROJECT_DIR$/.idea/modules/play-samples-play-scala-hello-world-tutorial_8805-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/play-scala-seed.iml" filepath="$PROJECT_DIR$/.idea/modules/play-scala-seed.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/root-build.iml" filepath="$PROJECT_DIR$/.idea/modules/root-build.iml" />
     </modules>
   </component>
 </project>
