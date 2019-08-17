@@ -10,9 +10,17 @@
             </ProjectSettingsEntry>
           </value>
         </entry>
+        <entry key="play-scala-seed">
+          <value>
+            <ProjectSettingsEntry>
+              <option name="playDistrPath" value="$USER_HOME$/.ivy2/cache/com.typesafe.play/play_2.13/jars/play_2.13-2.7.3.jar" />
+            </ProjectSettingsEntry>
+          </value>
+        </entry>
         <entry key="root">
           <value>
             <ProjectSettingsEntry>
+              <option name="sourceDir" value="C:\Users\emill\dev\maproef1819-emile\play-samples-play-scala-hello-world-tutorial\app" />
               <option name="confDir" value="C:\Users\emill\dev\maproef1819-emile\play-samples-play-scala-hello-world-tutorial\app" />
               <option name="templateImports">
                 <list>
