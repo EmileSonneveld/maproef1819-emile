@@ -84,7 +84,7 @@ class SemanticDB(val projectPath: File) {
         documents += reload(main_doc.tdoc.uri)
       } catch {
         case _ =>
-          println("Ignored document that throws when parsed" + main_doc.path)
+          println("Ignored document that throws when parsed: " + main_doc.path)
       }
     }
     documents

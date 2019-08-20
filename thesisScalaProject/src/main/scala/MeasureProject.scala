@@ -4,7 +4,7 @@ import java.text._
 import org.apache.commons.lang3.StringUtils
 import scalafix.v1.SemanticDocument
 import scalafix.{DocumentTuple, SemanticDB}
-import scalafix.v1._
+import scalafix.v1._ // for the symbol magic
 import slickEmileProfile.Tables
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -219,9 +219,9 @@ object MeasureProject {
             for (pair <- methodMap) {
               cc += CfgPerMethod.calculateCC(pair._2)
             }
-            val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, doc.sdoc)
+            val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, sdoc)
             val classExternalProps = classExternalPropsSet.size
-            val cohesion = calculateCohesion(clazz, semanticDB, doc.sdoc)
+            val cohesion = calculateCohesion(clazz, semanticDB, sdoc)
 
             // Numbers come from PMD
             if (classExternalProps > 5 // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
@@ -239,7 +239,7 @@ object MeasureProject {
               case d: Defn.Def =>
                 println("Def: " + d.name.value)
 
-                val methodExternalPropsSetAll = externalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
+                val methodExternalPropsSetAll = externalProperties(clazz.symbol.value, d, semanticDB, sdoc)
                 print("")
                 val methodExternalPropsSet = methodExternalPropsSetAll.filter(doWeOwnThisClass) // We can envy the standard library, but we can't realy do anything about it
 
@@ -251,7 +251,7 @@ object MeasureProject {
                   }
                   set
                 }
-                val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
+                val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, sdoc)
                 val methodInternalProps = methodInternalPropsSet.size
 
                 assert(methodExternalPropsSetAll.intersect(methodInternalPropsSet).size == 0)
@@ -292,20 +292,21 @@ object MeasureProject {
                 val loc = d.toString.count(x => x == '\n')
 
                 val methodLocalPropsSet = localProperties(clazz, d, semanticDB, sdoc)
-
+                val MAXNESTING = calculateNestingLevel(d)
                 // Number Of Accessed Variables
                 val NOAV = methodLocalPropsSet.size + methodInternalProps + methodExternalProps
 
                 if (loc > locInClass.toDouble / 2
                   && methodCc > 10 // TODO: Verify if this indeed is a "VERY HIGH" CC
-                  // TODO: Nesting level
-                  && NOAV > 10 // TODO: Verify if this indeed is "MANY"
+                  && MAXNESTING > 3 // SEVERAL means 2-5
+                  && NOAV > 2 // TODO: Verify if this indeed is "MANY"
                 ) {
 
                   val log = ("BrainMethod detected! " + d.name.toString() + "\n"
                     + "    loc: " + loc + "\n"
                     + "    locInClass: " + locInClass + "\n"
                     + "    methodCc: " + methodCc + "\n"
+                    + "    MAXNESTING: " + MAXNESTING + "\n"
                     + "    NOAV: " + NOAV)
                   LargeScaleDb.insertRow(Tables.DetectedSmellRow(0, commitStats.commitHash, d.symbol.value, "BrainMethod", log))
                 }
@@ -363,16 +364,19 @@ object MeasureProject {
     var currentDepth = 0
 
     def rec(tree: Tree): Unit = {
-      var goingDeeper = false
-      tree match {
-        case _: Term.If => goingDeeper = true
-        case _: Term.Do => goingDeeper = true
-        case _: Term.For => goingDeeper = true
-        case _: Term.Match => goingDeeper = true
-        case _: Term.While => goingDeeper = true
+      var goingDeeper = tree match {
+        case _: Term.If => true
+        case _: Term.Do => true
+        case _: Term.For => true
+        case _: Term.Match => true
+        case _: Term.While => true
+        case _ => false
       }
-      if (goingDeeper)
+      if (goingDeeper) {
         currentDepth += 1
+        if (currentDepth > maxDepth) maxDepth = currentDepth
+      }
+
       tree.children.foreach(rec)
 
       if (goingDeeper)
@@ -380,21 +384,6 @@ object MeasureProject {
     }
 
     rec(methodTree)
-
-    def traverse(fn: PartialFunction[Tree, Unit]): Unit = {
-      val liftedFn = fn.lift
-      object traverser extends SimpleTraverser {
-        override def apply(tree: Tree): Unit = {
-          liftedFn(tree)
-          super.apply(tree)
-        }
-      }
-      traverser(methodTree)
-    }
-
-    traverse({
-      case d: Defn.Def => 5
-    })
     maxDepth
   }
 
@@ -505,11 +494,16 @@ object MeasureProject {
                   collectedProperties += decodedPropName
                 }
                 else if (info.kind == SymbolInformation.Kind.METHOD) {
-                  val params = info.signature.asInstanceOf[semanticdb.MethodSignature].parameterLists
-                  val noBraces = params == scala.collection.immutable.Nil
+                  info.signature match {
+                    case sig: semanticdb.MethodSignature =>
+                      val params = sig.parameterLists
+                      val noBraces = params == scala.collection.immutable.Nil
 
-                  if (noBraces || isGetterSetterCall(info.displayName)) {
-                    collectedProperties += decodedPropName
+                      if (noBraces || isGetterSetterCall(info.displayName)) {
+                        collectedProperties += decodedPropName
+                      }
+                    case sig: semanticdb.Signature =>
+                      println("ignoring unknown signature: " + sig.toString)
                   }
                 }
               }

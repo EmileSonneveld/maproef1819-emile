@@ -7,12 +7,10 @@ import scala.language.postfixOps
 object main extends App {
 
   def calculationsOnProject(projectPath: File): Any = {
-    thesisCommon.main(Array(""))
-
-    //if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
-    //  println("Don't treat the dev folder as cannon flodder.")
-    //  System.exit(-1)
-    //}
+    if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
+      println("It is dangerous to alnalyse the dev folder! This tools messes with GIT and builds stuff.")
+      //System.exit(-1)
+    }
 
     var gitTopLevel = Cmd.getGitTopLevel(projectPath)
     val projectName = Cmd.getProjectName(projectPath.toPath)
@@ -57,7 +55,6 @@ object main extends App {
             commitStats.projectName = projectName
             MeasureProject.doStatsForProject(projectPath, commitStats)
           }
-          // Keep commitStats null if it was calculated before
         } catch {
           case x: Throwable => {
             println("Exception while calculating stats.")
@@ -92,13 +89,14 @@ object main extends App {
     }
   } else {
     // Don't mess in the /dev folder!
-    calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
+    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) Does not compile
     //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\100x.io"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta")) Infinite loop?
+    calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))
+    calculationsOnProjectWrap(new File("C:\\github_download\\100x.io"))
   }
 }
