@@ -17,13 +17,18 @@ import org.openqa.selenium.os._
 object Cmd {
 
 
-  def getProjectName(path: Path): String = {
+  def getRelativePathToProject(path: Path): String = {
     var tmp = path.toString
     tmp = tmp.replace("C:\\Users\\emill\\dev\\", "")
     tmp = tmp.replace("D:\\github_download\\", "")
     tmp = tmp.replace("C:\\github_download\\", "")
     tmp = tmp.replace("C:\\Users\\emill\\Desktop\\github_download\\", "")
     tmp = tmp.replace("D:\\dev\\", "")
+    tmp
+  }
+
+  def getProjectName(path: Path): String = {
+    val tmp = getRelativePathToProject(path)
     var firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))
     if (firstSlah == -1) return tmp
     else return tmp.substring(0, firstSlah)

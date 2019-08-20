@@ -176,9 +176,9 @@ object MeasureProject {
     if (true) { // CC and Code Flow Graph
       val methodMap = CfgPerMethod.compute(sdoc.tree)
 
-      //val relative = semanticDB.projectPath.toPath.relativize(sdoc.input.asInstanceOf[Input.File].path.toNIO)
-      //val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\" + commitStats.projectName + "\\" + relative + ".gv"
-      //Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
+      val relative = Cmd.getRelativePathToProject(sdoc.input.asInstanceOf[Input.File].path.toNIO)
+      val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\" + relative + ".gv"
+      Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
 
       for (pair <- methodMap) {
         val CC = CfgPerMethod.calculateCC(pair._2)

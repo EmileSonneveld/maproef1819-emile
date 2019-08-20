@@ -37,9 +37,9 @@ class TestCFG {
       case 1 => "One"
       case 2 => {
         if (true) {
-          "Two"
+          "Two_A"
         }
-        "Twooooo"
+        "Two_B"
       }
       case 3 => "Tree"
     }
