@@ -83,7 +83,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
         var nodeClusterId = nodeToClusterId(node)
         if (nodeClusterId < 0 && ConsiderClassForAHH(node.name)) {
           currentClusterId += 1
-          println("New cluster starter: " + node.name)
+          //println("New cluster starter: " + node.name)
           infectClusterWithId(node, currentClusterId)
           clusterStarers += node
         }
@@ -104,11 +104,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       def searchExtremeOffsets(currentNode: TypeGraphNode, currentOffset: Int): Unit = {
         if (!visitedList(currentNode) && ConsiderClassForAHH(currentNode.name)) {
           visitedList(currentNode) = true
-          println("  " * tabDepth + currentNode.name)
-
-          if (currentNode.name == "org/shotdraw/util/Storable#") {
-            println()
-          }
+          //println("  " * tabDepth + currentNode.name)
 
           if (currentOffset < minOffset) minOffset = currentOffset
           if (currentOffset > maxOffset) maxOffset = currentOffset

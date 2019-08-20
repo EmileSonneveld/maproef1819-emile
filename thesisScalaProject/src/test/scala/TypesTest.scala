@@ -23,7 +23,7 @@ class TypesTest extends FunSuite {
     val semanticDB = new SemanticDB(new File("..\\testScala"))
     for (doc <- semanticDB.documents) {
       implicit val sdlifhbduogdfhg: SemanticDocument = doc.sdoc
-      println("\n Doc: " + doc.tdoc.uri)
+      println("\nDoc: " + doc.tdoc.uri)
 
       def handleTraitOrClass(c: Tree) = {
         {
@@ -36,16 +36,19 @@ class TypesTest extends FunSuite {
             //println("externalPropertiesSet: " + externalPropertiesSet)
 
             val internalPropertiesSet = internalProperties(c.symbol.value, c, semanticDB, doc.sdoc)
-            //println("internalPropertiesSet: " + internalPropertiesSet)
+            println("internalPropertiesSet: " + internalPropertiesSet)
+            assert(externalPropertiesSet.intersect(internalPropertiesSet).size == 0)
 
             className match {
               case "C" =>
                 assert(externalPropertiesSet.exists(p => p.contains("property_ObjectType")))
                 assert(internalPropertiesSet.exists(p => p.contains("propA")))
+                assert(!internalPropertiesSet.exists(p => p.contains("#this")))
               case "D" =>
                 assert(externalPropertiesSet.exists(p => p.contains("property_ObjectType")))
                 assert(internalPropertiesSet.exists(p => p.contains("propA")))
                 assert(internalPropertiesSet.exists(p => p.contains("propD")))
+                assert(internalPropertiesSet.exists(p => p.contains("#this")))
               case _ => // ignore
             }
           }

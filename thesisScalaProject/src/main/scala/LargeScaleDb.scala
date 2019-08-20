@@ -1,14 +1,10 @@
 import java.io.File
-import java.util.{ArrayList, Date}
-import java.security.PublicKey
 import java.sql._
-import java.time.ZonedDateTime
-import java.util
+import java.util.Date
 
-import slick.ast.LiteralNode
 import slick.jdbc.SQLiteProfile.api._
 import slickEmileProfile.Tables
-import slickEmileProfile.Tables.{BuildTriesRow, JavaPyramidRow, PyramidStatsScalaRow}
+import slickEmileProfile.Tables.{JavaIplasmaPyramidRow, SbtBuildTriesRow}
 
 import scala.concurrent.{Await, duration}
 
@@ -17,10 +13,11 @@ object LargeScaleDb {
   val db = Database.forConfig("slickEmileProfile")
   // Should call this if database must close: finally db.close
 
-  val build_tries = TableQuery[Tables.BuildTries]
+  val build_tries = TableQuery[Tables.SbtBuildTries]
   val pyramid_stats = TableQuery[Tables.PyramidStatsScala]
-  val java_pyramid = TableQuery[Tables.JavaPyramid]
+  val java_pyramid = TableQuery[Tables.JavaIplasmaPyramid]
   val pyramid_stats_java = TableQuery[Tables.PyramidStatsJava]
+  val detected_smell = TableQuery[Tables.DetectedSmell]
 
   //private var conn: Connection = _
   //try {
@@ -33,28 +30,28 @@ object LargeScaleDb {
   //}
 
   def insertBuildTry(buildPath: File, stdOutput: String, buildType: String): Unit = {
-    var f = db.run(build_tries += BuildTriesRow(0, new Timestamp(new Date().getTime).toString, buildPath.toString, stdOutput, null))
+    var f = db.run(build_tries += SbtBuildTriesRow(0, new Timestamp(new Date().getTime).toString, buildPath.toString, stdOutput, null))
     Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def insertJavaPyramidTry(buildPath: File, stdOutput: String): Unit = {
-    var f = db.run(java_pyramid += JavaPyramidRow(0, new Timestamp(new Date().getTime).toString, buildPath.toString, stdOutput))
+  def insertJavaIplasmaPyramidTry(buildPath: File, stdOutput: String): Unit = {
+    var f = db.run(java_pyramid += JavaIplasmaPyramidRow(0, new Timestamp(new Date().getTime).toString, buildPath.toString, stdOutput))
     Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def getSuccesfullProjects: Seq[Tables.BuildTriesRow] = {
+  def getSuccesfullProjects: Seq[Tables.SbtBuildTriesRow] = {
     var query = build_tries.filter(_.stdoutput.like("%[success]%"))
     var f = db.run(query.result)
     Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def getBuildTry(buildPath: File): Seq[Tables.BuildTriesRow] = {
+  def getBuildTry(buildPath: File): Seq[Tables.SbtBuildTriesRow] = {
     var query = build_tries.filter(_.buildpath.like(buildPath.toString))
     var f = db.run(query.result)
     Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def getAllJavaIPlasma: Seq[Tables.JavaPyramidRow] = {
+  def getAllJavaIPlasma: Seq[Tables.JavaIplasmaPyramidRow] = {
     var query = java_pyramid
     var f = db.run(query.result)
     Await.result(f, duration.Duration(10, "sec"))
@@ -82,7 +79,7 @@ object LargeScaleDb {
     Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def getDistinctCommits() = {
+  def getDistinctCommits: Seq[String] = {
     var query = pyramid_stats.map(_.commithash).distinct
     var f = db.run(query.result)
     Await.result(f, duration.Duration(10, "sec"))
@@ -94,7 +91,7 @@ object LargeScaleDb {
     Await.result(f, duration.Duration(10, "sec"))
   }
 
-  def removePyramidRow(id: Int) = {
+  def removePyramidRow(id: Int): Unit = {
     var query = pyramid_stats.filter(_.id === id).delete
     var f = db.run(query)
     Await.result(f, duration.Duration(10, "sec"))
@@ -135,6 +132,18 @@ object LargeScaleDb {
     val action = res.update(row)
     var f = db.run(action)
     Await.result(f, duration.Duration(5, "sec"))
+  }
+
+  def insertRow(row: Tables.DetectedSmellRow): Unit = {
+    var query = (detected_smell += row)
+    var f = db.run(query)
+    Await.result(f, duration.Duration(5, "sec"))
+  }
+
+  def removeDetectedSmellsForCommit(commitHash: String): Unit = {
+    var query = detected_smell.filter(_.commit === commitHash).delete
+    var f = db.run(query)
+    Await.result(f, duration.Duration(10, "sec"))
   }
 }
 

@@ -22,7 +22,7 @@ trait B {}
 trait C extends A {
 
   private val external = new ObjectType()
-  println(propA + external.property_ObjectType)
+  println(propA + this.external.property_ObjectType)
 }
 
 class D extends A with B {
@@ -31,6 +31,7 @@ class D extends A with B {
   def methodInD: String = {
     val external = new ObjectType()
     val totallyLocal = "local"
+    val testThis = this
     propD + propA + totallyLocal + external.property_ObjectType
   }
 }

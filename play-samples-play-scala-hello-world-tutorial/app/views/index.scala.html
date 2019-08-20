@@ -26,7 +26,7 @@
                 project_selection
                 @for(item <- controlToView.project_list) {
                     <div style="">
-                    <input type="radio" name="project_@{item}" value="project_@{item}">
+                    <input type="radio" name="project_selection_radio" value="project_@{item}">
                     <label for="project_@{item}">@{item}</label>
                     </div>
                 }
@@ -35,7 +35,7 @@
                 commit_selection
                 @for(item <- controlToView.commit_list) {
                     <div style="">
-                        <input type="radio" name="commit_@{item}" value="commit_@{item}">
+                        <input type="radio" name="radio_selection_radio" value="commit_@{item}">
                         <label for="radio@{item}">@{item}</label>
                     </div>
                 }
@@ -50,7 +50,7 @@
                     tab_selection
                     @for(item <- controlToView.tab_list) {
                         <div style="display: inline">
-                            <input type="radio" name="tab_@{item}" value="tab_@{item}">
+                            <input type="radio" name="tab_selection_radio" value="tab_@{item}">
                             <label for="tab_@{item}">@{item}</label>
                         </div>
                     }</div>

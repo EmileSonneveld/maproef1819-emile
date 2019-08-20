@@ -14,65 +14,33 @@ trait Tables {
   import slick.jdbc.{GetResult => GR}
 
   /** DDL for all tables. Call .create to execute. */
-  lazy val schema: profile.SchemaDescription = BuildTries.schema ++ DetectedSmell.schema ++ JavaPyramid.schema ++ PyramidStatsJava.schema ++ PyramidStatsScala.schema
+  lazy val schema: profile.SchemaDescription = DetectedSmell.schema ++ JavaIplasmaPyramid.schema ++ PyramidStatsJava.schema ++ PyramidStatsScala.schema ++ SbtBuildTries.schema
   @deprecated("Use .schema instead of .ddl", "3.0")
   def ddl = schema
 
-  /** Entity class storing rows of table BuildTries
-   *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
-   *  @param builddatetime Database column buildDateTime SqlType(TEXT)
-   *  @param buildpath Database column buildPath SqlType(TEXT)
-   *  @param stdoutput Database column stdOutput SqlType(TEXT)
-   *  @param buildtype Database column buildType SqlType(TEXT) */
-  case class BuildTriesRow(id: Int, builddatetime: String, buildpath: String, stdoutput: String, buildtype: Option[String])
-  /** GetResult implicit for fetching BuildTriesRow objects using plain SQL queries */
-  implicit def GetResultBuildTriesRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[String]]): GR[BuildTriesRow] = GR{
-    prs => import prs._
-    BuildTriesRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<?[String]))
-  }
-  /** Table description of table build_tries. Objects of this class serve as prototypes for rows in queries. */
-  class BuildTries(_tableTag: Tag) extends profile.api.Table[BuildTriesRow](_tableTag, "build_tries") {
-    def * = (id, builddatetime, buildpath, stdoutput, buildtype) <> (BuildTriesRow.tupled, BuildTriesRow.unapply)
-    /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(builddatetime), Rep.Some(buildpath), Rep.Some(stdoutput), buildtype)).shaped.<>({r=>import r._; _1.map(_=> BuildTriesRow.tupled((_1.get, _2.get, _3.get, _4.get, _5)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
-
-    /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
-    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
-    /** Database column buildDateTime SqlType(TEXT) */
-    val builddatetime: Rep[String] = column[String]("buildDateTime")
-    /** Database column buildPath SqlType(TEXT) */
-    val buildpath: Rep[String] = column[String]("buildPath")
-    /** Database column stdOutput SqlType(TEXT) */
-    val stdoutput: Rep[String] = column[String]("stdOutput")
-    /** Database column buildType SqlType(TEXT) */
-    val buildtype: Rep[Option[String]] = column[Option[String]]("buildType")
-  }
-  /** Collection-like TableQuery object for table BuildTries */
-  lazy val BuildTries = new TableQuery(tag => new BuildTries(tag))
-
   /** Entity class storing rows of table DetectedSmell
    *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
-   *  @param project Database column project SqlType(INTEGER)
+   *  @param commit Database column commit SqlType(TEXT)
    *  @param fullyQualifiedName Database column fully_qualified_name SqlType(TEXT)
    *  @param `type` Database column type SqlType(TEXT)
    *  @param log Database column log SqlType(TEXT) */
-  case class DetectedSmellRow(id: Int, project: Int, fullyQualifiedName: String, `type`: String, log: String)
+  case class DetectedSmellRow(id: Int, commit: String, fullyQualifiedName: String, `type`: String, log: String)
   /** GetResult implicit for fetching DetectedSmellRow objects using plain SQL queries */
   implicit def GetResultDetectedSmellRow(implicit e0: GR[Int], e1: GR[String]): GR[DetectedSmellRow] = GR{
     prs => import prs._
-    DetectedSmellRow.tupled((<<[Int], <<[Int], <<[String], <<[String], <<[String]))
+    DetectedSmellRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[String]))
   }
   /** Table description of table detected_smell. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: type */
   class DetectedSmell(_tableTag: Tag) extends profile.api.Table[DetectedSmellRow](_tableTag, "detected_smell") {
-    def * = (id, project, fullyQualifiedName, `type`, log) <> (DetectedSmellRow.tupled, DetectedSmellRow.unapply)
+    def * = (id, commit, fullyQualifiedName, `type`, log) <> (DetectedSmellRow.tupled, DetectedSmellRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(fullyQualifiedName), Rep.Some(`type`), Rep.Some(log))).shaped.<>({r=>import r._; _1.map(_=> DetectedSmellRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(commit), Rep.Some(fullyQualifiedName), Rep.Some(`type`), Rep.Some(log))).shaped.<>({r=>import r._; _1.map(_=> DetectedSmellRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
-    /** Database column project SqlType(INTEGER) */
-    val project: Rep[Int] = column[Int]("project")
+    /** Database column commit SqlType(TEXT) */
+    val commit: Rep[String] = column[String]("commit")
     /** Database column fully_qualified_name SqlType(TEXT) */
     val fullyQualifiedName: Rep[String] = column[String]("fully_qualified_name")
     /** Database column type SqlType(TEXT)
@@ -84,22 +52,22 @@ trait Tables {
   /** Collection-like TableQuery object for table DetectedSmell */
   lazy val DetectedSmell = new TableQuery(tag => new DetectedSmell(tag))
 
-  /** Entity class storing rows of table JavaPyramid
+  /** Entity class storing rows of table JavaIplasmaPyramid
    *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
    *  @param datetime Database column dateTime SqlType(TEXT)
    *  @param path Database column path SqlType(TEXT)
    *  @param output Database column output SqlType(TEXT) */
-  case class JavaPyramidRow(id: Int, datetime: String, path: String, output: String)
-  /** GetResult implicit for fetching JavaPyramidRow objects using plain SQL queries */
-  implicit def GetResultJavaPyramidRow(implicit e0: GR[Int], e1: GR[String]): GR[JavaPyramidRow] = GR{
+  case class JavaIplasmaPyramidRow(id: Int, datetime: String, path: String, output: String)
+  /** GetResult implicit for fetching JavaIplasmaPyramidRow objects using plain SQL queries */
+  implicit def GetResultJavaIplasmaPyramidRow(implicit e0: GR[Int], e1: GR[String]): GR[JavaIplasmaPyramidRow] = GR{
     prs => import prs._
-    JavaPyramidRow.tupled((<<[Int], <<[String], <<[String], <<[String]))
+    JavaIplasmaPyramidRow.tupled((<<[Int], <<[String], <<[String], <<[String]))
   }
-  /** Table description of table java_pyramid. Objects of this class serve as prototypes for rows in queries. */
-  class JavaPyramid(_tableTag: Tag) extends profile.api.Table[JavaPyramidRow](_tableTag, "java_pyramid") {
-    def * = (id, datetime, path, output) <> (JavaPyramidRow.tupled, JavaPyramidRow.unapply)
+  /** Table description of table java_iplasma_pyramid. Objects of this class serve as prototypes for rows in queries. */
+  class JavaIplasmaPyramid(_tableTag: Tag) extends profile.api.Table[JavaIplasmaPyramidRow](_tableTag, "java_iplasma_pyramid") {
+    def * = (id, datetime, path, output) <> (JavaIplasmaPyramidRow.tupled, JavaIplasmaPyramidRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(datetime), Rep.Some(path), Rep.Some(output))).shaped.<>({r=>import r._; _1.map(_=> JavaPyramidRow.tupled((_1.get, _2.get, _3.get, _4.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(datetime), Rep.Some(path), Rep.Some(output))).shaped.<>({r=>import r._; _1.map(_=> JavaIplasmaPyramidRow.tupled((_1.get, _2.get, _3.get, _4.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -110,8 +78,8 @@ trait Tables {
     /** Database column output SqlType(TEXT) */
     val output: Rep[String] = column[String]("output")
   }
-  /** Collection-like TableQuery object for table JavaPyramid */
-  lazy val JavaPyramid = new TableQuery(tag => new JavaPyramid(tag))
+  /** Collection-like TableQuery object for table JavaIplasmaPyramid */
+  lazy val JavaIplasmaPyramid = new TableQuery(tag => new JavaIplasmaPyramid(tag))
 
   /** Entity class storing rows of table PyramidStatsJava
    *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
@@ -233,4 +201,36 @@ trait Tables {
   }
   /** Collection-like TableQuery object for table PyramidStatsScala */
   lazy val PyramidStatsScala = new TableQuery(tag => new PyramidStatsScala(tag))
+
+  /** Entity class storing rows of table SbtBuildTries
+   *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
+   *  @param builddatetime Database column buildDateTime SqlType(TEXT)
+   *  @param buildpath Database column buildPath SqlType(TEXT)
+   *  @param stdoutput Database column stdOutput SqlType(TEXT)
+   *  @param buildtype Database column buildType SqlType(TEXT) */
+  case class SbtBuildTriesRow(id: Int, builddatetime: String, buildpath: String, stdoutput: String, buildtype: Option[String])
+  /** GetResult implicit for fetching SbtBuildTriesRow objects using plain SQL queries */
+  implicit def GetResultSbtBuildTriesRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[String]]): GR[SbtBuildTriesRow] = GR{
+    prs => import prs._
+    SbtBuildTriesRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<?[String]))
+  }
+  /** Table description of table sbt_build_tries. Objects of this class serve as prototypes for rows in queries. */
+  class SbtBuildTries(_tableTag: Tag) extends profile.api.Table[SbtBuildTriesRow](_tableTag, "sbt_build_tries") {
+    def * = (id, builddatetime, buildpath, stdoutput, buildtype) <> (SbtBuildTriesRow.tupled, SbtBuildTriesRow.unapply)
+    /** Maps whole row to an option. Useful for outer joins. */
+    def ? = ((Rep.Some(id), Rep.Some(builddatetime), Rep.Some(buildpath), Rep.Some(stdoutput), buildtype)).shaped.<>({r=>import r._; _1.map(_=> SbtBuildTriesRow.tupled((_1.get, _2.get, _3.get, _4.get, _5)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+
+    /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    /** Database column buildDateTime SqlType(TEXT) */
+    val builddatetime: Rep[String] = column[String]("buildDateTime")
+    /** Database column buildPath SqlType(TEXT) */
+    val buildpath: Rep[String] = column[String]("buildPath")
+    /** Database column stdOutput SqlType(TEXT) */
+    val stdoutput: Rep[String] = column[String]("stdOutput")
+    /** Database column buildType SqlType(TEXT) */
+    val buildtype: Rep[Option[String]] = column[Option[String]]("buildType")
+  }
+  /** Collection-like TableQuery object for table SbtBuildTries */
+  lazy val SbtBuildTries = new TableQuery(tag => new SbtBuildTries(tag))
 }

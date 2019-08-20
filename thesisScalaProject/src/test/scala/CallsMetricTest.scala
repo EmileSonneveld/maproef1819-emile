@@ -21,7 +21,7 @@ class CallsMetricTest extends FunSuite {
     for (doc <- semanticDB.documents) {
       implicit val sdlifhbduogdfhg: SemanticDocument = doc.sdoc
       if (doc.tdoc.uri.contains("CallsMetric")) {
-        println("\n Doc: " + doc.tdoc.uri)
+        println("\nDoc: " + doc.tdoc.uri)
 
         // Todo, find a way to capture function calls in class body
 
@@ -38,12 +38,7 @@ class CallsMetricTest extends FunSuite {
 
                 var s = SemanticDB.getFromSymbolTable(a, doc.sdoc)
                 if (!s.isLocal && !s.isNone) {
-                  println("s: " + s.value)
                   val info = semanticDB.getInfo(s.value)
-
-                  if (s.value.contains("theImportantDef")) {
-                    println()
-                  }
                   if (info.kind == SymbolInformation.Kind.METHOD) {
                     calls += s.value
                   }

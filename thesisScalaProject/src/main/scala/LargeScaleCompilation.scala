@@ -36,7 +36,7 @@ object LargeScaleCompilation {
           "\"C:\\Program Files\\Java\\jdk1.8.0_191\\bin\\java\" -DSAIL_PATH=\"./res/SAILMetrics\" -DFOLDER_LIST=\";\" -DFOLDER_SEPARATOR=\"\\\\\" -DPROJECT_TYPE=\"Java\" -Xms256m -Xmx1536m -classpath \"C:\\Program Files\\Java\\jdk1.8.0_191\\lib\\tools.jar\";\"C:\\Program Files\\Java\\jdk1.8.0_191\\lib\\rt.jar\";./classes;liquidlnf.jar;intellij.jar;memoria.jar;metrics.jar;common.jar;dude.jar;java2html.jar;recoder.jar;jmondrian.jar lrg.insider.gui.InsiderTextMain " + p.getAbsolutePath + " OverviewPyramid",
           new File("C:\\Users\\emill\\dev\\maproef1819-emile\\iPlasma_decompiled\\iPlasma_original\\iPlasma"))
 
-        LargeScaleDb.insertJavaPyramidTry(p, returnString)
+        LargeScaleDb.insertJavaIplasmaPyramidTry(p, returnString)
       }
     }
   }

@@ -9,21 +9,21 @@ object main extends App {
   def calculationsOnProject(projectPath: File): Any = {
     thesisCommon.main(Array(""))
 
-    if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
-      println("Don't treat the dev folder as cannon flodder.")
-      System.exit(-1)
-    }
+    //if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
+    //  println("Don't treat the dev folder as cannon flodder.")
+    //  System.exit(-1)
+    //}
 
     var gitTopLevel = Cmd.getGitTopLevel(projectPath)
     val projectName = Cmd.getProjectName(projectPath.toPath)
 
     if (true) {
-      val commitHash = Cmd.getCurrentCommitHash(projectPath)
-      Cmd.makeCommitStateClean(gitTopLevel)
+      //Cmd.makeCommitStateClean(gitTopLevel) Doesn't matter, as we calculate on the semantiddb files
 
-      var commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
-      commitStats.commitHash = commitHash
-      println(commitStats.nom_set)
+      val commitStats = new CommitStats
+      commitStats.projectName = projectName
+      commitStats.commitHash = Cmd.getCurrentCommitHash(projectPath)
+      MeasureProject.doStatsForProject(projectPath, commitStats)
       var svg = Utils.readFile("..\\svg\\pyramid.svg")
       svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
       Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
@@ -42,7 +42,9 @@ object main extends App {
       hashes = hashes.slice(0, Math.min(2, hashes.length))
       //hashes = List("821b2307a02cf68fd608d098be807876fd320563")
       for (hash <- hashes) {
-        var commitStats: CommitStats = null
+        val commitStats: CommitStats = new CommitStats
+        commitStats.projectName = projectName
+        commitStats.commitHash = hash
         try {
           if (!hashesFromDb.exists(_.commithash == hash) || LargeScaleDb.commitWorthRetaking(hash)) {
             Cmd.gitForceCheckout(hash, gitTopLevel)
@@ -52,21 +54,17 @@ object main extends App {
             if (!returnString.contains("[success]")) {
               println("Could not make semanticdb for commit")
             }
-            commitStats = MeasureProject.doStatsForProject(projectPath, projectName)
+            commitStats.projectName = projectName
+            MeasureProject.doStatsForProject(projectPath, commitStats)
           }
           // Keep commitStats null if it was calculated before
         } catch {
           case x: Throwable => {
             println("Exception while calculating stats.")
-            commitStats = new CommitStats // Add empty line to avoid calculating this commit in the future
           }
         }
 
-        if (commitStats != null) {
-          commitStats.projectName = projectName
-          commitStats.commitHash = hash
-          LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
-        }
+        LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
       }
     }
   }
@@ -94,7 +92,8 @@ object main extends App {
     }
   } else {
     // Don't mess in the /dev folder!
-    calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
+    calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
+    //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
     //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))

@@ -4,13 +4,15 @@ import java.text._
 import org.apache.commons.lang3.StringUtils
 import scalafix.v1.SemanticDocument
 import scalafix.{DocumentTuple, SemanticDB}
-import scalafix.v1._ // for the symbol magic
+import scalafix.v1._
+import slickEmileProfile.Tables
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.language.postfixOps
 import scala.meta._
 import scala.meta.internal.semanticdb
 import scala.meta.internal.semanticdb.SymbolInformation
+import scala.meta.transversers.SimpleTraverser
 
 
 trait ClassOrTrait extends Tree {}
@@ -82,6 +84,7 @@ object MeasureProject {
 
 
   private def consumeFile(commitStats: CommitStats, sdoc: SemanticDocument, semanticDB: SemanticDB): Unit = {
+    implicit val implicit_sdoc_fkurhgbsdf: SemanticDocument = sdoc
 
     val packageCollection = sdoc.tree.collect {
       case q: Pkg => q.name
@@ -114,11 +117,6 @@ object MeasureProject {
           if (!s.isLocal && !s.isNone && doWeOwnThisClass(s.value)) {
             val info = semanticDB.getInfo(s.value)
             if (info != null && info.kind == SymbolInformation.Kind.METHOD) {
-              println("s: " + s.value)
-
-              if (sdoc.toString().contains("JPanelDesktop")) {
-                println()
-              }
               calls += s.value
             }
           }
@@ -174,6 +172,148 @@ object MeasureProject {
         val symb: Symbol = SemanticDB.getFromSymbolTable(defn, sdoc)
         descendDefOrCtor(defn.body, symb)
     }
+
+    if (true) { // CC and Code Flow Graph
+      val methodMap = CfgPerMethod.compute(sdoc.tree)
+
+      //val relative = semanticDB.projectPath.toPath.relativize(sdoc.input.asInstanceOf[Input.File].path.toNIO)
+      //val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\" + commitStats.projectName + "\\" + relative + ".gv"
+      //Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
+
+      for (pair <- methodMap) {
+        val CC = CfgPerMethod.calculateCC(pair._2)
+        //if (CC >= 2) {
+        //  println("Big CC found: " + pair._1 + " -> " + CC)
+        //  println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
+        //}
+        //println(pair._1 + ": CC= " + CC)
+        commitStats.cc += CC
+      }
+
+    }
+
+
+    if (true) { // Check design smells
+      sdoc.tree.collect {
+
+        case clazz: Defn.Object => {
+
+          val className = MeasureProject.traitOrClassName(clazz)
+          if (className.contains("PolygonFigure")) {
+            var clazzSymbol = clazz.symbol
+            var symInfo = semanticDB.symbolTable.info(clazzSymbol.value).get
+            print("")
+          }
+        }
+        case clazz: Defn.Class => {
+          val className = MeasureProject.traitOrClassName(clazz)
+          if (!className.endsWith("Test") // Naming convension for test classes
+            && !clazz.symbol.isLocal
+            && !clazz.symbol.isNone) { // Scala meta doesn't keep semantic information about inline classes :(
+            println("Class: " + clazz.name.value)
+
+            var locInClass = countLocInClass(clazz)
+
+            var cc = 0
+            val methodMap = CfgPerMethod.compute(clazz)
+            for (pair <- methodMap) {
+              cc += CfgPerMethod.calculateCC(pair._2)
+            }
+            val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, doc.sdoc)
+            val classExternalProps = classExternalPropsSet.size
+            val cohesion = calculateCohesion(clazz, semanticDB, doc.sdoc)
+
+            // Numbers come from PMD
+            if (classExternalProps > 5 // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
+              && cc > 47 // Very high threshold for WMC (Weighted Method Count). See: Lanza. Object-Oriented Metrics in Practice. Page 16.
+              && cohesion < 1.0 / 3.0) {
+              val log = ("Godclass detected! " + clazz.name.toString() + "\n"
+                + " cc: " + cc + "\n"
+                + " classExternalPropsSet: " + classExternalPropsSet + "\n"
+                + " classExternalProps: " + classExternalProps + "\n"
+                + " cohesion: " + cohesion)
+              LargeScaleDb.insertRow(Tables.DetectedSmellRow(0, commitStats.commitHash, clazz.symbol.value, "GodClass", log))
+            }
+
+            clazz.collect {
+              case d: Defn.Def =>
+                println("Def: " + d.name.value)
+
+                val methodExternalPropsSetAll = externalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
+                print("")
+                val methodExternalPropsSet = methodExternalPropsSetAll.filter(doWeOwnThisClass) // We can envy the standard library, but we can't realy do anything about it
+
+                val methodExternalProps = methodExternalPropsSet.size
+                val methodExternalPropsClasses = {
+                  var set: Set[String] = Set.empty[String]
+                  for (e <- methodExternalPropsSet) {
+                    set += propGetOwnerClass(e)
+                  }
+                  set
+                }
+                val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
+                val methodInternalProps = methodInternalPropsSet.size
+
+                assert(methodExternalPropsSetAll.intersect(methodInternalPropsSet).size == 0)
+
+                val LAA = {
+                  if (methodExternalProps + methodInternalProps == 0) Double.PositiveInfinity
+                  else methodInternalProps.toDouble / (methodExternalProps.toDouble + methodInternalProps.toDouble)
+                }
+
+                if (d.name.value == "findStart") {
+                  print("")
+                }
+                if (className.contains("StandardDrawingView")) {
+                  if (d.name.value == "insertFigures") {
+                    print("")
+                  }
+                }
+
+                if (methodExternalProps > 4 // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
+                  && LAA < 1.0 / 3.0
+                  && methodExternalPropsClasses.size <= 4) { // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
+                  if (d.symbol.value == "org/shotdraw/util/StorageFormatManager#registerFileFilters().") {
+                    println()
+                  }
+                  val log = ("FeatureEnvy detected! " + d.name.toString() + "\n"
+                    + "    methodExternalPropsSet: " + methodExternalPropsSet + "\n"
+                    + "    methodExternalProps: " + methodExternalProps + "\n"
+                    + "    methodInternalPropsSet: " + methodInternalPropsSet + "\n"
+                    + "    methodInternalProps: " + methodInternalProps + "\n"
+                    + "    LAA: " + LAA + "\n"
+                    + "    methodExternalPropsClasses.size: " + methodExternalPropsClasses.size)
+                  LargeScaleDb.insertRow(Tables.DetectedSmellRow(0, commitStats.commitHash, d.symbol.value, "FeatureEnvy", log))
+                }
+
+                val methodNodes = CfgPerMethod.compute(d).head._2
+                val methodCc = CfgPerMethod.calculateCC(methodNodes)
+
+                val loc = d.toString.count(x => x == '\n')
+
+                val methodLocalPropsSet = localProperties(clazz, d, semanticDB, sdoc)
+
+                // Number Of Accessed Variables
+                val NOAV = methodLocalPropsSet.size + methodInternalProps + methodExternalProps
+
+                if (loc > locInClass.toDouble / 2
+                  && methodCc > 10 // TODO: Verify if this indeed is a "VERY HIGH" CC
+                  // TODO: Nesting level
+                  && NOAV > 10 // TODO: Verify if this indeed is "MANY"
+                ) {
+
+                  val log = ("BrainMethod detected! " + d.name.toString() + "\n"
+                    + "    loc: " + loc + "\n"
+                    + "    locInClass: " + locInClass + "\n"
+                    + "    methodCc: " + methodCc + "\n"
+                    + "    NOAV: " + NOAV)
+                  LargeScaleDb.insertRow(Tables.DetectedSmellRow(0, commitStats.commitHash, d.symbol.value, "BrainMethod", log))
+                }
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -185,18 +325,16 @@ object MeasureProject {
       !classUri.startsWith("scala/")
   }
 
-  def doStatsForProject(projectPath: File, projectName: String): CommitStats = {
-    val commitStats = new CommitStats
+  def doStatsForProject(projectPath: File, commitStats: CommitStats) = {
 
-    commitStats.projectName = projectName
+    LargeScaleDb.removeDetectedSmellsForCommit(commitStats.commitHash)
     //commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"), ".scala")
     //commitStats.regexDefMatches = MeasureProject.getRegexDefMatchesInFolder(projectPath)
+
 
     var scalaRoot = Utils.normalizeDirectoryPath(projectPath.getAbsolutePath)
     if (scalaRoot.endsWith("src/main/scala/"))
       scalaRoot = scalaRoot.substring(0, scalaRoot.length - "src/main/scala/".length)
-
-    //Utils.execCommand("cd " + getGitTopLevel(new File(scalaRoot)) + " && sbt semanticdb").trim
 
     val semanticDB = new SemanticDB(new File(scalaRoot))
 
@@ -205,139 +343,80 @@ object MeasureProject {
       for (doc <- semanticDB.documents) {
         th.absorb(doc)
       }
-      Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\types_" + projectName + ".gv", th.getGvString())
+      Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\types_" + commitStats.projectName + ".gv", th.getGvString())
 
       commitStats.andc = th.calculateANDC()
       commitStats.ahh = th.calculateAHH()
     }
 
     for (doc <- semanticDB.documents) {
-      implicit val implicit_ksjndflidbfkurhgb: SemanticDocument = doc.sdoc
-      println("\n Doc: " + doc.tdoc.uri)
+      println("\nDoc: " + doc.tdoc.uri)
 
-      if (true) {
-        consumeFile(commitStats, doc.sdoc, semanticDB)
-      }
-
-      if (true) { // CC and Code Flow Graph
-        val methodMap = CfgPerMethod.compute(doc.sdoc.tree)
-
-        val relative = projectPath.toPath.relativize(doc.sdoc.input.asInstanceOf[Input.File].path.toNIO)
-        val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\" + projectName + "\\" + relative + ".gv"
-        Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
-
-        for (pair <- methodMap) {
-          val CC = CfgPerMethod.calculateCC(pair._2)
-          //if (CC >= 2) {
-          //  println("Big CC found: " + pair._1 + " -> " + CC)
-          //  println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
-          //}
-          //println(pair._1 + ": CC= " + CC)
-          commitStats.cc += CC
-        }
-      }
-
-      if (false) { // Check design smells
-        doc.sdoc.tree.collect {
-
-          case clazz: Defn.Object => {
-
-            val className = MeasureProject.traitOrClassName(clazz)
-            if (className.contains("PolygonFigure")) {
-              var clazzSymbol = clazz.symbol
-              var symInfo = semanticDB.symbolTable.info(clazzSymbol.value).get
-              print("")
-            }
-          }
-          case clazz: Defn.Class => {
-            val className = MeasureProject.traitOrClassName(clazz)
-            if (!className.endsWith("Test") // Naming convension for test classes
-              && !clazz.symbol.isLocal
-              && !clazz.symbol.isNone) { // Scala meta doesn't keep semantic information about inline classes :(
-              println("Class: " + clazz.name.value)
-
-              var cc = 0
-              val methodMap = CfgPerMethod.compute(clazz) //doc.sdoc.tree)
-              for (pair <- methodMap) {
-                cc += CfgPerMethod.calculateCC(pair._2)
-              }
-              val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, doc.sdoc)
-              val classExternalProps = classExternalPropsSet.size
-              val cohesion = calculateCohesion(clazz, semanticDB, doc.sdoc)
-              if (className.contains("PolygonFigure")) {
-                print("")
-              }
-
-              {
-                println("classExternalPropsSet[" + classExternalPropsSet.size + "]: " + classExternalPropsSet)
-              }
-              //if (classExternalProps > 10
-              //  && cc > 30
-              //  && cohesion < 0.3)
-
-              {
-                println("\nGodclass detected! " + clazz.name.toString()
-                  + " cc: " + cc
-                  + " classExternalProps: " + classExternalProps
-                  + " cohesion: " + cohesion)
-              }
-
-              clazz.collect {
-                case d: Defn.Def =>
-                  println("Def: " + d.name.value)
-
-                  val methodExternalPropsSet = externalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
-
-                  val methodExternalProps = methodExternalPropsSet.size
-                  val methodExternalPropsClasses = {
-                    var set: Set[String] = Set.empty[String]
-                    for (e <- methodExternalPropsSet) {
-                      set += propGetOwnerClass(e)
-                    }
-                    set
-                  }
-                  val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, doc.sdoc)
-                  val methodInternalProps = methodInternalPropsSet.size
-                  //println("methodInternalPropsSet: " + methodInternalPropsSet)
-
-                  if (methodExternalProps > 11
-                    && methodExternalProps > methodInternalProps * 3
-                    && methodExternalPropsClasses.size <= 6) {
-
-                    println("\nFeatureEnvy detected! " + d.name.toString())
-                    println("    methodExternalProps: " + methodExternalProps)
-                    println("    methodInternalProps: " + methodInternalProps)
-                    println("    methodExternalPropsClasses.size: " + methodExternalPropsClasses.size)
-                  }
-
-                  val methodNodes = CfgPerMethod.compute(d).head._2
-                  val methodCc = CfgPerMethod.calculateCC(methodNodes)
-
-                  val loc = d.toString.count(x => x == '\n')
-
-                  val methodLocalPropsSet = localProperties(clazz, d, semanticDB, doc.sdoc)
-                  val totalVars = methodLocalPropsSet.size + methodInternalProps + methodExternalProps
-
-                  if (loc > 50 // arbitrary number
-                    && methodCc > 10
-                    // TODO: Nesting level
-                    && totalVars > 10
-                  ) {
-
-                    println("\nBrainMethod detected! " + d.name.toString())
-                    println("    loc: " + loc)
-                    println("    methodCc: " + methodCc)
-                    println("    totalVars: " + totalVars)
-                  }
-              }
-            }
-          }
-        }
-      }
+      consumeFile(commitStats, doc.sdoc, semanticDB)
     }
 
-
     commitStats
+  }
+
+  def calculateNestingLevel(methodTree: Tree): Int = {
+    var maxDepth = 0
+    var currentDepth = 0
+
+    def rec(tree: Tree): Unit = {
+      var goingDeeper = false
+      tree match {
+        case _: Term.If => goingDeeper = true
+        case _: Term.Do => goingDeeper = true
+        case _: Term.For => goingDeeper = true
+        case _: Term.Match => goingDeeper = true
+        case _: Term.While => goingDeeper = true
+      }
+      if (goingDeeper)
+        currentDepth += 1
+      tree.children.foreach(rec)
+
+      if (goingDeeper)
+        currentDepth -= 1
+    }
+
+    rec(methodTree)
+
+    def traverse(fn: PartialFunction[Tree, Unit]): Unit = {
+      val liftedFn = fn.lift
+      object traverser extends SimpleTraverser {
+        override def apply(tree: Tree): Unit = {
+          liftedFn(tree)
+          super.apply(tree)
+        }
+      }
+      traverser(methodTree)
+    }
+
+    traverse({
+      case d: Defn.Def => 5
+    })
+    maxDepth
+  }
+
+  def countLocInClass(classTree: Tree): Int = {
+    var loc = 0
+
+    def descendDefOrCtor(tree: Tree): Unit = {
+      loc += tree.toString().count(x => x == '\n')
+    }
+
+    classTree.collect {
+      //case a: Ctor.Primary => {
+      //  descendDefOrCtor(a)
+      //}
+      case a: Ctor.Secondary =>
+        for (stat <- a.stats)
+          descendDefOrCtor(stat)
+
+      case defn: Defn.Def =>
+        descendDefOrCtor(defn.body)
+    }
+    loc
   }
 
   def propGetOwnerClass(e: String): String = {
@@ -346,20 +425,6 @@ object MeasureProject {
       idx = math.max(idx, e.lastIndexOf("."))
     return e.substring(0, idx)
   }
-
-  /*
-    def externalProperties(c: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Int = {
-      var externalProps: Set[String] = Set.empty[String]
-
-      c.collect({
-        case d: Defn.Def => {
-          externalProps ++= externalProperties(c, d, semanticDB, sdoc)
-        }
-      })
-      //println("externalProperties in class: \n\t" + externalProps.mkString("\n\t"))
-      externalProps.size
-    }
-  */
 
   def getParents(semanticDB: SemanticDB, symbolString: String): Seq[String] = {
     if (symbolString == "io/x100/colstore/ColumnarStoreSpec#") {
@@ -408,7 +473,7 @@ object MeasureProject {
   def symbolInParentHiarchy(semanticDB: SemanticDB, className: String, termString: String) = {
     var parents = getAllParentSymbs(semanticDB, className)
     parents = parents.map(p => {
-      assert(p.endsWith("#"));
+      assert(p.endsWith("#"))
       p.substring(0, p.length - 1)
     })
     parents.exists(p => termString.startsWith(p))
@@ -421,8 +486,8 @@ object MeasureProject {
       )
   }
 
-  def externalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    var collectedProperties: ListBuffer[String] = ListBuffer.empty[String]
+  def externalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Set[String] = {
+    var collectedProperties: Set[String] = Set.empty[String] // Was ListBuffer, not sure why
 
     tree.collect({
       case term: Term.Name => {
@@ -458,24 +523,24 @@ object MeasureProject {
 
   // Shares many LOC with externalProperties. Only symbolInParentHiarchy isn't negated
   // Pure internal properties, local variables are not counted
-  def internalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
-    var collectedProperties: ListBuffer[String] = ListBuffer.empty[String]
-    if (className.contains("DrawApplication")) {
-      if (tree.toString().contains("def setDefaultTool")) {
-        println()
-      }
-    }
+  def internalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Set[String] = {
+    var collectedProperties: Set[String] = Set.empty[String] // Was ListBuffer, not sure why
+
     tree.collect({
+      case term: Term.This => {
+        val parent = term.parent.get
+        parent match {
+          case _: Term.Select =>
+          // Cases like this.myProperty are ignored here.
+          // They are already covered in the Term.Name case
+          case _ =>
+            val decodedPropName = className + "this."
+            collectedProperties += decodedPropName
+        }
+      }
       case term: Term.Name => {
         val termSymbol = term.symbol(sdoc)
-        if (className.contains("DrawApplication")) {
-          if (tree.toString().contains("def setDefaultTool")) {
-            println(termSymbol.value)
-            if (termSymbol.value.contains("fDefaultToolButton")) {
-              println()
-            }
-          }
-        }
+
         if (!termSymbol.isNone && !term.isDefinition) {
           if (!termSymbol.isLocal && symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
             val decodedPropName = termSymbol.value
@@ -532,7 +597,7 @@ object MeasureProject {
   }
 
   class MethodNodeWithUsages(val name: String) {
-    var usesProperty: ListBuffer[String] = ListBuffer.empty[String]
+    var usesProperty: Set[String] = Set.empty[String]
 
     override def toString: String = {
       "MethodNodeWithUsages(" + name + ")\n" +
@@ -574,7 +639,7 @@ object MeasureProject {
         var mNode = new MethodNodeWithUsages(dSymbol.value)
 
         val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, sdoc)
-        mNode.usesProperty = methodInternalPropsSet
+        mNode.usesProperty = methodInternalPropsSet.toSet
         if (clazz.toString().contains("DrawApplication")) {
           if (d.toString().contains("def setDefaultTool")) {
             println(d.toString())
