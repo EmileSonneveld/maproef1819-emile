@@ -4,11 +4,12 @@ import java.text._
 import org.apache.commons.lang3.StringUtils
 import scalafix.v1.SemanticDocument
 import scalafix.{DocumentTuple, SemanticDB}
-import scalafix.v1._ // for the symbol magic
+import scalafix.v1._
 import slickEmileProfile.Tables
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.language.postfixOps
+import scala.meta.Term.Block
 import scala.meta._
 import scala.meta.internal.semanticdb
 import scala.meta.internal.semanticdb.SymbolInformation
@@ -21,11 +22,15 @@ object MeasureProject {
 
   def fillInPyramidTemplate(file: String, commitStats: CommitStats): String = {
     var svg = file
-    val nop = commitStats.nop_set.size
-    val noc = commitStats.noc_set.size
-    val nom = commitStats.nom_set.size
-    val loc = commitStats.loc
-    val cc = commitStats.cc
+    val nop = commitStats.nop_set.size.toDouble
+    val noc = commitStats.noc_set.size.toDouble
+    val nom = commitStats.nom_set.size.toDouble
+    val loc = commitStats.loc.toDouble
+    val cc = commitStats.cc.toDouble
+    val andc = commitStats.andc
+    val ahh = commitStats.ahh
+    val calls = commitStats.calls
+    val fanout = commitStats.fanout
 
     val df = new DecimalFormat(".##")
 
@@ -56,28 +61,61 @@ object MeasureProject {
 
     var doc = XmlUtil.parseXmlFromString(svg)
 
-    // Based on statistical foundings in java
-    {
-      val attr = XmlUtil.xpathGetNode(doc, "//rect[@label=\"bg_CycloPerLoc\"]/@style").get
-      if (cc.toDouble / loc < 0.16)
+    /**
+      * From iPlasma.
+      * C:\Users\emill\dev\maproef1819-emile\iPlasma_decompiled\decompiled_result\src\lrg\insider\plugins\tools\OverviewPyramid.java
+      */
+    def getColor(value: Double, min: Double, avg: Double, max: Double): String = {
+      val dist_min = Math.abs(value - min)
+      val dist_avg = Math.abs(value - avg)
+      val dist_max = Math.abs(value - max)
+      if (dist_min < dist_avg) "#0000CC" // Blue
+      else if (dist_avg < dist_max) "#006600" // Green
+      else "#CC0000" // Red
+    }
+
+    def colorGradeIPLasma(xpath: String, value: Double, low: Double, high: Double, avg: Double): Unit = {
+      val attr = XmlUtil.xpathGetNode(doc, xpath).get
+      attr.setTextContent(attr.getTextContent.replace(greenStr, "fill:" + getColor(value, low, avg, high) + ";"))
+    }
+
+    def colorGrade(xpath: String, value: Double, low: Double, high: Double, ignore_avg: Double): Unit = {
+      val attr = XmlUtil.xpathGetNode(doc, xpath).get
+      if (value < low)
         attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
-      else if (cc.toDouble / loc > 0.24)
+      else if (value > high)
         attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
     }
-    {
-      val attr = XmlUtil.xpathGetNode(doc, "//rect[@label=\"bg_NomPerNoc\"]/@style").get
-      if (nom.toDouble / noc < 4)
-        attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
-      else if (nom.toDouble / noc > 10)
-        attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
-    }
-    {
-      val attr = XmlUtil.xpathGetNode(doc, "//rect[@label=\"bg_LocPerNom\"]/@style").get
-      if (loc.toDouble / nom < 7)
-        attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
-      else if (loc.toDouble / nom > 13)
-        attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
-    }
+
+    // Scala tresholds from all_plots_scala.pdf
+    // colorGrade("//rect[@label=\"bg_CycloPerLoc\"]/@style", cc / loc, 0.1, 0.38, 0.24)
+    // colorGrade("//rect[@label=\"bg_LocPerNom\"]/@style", loc / nom, 4.96, 17.46, 11.21)
+    // colorGrade("//rect[@label=\"bg_NomPerNoc\"]/@style", nom / noc, 1.9, 4.43, 3.17)
+    // colorGrade("//rect[@label=\"bg_NocPerNop\"]/@style", noc / nop, 11.13, 26.39, 18.76)
+    // colorGrade("//rect[@label=\"bg_CallsPerNom\"]/@style", calls / nom, 1.17, 2.47, 1.82)
+    // colorGrade("//rect[@label=\"bg_FanoutPerCalls\"]/@style", fanout / calls, 1.03, 6.15, 2.09)
+    // colorGrade("//rect[@label=\"bg_Andc\"]/@style", andc, 0.63, 1.81, 1.22)
+    // colorGrade("//rect[@label=\"bg_Ahh\"]/@style", ahh, 0.10, 0.26, 0.18)
+
+    // New Scala tresholds
+    colorGrade("//rect[@label=\"bg_NocPerNop\"]/@style", noc / nop, 12.91, 32.71, 22.81)
+    colorGrade("//rect[@label=\"bg_NomPerNoc\"]/@style", nom / noc, 1.91, 4.13, 3.02)
+    colorGrade("//rect[@label=\"bg_LocPerNom\"]/@style", loc / nom, 4.71, 16.79, 10.75)
+    colorGrade("//rect[@label=\"bg_CycloPerLoc\"]/@style", cc / loc, 0.1, 0.38, 0.24)
+    colorGrade("//rect[@label=\"bg_CallsPerNom\"]/@style", calls / nom, 1.15, 2.42, 1.78)
+    colorGrade("//rect[@label=\"bg_FanoutPerCalls\"]/@style", fanout / calls, 1.02, 3.06, 2.04)
+    colorGrade("//rect[@label=\"bg_Andc\"]/@style", andc, 0.63, 1.77, 1.2)
+    colorGrade("//rect[@label=\"bg_Ahh\"]/@style", ahh, 0.1, 0.25, 0.17)
+
+    // Java tresholds
+    //colorGrade("//rect[@label=\"bg_NocPerNop\"]/@style", noc / nop, 5.66, 12.41, 9.04)
+    //colorGrade("//rect[@label=\"bg_NomPerNoc\"]/@style", nom / noc, 5.37, 17.92, 11.64)
+    //colorGrade("//rect[@label=\"bg_LocPerNom\"]/@style", loc / nom, 3.73, 13.22, 8.48)
+    //colorGrade("//rect[@label=\"bg_CycloPerLoc\"]/@style", cc / loc, 0.07, 0.34, 0.2)
+    //colorGrade("//rect[@label=\"bg_CallsPerNom\"]/@style", calls / nom, 1.32, 3.41, 2.37)
+    //colorGrade("//rect[@label=\"bg_FanoutPerCalls\"]/@style", fanout / calls, 0.11, 0.67, 0.39)
+    //colorGrade("//rect[@label=\"bg_Andc\"]/@style", andc, 0.15, 0.28, 0.21)
+    //colorGrade("//rect[@label=\"bg_Ahh\"]/@style", ahh, 0.07, 0.16, 0.12)
 
     return XmlUtil.documentToString(doc)
   }
@@ -93,8 +131,8 @@ object MeasureProject {
 
 
     val classCollection = sdoc.tree.collect {
-      case q: Defn.Class => q.name
-      case q: Defn.Object => q.name
+      case q: Defn.Class => q.name.toString()
+      case q: Defn.Object => q.name.toString()
       //case q: Defn.Trait => q.name // TODO: Yes/No?
     }
     classCollection.foreach(x => commitStats.noc_set += x.toString)
@@ -102,7 +140,8 @@ object MeasureProject {
 
     def descendDefOrCtor(tree: Tree, symb: Symbol): Unit = {
 
-      if (!symb.isLocal && !symb.isNone)
+      //!symb.isLocal && // probably local variables need to be counted too
+      if (!symb.isNone)
         commitStats.nom_set += symb.value
 
       commitStats.loc += tree.toString().count(x => x == '\n')
@@ -114,9 +153,12 @@ object MeasureProject {
         case a: Term.Name => {
 
           val s = SemanticDB.getFromSymbolTable(a, sdoc)
-          if (!s.isLocal && !s.isNone && doWeOwnThisClass(s.value)) {
+          if (!s.isNone && doWeOwnThisClass(s.value)) {
             val info = semanticDB.getInfo(s.value)
             if (info != null && info.kind == SymbolInformation.Kind.METHOD) {
+              //print("CALL: " + s.value)
+              //if (s.isLocal) println(" isLocal") // never gets triggered :(
+              //else println()
               calls += s.value
             }
           }
@@ -176,9 +218,9 @@ object MeasureProject {
     if (true) { // CC and Code Flow Graph
       val methodMap = CfgPerMethod.compute(sdoc.tree)
 
-      val relative = Cmd.getRelativePathToProject(sdoc.input.asInstanceOf[Input.File].path.toNIO)
-      val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\" + relative + ".gv"
-      Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
+      //val relative = Cmd.getRelativePathToProject(sdoc.input.asInstanceOf[Input.File].path.toNIO)
+      //val gvPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\" + relative + ".gv"
+      //Utils.writeFile(gvPath, CfgPerMethod.MethodMapToGraphViz(methodMap))
 
       for (pair <- methodMap) {
         val CC = CfgPerMethod.calculateCC(pair._2)
@@ -196,8 +238,15 @@ object MeasureProject {
     if (true) { // Check design smells
       sdoc.tree.collect {
 
+        case clazz: Defn.Trait => {
+          val className = MeasureProject.traitOrClassName(clazz)
+          if (className.contains("Drawing")) {
+            var clazzSymbol = clazz.symbol
+            var symInfo = semanticDB.symbolTable.info(clazzSymbol.value).get
+            print("")
+          }
+        }
         case clazz: Defn.Object => {
-
           val className = MeasureProject.traitOrClassName(clazz)
           if (className.contains("PolygonFigure")) {
             var clazzSymbol = clazz.symbol
@@ -219,19 +268,28 @@ object MeasureProject {
             for (pair <- methodMap) {
               cc += CfgPerMethod.calculateCC(pair._2)
             }
-            val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, sdoc)
+            val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, sdoc, false)
             val classExternalProps = classExternalPropsSet.size
             val cohesion = calculateCohesion(clazz, semanticDB, sdoc)
 
+            val log = (""
+              + " cc: " + cc + "\n"
+              + " classExternalPropsSet: " + classExternalPropsSet + "\n"
+              + " classExternalProps: " + classExternalProps + "\n"
+              + " cohesion: " + cohesion)
+            if (clazz.name.toString().contains("AbstractFigure")
+              || clazz.name.toString().contains("Geom")
+              || clazz.name.toString().contains("LineConnection")
+              || clazz.name.toString().contains("PolygonFigure")
+              || clazz.name.toString().contains("PolyLineFigure")
+            ) {
+              println(log)
+            }
             // Numbers come from PMD
             if (classExternalProps > 5 // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
-              && cc > 47 // Very high threshold for WMC (Weighted Method Count). See: Lanza. Object-Oriented Metrics in Practice. Page 16.
+              && cc > 45 // Very high threshold for WMC (Weighted Method Count). See: Lanza. Object-Oriented Metrics in Practice. Page 16.
               && cohesion < 1.0 / 3.0) {
-              val log = ("Godclass detected! " + clazz.name.toString() + "\n"
-                + " cc: " + cc + "\n"
-                + " classExternalPropsSet: " + classExternalPropsSet + "\n"
-                + " classExternalProps: " + classExternalProps + "\n"
-                + " cohesion: " + cohesion)
+              println(log)
               LargeScaleDb.insertRow(Tables.DetectedSmellRow(0, commitStats.commitHash, clazz.symbol.value, "GodClass", log))
             }
 
@@ -266,6 +324,9 @@ object MeasureProject {
                 }
                 if (className.contains("StandardDrawingView")) {
                   if (d.name.value == "insertFigures") {
+                    var test = d.symbol.value.toString
+                    var tmp = d.body.asInstanceOf[Term.Block]
+                    var tmp2 = tmp.stats(2).symbol
                     print("")
                   }
                 }
@@ -459,13 +520,17 @@ object MeasureProject {
     }
   }
 
-  def symbolInParentHiarchy(semanticDB: SemanticDB, className: String, termString: String) = {
+  def symbolInParentHiarchy(semanticDB: SemanticDB, className: String, termString: String): Boolean = {
     var parents = getAllParentSymbs(semanticDB, className)
     parents = parents.map(p => {
       assert(p.endsWith("#"))
       p.substring(0, p.length - 1)
     })
     parents.exists(p => termString.startsWith(p))
+  }
+
+  def symbolIsInThisClass(semanticDB: SemanticDB, className: String, termString: String): Boolean = {
+    termString.startsWith(className)
   }
 
   def isGetterSetterCall(methodOrAttributeName: String): Boolean = {
@@ -475,14 +540,17 @@ object MeasureProject {
       )
   }
 
-  def externalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument): Set[String] = {
+  def externalProperties(className: String, tree: Tree, semanticDB: SemanticDB, sdoc: SemanticDocument, areParentSymbolsConcideredInternal: Boolean = true): Set[String] = {
     var collectedProperties: Set[String] = Set.empty[String] // Was ListBuffer, not sure why
 
     tree.collect({
       case term: Term.Name => {
         val termSymbol = term.symbol(sdoc)
         if (!termSymbol.isNone && !term.isDefinition) {
-          if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
+          if (!termSymbol.isLocal &&
+            (if (areParentSymbolsConcideredInternal) !symbolInParentHiarchy(semanticDB, className, termSymbol.value)
+            else !symbolIsInThisClass(semanticDB, className, termSymbol.value))
+          ) {
             val decodedPropName = termSymbol.value
 
             // TODO: Ignore properies from nested classes
@@ -537,7 +605,10 @@ object MeasureProject {
 
         if (!termSymbol.isNone && !term.isDefinition) {
           if (!termSymbol.isLocal && symbolInParentHiarchy(semanticDB, className, termSymbol.value)) {
-            val decodedPropName = termSymbol.value
+            var decodedPropName = termSymbol.value
+            if (decodedPropName.contains("=`().")) { // For example org/shotdraw/util/Bounds#`y1_=`().
+              decodedPropName = decodedPropName.replace("_=`().", "().").replace("#`", "#")
+            }
 
             // TODO: Ignore properies from nested classes
             //if (doWeOwnThisClass(decodedPropName))
@@ -614,7 +685,7 @@ object MeasureProject {
     val compagnionRefString = clazzSymbol.value.substring(0, clazzSymbol.value.length - 1) + "."
     val compagnionTree = semanticDB.getClassTraitObjectTree(compagnionRefString)
 
-    if (className.contains("PolygonFigure")) {
+    if (className.contains("Bounds")) {
       /*var symInfoOpt = semanticDB.symbolTable.info(clazzSymbol.value)
       if (symInfoOpt.isDefined) {
         var symInfo = symInfoOpt.get
@@ -664,8 +735,10 @@ object MeasureProject {
         case d: Defn.Def => collectDefn(d)
       })
     }
-    println(("methods: \n" + methods.map(x => x.toString.replace("\n", "\n\t")).mkString("\n"))
-      .replace("\n", "\n\t"))
+    if (className.contains("Bounds")) {
+      println(("methods: \n" + methods.map(x => x.toString.replace("\n", "\n\t")).mkString("\n"))
+        .replace("\n", "\n\t"))
+    }
 
     val pairsWithCommon = numMethodsRelatedByAttributeAccess(methods)
     val maxPairs = methods.size * (methods.size - 1) / 2

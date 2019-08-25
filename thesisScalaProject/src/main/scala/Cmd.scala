@@ -22,6 +22,8 @@ object Cmd {
     tmp = tmp.replace("C:\\Users\\emill\\dev\\", "")
     tmp = tmp.replace("D:\\github_download\\", "")
     tmp = tmp.replace("C:\\github_download\\", "")
+    tmp = tmp.replace("D:\\github_java\\", "")
+    tmp = tmp.replace("C:\\github_java\\", "")
     tmp = tmp.replace("C:\\Users\\emill\\Desktop\\github_download\\", "")
     tmp = tmp.replace("D:\\dev\\", "")
     tmp
@@ -53,12 +55,16 @@ object Cmd {
   }
 
   def getPowershellLoc(projectPath: File, extention: String): Int = {
-    var result = Cmd.execCommandWithTimeout("powershell \"dir -Recurse *" + extention + " | Get-Content | Measure-Object -Line\"", projectPath)
-    var linesPos = result.indexOf("Lines")
-    result = result.substring(linesPos)
+    try {
+      var result = Cmd.execCommandWithTimeout("powershell \"dir -Recurse *" + extention + " | Get-Content | Measure-Object -Line\"", projectPath)
+      var linesPos = result.indexOf("Lines")
+      result = result.substring(linesPos)
 
-    val re = """[0-9]+""".r
-    re.findFirstIn(result).get.toInt
+      val re = """[0-9]+""".r
+      re.findFirstIn(result).get.toInt
+    } catch {
+      case _: Throwable => 0
+    }
   }
 
   def getGitTopLevel(path: File): File = {
@@ -114,7 +120,7 @@ object Cmd {
     })) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
-      val exitValue: Int = Await.result(f, duration.Duration(5, "sec")) // 2 * 60
+      val exitValue: Int = Await.result(f, duration.Duration(1 * 60, "sec")) // 2 * 60
       if (exitValue != 0)
         println("exitValue: " + exitValue)
 

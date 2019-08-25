@@ -39,14 +39,14 @@ class TypeHiarchy(semanticDB: SemanticDB) {
   def calculateANDC(): Double = {
     var sum = 0.0
     var count = 0.0
-    for (n <- symbolList) {
-      sum += n.numberOfChildren
+    for (n <- symbolList.filter(x => ConsiderClassInHierarchy(x.name))) {
+      sum += n.children.count(x => ConsiderClassInHierarchy(x.name))
       count += 1
     }
     return sum / count
   }
 
-  def ConsiderClassForAHH(name:String): Boolean = {
+  def ConsiderClassInHierarchy(name: String): Boolean = {
     MeasureProject.doWeOwnThisClass(name) && !name.startsWith("test")
   }
 
@@ -64,7 +64,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       symbolList.foreach(nodeToClusterId += _ -> -666)
 
       def infectClusterWithId(currentNode: TypeGraphNode, id: Int): Unit = {
-        if (!ConsiderClassForAHH(currentNode.name)) return
+        if (!ConsiderClassInHierarchy(currentNode.name)) return
         if (nodeToClusterId(currentNode) >= 0) {
           assert(nodeToClusterId(currentNode) == id)
           return // Already infected
@@ -81,7 +81,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
 
       for (node <- symbolList) {
         var nodeClusterId = nodeToClusterId(node)
-        if (nodeClusterId < 0 && ConsiderClassForAHH(node.name)) {
+        if (nodeClusterId < 0 && ConsiderClassInHierarchy(node.name)) {
           currentClusterId += 1
           //println("New cluster starter: " + node.name)
           infectClusterWithId(node, currentClusterId)
@@ -102,7 +102,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       var tabDepth = 0
 
       def searchExtremeOffsets(currentNode: TypeGraphNode, currentOffset: Int): Unit = {
-        if (!visitedList(currentNode) && ConsiderClassForAHH(currentNode.name)) {
+        if (!visitedList(currentNode) && ConsiderClassInHierarchy(currentNode.name)) {
           visitedList(currentNode) = true
           //println("  " * tabDepth + currentNode.name)
 

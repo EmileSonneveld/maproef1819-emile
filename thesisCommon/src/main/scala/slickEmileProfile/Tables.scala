@@ -14,7 +14,7 @@ trait Tables {
   import slick.jdbc.{GetResult => GR}
 
   /** DDL for all tables. Call .create to execute. */
-  lazy val schema: profile.SchemaDescription = DetectedSmell.schema ++ JavaIplasmaPyramid.schema ++ PyramidStatsJava.schema ++ PyramidStatsScala.schema ++ SbtBuildTries.schema
+  lazy val schema: profile.SchemaDescription = Array(DetectedSmell.schema, DetectedSmellJava.schema, JavaIplasmaPyramid.schema, PyramidStatsJava.schema, PyramidStatsScala.schema, SbtBuildTries.schema).reduceLeft(_ ++ _)
   @deprecated("Use .schema instead of .ddl", "3.0")
   def ddl = schema
 
@@ -52,6 +52,49 @@ trait Tables {
   /** Collection-like TableQuery object for table DetectedSmell */
   lazy val DetectedSmell = new TableQuery(tag => new DetectedSmell(tag))
 
+  /** Entity class storing rows of table DetectedSmellJava
+   *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
+   *  @param commit Database column commit SqlType(TEXT)
+   *  @param javaFile Database column java_file SqlType(TEXT)
+   *  @param line Database column line SqlType(INTEGER)
+   *  @param `type` Database column type SqlType(TEXT)
+   *  @param wmc Database column WMC SqlType(INTEGER)
+   *  @param atfd Database column ATFD SqlType(INTEGER)
+   *  @param tcc Database column TCC SqlType(REAL) */
+  case class DetectedSmellJavaRow(id: Int, commit: String, javaFile: String, line: Int, `type`: String, wmc: Int, atfd: Int, tcc: Double)
+  /** GetResult implicit for fetching DetectedSmellJavaRow objects using plain SQL queries */
+  implicit def GetResultDetectedSmellJavaRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Double]): GR[DetectedSmellJavaRow] = GR{
+    prs => import prs._
+    DetectedSmellJavaRow.tupled((<<[Int], <<[String], <<[String], <<[Int], <<[String], <<[Int], <<[Int], <<[Double]))
+  }
+  /** Table description of table detected_smell_java. Objects of this class serve as prototypes for rows in queries.
+   *  NOTE: The following names collided with Scala keywords and were escaped: type */
+  class DetectedSmellJava(_tableTag: Tag) extends profile.api.Table[DetectedSmellJavaRow](_tableTag, "detected_smell_java") {
+    def * = (id, commit, javaFile, line, `type`, wmc, atfd, tcc) <> (DetectedSmellJavaRow.tupled, DetectedSmellJavaRow.unapply)
+    /** Maps whole row to an option. Useful for outer joins. */
+    def ? = ((Rep.Some(id), Rep.Some(commit), Rep.Some(javaFile), Rep.Some(line), Rep.Some(`type`), Rep.Some(wmc), Rep.Some(atfd), Rep.Some(tcc))).shaped.<>({r=>import r._; _1.map(_=> DetectedSmellJavaRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+
+    /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
+    val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    /** Database column commit SqlType(TEXT) */
+    val commit: Rep[String] = column[String]("commit")
+    /** Database column java_file SqlType(TEXT) */
+    val javaFile: Rep[String] = column[String]("java_file")
+    /** Database column line SqlType(INTEGER) */
+    val line: Rep[Int] = column[Int]("line")
+    /** Database column type SqlType(TEXT)
+     *  NOTE: The name was escaped because it collided with a Scala keyword. */
+    val `type`: Rep[String] = column[String]("type")
+    /** Database column WMC SqlType(INTEGER) */
+    val wmc: Rep[Int] = column[Int]("WMC")
+    /** Database column ATFD SqlType(INTEGER) */
+    val atfd: Rep[Int] = column[Int]("ATFD")
+    /** Database column TCC SqlType(REAL) */
+    val tcc: Rep[Double] = column[Double]("TCC")
+  }
+  /** Collection-like TableQuery object for table DetectedSmellJava */
+  lazy val DetectedSmellJava = new TableQuery(tag => new DetectedSmellJava(tag))
+
   /** Entity class storing rows of table JavaIplasmaPyramid
    *  @param id Database column id SqlType(INTEGER), AutoInc, PrimaryKey
    *  @param datetime Database column dateTime SqlType(TEXT)
@@ -77,6 +120,9 @@ trait Tables {
     val path: Rep[String] = column[String]("path")
     /** Database column output SqlType(TEXT) */
     val output: Rep[String] = column[String]("output")
+
+    /** Index over (path) (database name path_index) */
+    val index1 = index("path_index", path)
   }
   /** Collection-like TableQuery object for table JavaIplasmaPyramid */
   lazy val JavaIplasmaPyramid = new TableQuery(tag => new JavaIplasmaPyramid(tag))
@@ -95,18 +141,19 @@ trait Tables {
    *  @param ahh Database column ahh SqlType(REAL)
    *  @param calls Database column calls SqlType(INTEGER)
    *  @param fanout Database column fanout SqlType(INTEGER)
-   *  @param powershellLoc Database column powershell_LOC SqlType(INTEGER) */
-  case class PyramidStatsJavaRow(id: Int, project: String, commithash: String, timestamp: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Double, ahh: Double, calls: Int, fanout: Int, powershellLoc: Option[Int])
+   *  @param powershellLoc Database column powershell_LOC SqlType(INTEGER)
+   *  @param detectedSmells Database column detected_smells SqlType(INTEGER) */
+  case class PyramidStatsJavaRow(id: Int, project: String, commithash: String, timestamp: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Double, ahh: Double, calls: Int, fanout: Int, powershellLoc: Option[Int], detectedSmells: Option[Int])
   /** GetResult implicit for fetching PyramidStatsJavaRow objects using plain SQL queries */
   implicit def GetResultPyramidStatsJavaRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Double], e3: GR[Option[Int]]): GR[PyramidStatsJavaRow] = GR{
     prs => import prs._
-    PyramidStatsJavaRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<[Double], <<[Double], <<[Int], <<[Int], <<?[Int]))
+    PyramidStatsJavaRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<[Double], <<[Double], <<[Int], <<[Int], <<?[Int], <<?[Int]))
   }
   /** Table description of table pyramid_stats_java. Objects of this class serve as prototypes for rows in queries. */
   class PyramidStatsJava(_tableTag: Tag) extends profile.api.Table[PyramidStatsJavaRow](_tableTag, "pyramid_stats_java") {
-    def * = (id, project, commithash, timestamp, nop, noc, nom, loc, cc, andc, ahh, calls, fanout, powershellLoc) <> (PyramidStatsJavaRow.tupled, PyramidStatsJavaRow.unapply)
+    def * = (id, project, commithash, timestamp, nop, noc, nom, loc, cc, andc, ahh, calls, fanout, powershellLoc, detectedSmells) <> (PyramidStatsJavaRow.tupled, PyramidStatsJavaRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(commithash), Rep.Some(timestamp), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), Rep.Some(andc), Rep.Some(ahh), Rep.Some(calls), Rep.Some(fanout), powershellLoc)).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsJavaRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get, _12.get, _13.get, _14)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(commithash), Rep.Some(timestamp), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), Rep.Some(andc), Rep.Some(ahh), Rep.Some(calls), Rep.Some(fanout), powershellLoc, detectedSmells)).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsJavaRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get, _12.get, _13.get, _14, _15)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -136,6 +183,8 @@ trait Tables {
     val fanout: Rep[Int] = column[Int]("fanout")
     /** Database column powershell_LOC SqlType(INTEGER) */
     val powershellLoc: Rep[Option[Int]] = column[Option[Int]]("powershell_LOC")
+    /** Database column detected_smells SqlType(INTEGER) */
+    val detectedSmells: Rep[Option[Int]] = column[Option[Int]]("detected_smells")
   }
   /** Collection-like TableQuery object for table PyramidStatsJava */
   lazy val PyramidStatsJava = new TableQuery(tag => new PyramidStatsJava(tag))
@@ -155,18 +204,19 @@ trait Tables {
    *  @param calls Database column calls SqlType(INTEGER)
    *  @param fanout Database column fanout SqlType(INTEGER)
    *  @param powershellLoc Database column powershell_LOC SqlType(INTEGER)
-   *  @param regexdefmatches Database column regexDefMatches SqlType(INTEGER) */
-  case class PyramidStatsScalaRow(id: Int, project: String, commithash: String, timestamp: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], calls: Option[Int], fanout: Option[Int], powershellLoc: Option[Int], regexdefmatches: Option[Int])
+   *  @param regexdefmatches Database column regexDefMatches SqlType(INTEGER)
+   *  @param detectedSmells Database column detected_smells SqlType(INTEGER) */
+  case class PyramidStatsScalaRow(id: Int, project: String, commithash: String, timestamp: String, nop: Int, noc: Int, nom: Int, loc: Int, cc: Int, andc: Option[Double], ahh: Option[Double], calls: Option[Int], fanout: Option[Int], powershellLoc: Option[Int], regexdefmatches: Option[Int], detectedSmells: Option[Int])
   /** GetResult implicit for fetching PyramidStatsScalaRow objects using plain SQL queries */
   implicit def GetResultPyramidStatsScalaRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[Double]], e3: GR[Option[Int]]): GR[PyramidStatsScalaRow] = GR{
     prs => import prs._
-    PyramidStatsScalaRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<?[Int], <<?[Int], <<?[Int], <<?[Int]))
+    PyramidStatsScalaRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Double], <<?[Double], <<?[Int], <<?[Int], <<?[Int], <<?[Int], <<?[Int]))
   }
   /** Table description of table pyramid_stats_scala. Objects of this class serve as prototypes for rows in queries. */
   class PyramidStatsScala(_tableTag: Tag) extends profile.api.Table[PyramidStatsScalaRow](_tableTag, "pyramid_stats_scala") {
-    def * = (id, project, commithash, timestamp, nop, noc, nom, loc, cc, andc, ahh, calls, fanout, powershellLoc, regexdefmatches) <> (PyramidStatsScalaRow.tupled, PyramidStatsScalaRow.unapply)
+    def * = (id, project, commithash, timestamp, nop, noc, nom, loc, cc, andc, ahh, calls, fanout, powershellLoc, regexdefmatches, detectedSmells) <> (PyramidStatsScalaRow.tupled, PyramidStatsScalaRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(commithash), Rep.Some(timestamp), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), andc, ahh, calls, fanout, powershellLoc, regexdefmatches)).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsScalaRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10, _11, _12, _13, _14, _15)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(project), Rep.Some(commithash), Rep.Some(timestamp), Rep.Some(nop), Rep.Some(noc), Rep.Some(nom), Rep.Some(loc), Rep.Some(cc), andc, ahh, calls, fanout, powershellLoc, regexdefmatches, detectedSmells)).shaped.<>({r=>import r._; _1.map(_=> PyramidStatsScalaRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10, _11, _12, _13, _14, _15, _16)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -198,6 +248,8 @@ trait Tables {
     val powershellLoc: Rep[Option[Int]] = column[Option[Int]]("powershell_LOC")
     /** Database column regexDefMatches SqlType(INTEGER) */
     val regexdefmatches: Rep[Option[Int]] = column[Option[Int]]("regexDefMatches")
+    /** Database column detected_smells SqlType(INTEGER) */
+    val detectedSmells: Rep[Option[Int]] = column[Option[Int]]("detected_smells")
   }
   /** Collection-like TableQuery object for table PyramidStatsScala */
   lazy val PyramidStatsScala = new TableQuery(tag => new PyramidStatsScala(tag))
