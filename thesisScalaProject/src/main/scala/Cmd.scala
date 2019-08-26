@@ -179,7 +179,9 @@ object Cmd {
 
   def gitForceCheckout(commitHash: String, gitTopLevel: File): Unit = {
     clearGitRepo(gitTopLevel)
-    execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
+    var ret = execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
+    if (ret.contains("fatal: not a git repository"))
+      println("GIT problem:\n" + ret)
     execCommandWithTimeout("git checkout .", gitTopLevel)
   }
 }

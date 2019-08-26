@@ -22,8 +22,8 @@ object LargeScaleCompilation {
   def main(args: Array[String]): Unit = {
     //runJavaIPlasma()
     //collectJavaResults()
-    runPMD()
-    //doScala()
+    //runPMD()
+    doScala()
   }
 
   def runPMD(): Unit = {
@@ -143,7 +143,7 @@ object LargeScaleCompilation {
         //Cmd.gitSoftClean(gitTopLevel)
         var returnString = Cmd.execCommandWithTimeout("sbt.bat semanticdb", p)
 
-        LargeScaleDb.insertBuildTry(p, returnString, "maybeBothJDKs_bigList")
+        LargeScaleDb.insertBuildTry(p, returnString, "fixedANDC and perhaps CALLS")
         //Cmd.execCommandWithTimeout("simple_console.exe", new File(p))
       } else {
         println("Skipped: " + p)

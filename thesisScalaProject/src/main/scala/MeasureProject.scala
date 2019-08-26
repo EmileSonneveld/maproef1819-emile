@@ -80,11 +80,12 @@ object MeasureProject {
     }
 
     def colorGrade(xpath: String, value: Double, low: Double, high: Double, ignore_avg: Double): Unit = {
-      val attr = XmlUtil.xpathGetNode(doc, xpath).get
-      if (value < low)
-        attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
-      else if (value > high)
-        attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
+      colorGradeIPLasma(xpath, value, low, high, ignore_avg)
+      //val attr = XmlUtil.xpathGetNode(doc, xpath).get
+      //if (value < low)
+      //  attr.setTextContent(attr.getTextContent.replace(greenStr, blueStr))
+      //else if (value > high)
+      //  attr.setTextContent(attr.getTextContent.replace(greenStr, redStr))
     }
 
     // Scala tresholds from all_plots_scala.pdf
@@ -152,7 +153,7 @@ object MeasureProject {
       tree.collect {
         case a: Term.Name => {
 
-          val s = SemanticDB.getFromSymbolTable(a, sdoc)
+          val s = SemanticDB.getFromSymbolTable(a, sdoc);
           if (!s.isNone && doWeOwnThisClass(s.value)) {
             val info = semanticDB.getInfo(s.value)
             if (info != null && info.kind == SymbolInformation.Kind.METHOD) {
@@ -170,10 +171,13 @@ object MeasureProject {
           var s = SemanticDB.getFromSymbolTable(tpe, sdoc)
           try {
             if (doWeOwnThisClass(s.value)) {
-              classes += s.value
+              val classWeAreIn = symb.owner.value
+              if (classWeAreIn != s.value)
+                classes += s.value
             }
           } catch {
-            case ex: Throwable => println("EXCEPTION: " + ex)
+            case ex: Throwable =>
+              println("EXCEPTION: " + ex)
           }
 
         }
@@ -186,11 +190,14 @@ object MeasureProject {
             if (doWeOwnThisClass(s.value)) {
 
               val info = semanticDB.getInfo(s.value)
-              if (info != null && info.kind == SymbolInformation.Kind.OBJECT) {
-                classes += s.value
+              val tmp = if (info != null && info.kind == SymbolInformation.Kind.OBJECT) {
+                s.value
               } else {
-                classes += s.owner.value
+                s.owner.value
               }
+              val classWeAreIn = symb.owner.value
+              if (classWeAreIn != tmp)
+                classes += tmp
             }
           } catch {
             case ex: Throwable => println("EXCEPTION: " + ex)

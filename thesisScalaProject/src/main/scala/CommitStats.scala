@@ -28,7 +28,9 @@ class CommitStats {
     val noc = this.noc_set.size
     val nom = this.nom_set.size
     val timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance.getTime)
-    PyramidStatsScalaRow(0, projectName, commitHash, timeStamp, nop, noc, nom, loc, cc, Option(andc), Option(ahh), Option(calls), Option(fanout), Option(powershell_LOC), Option(regexDefMatches))
+    PyramidStatsScalaRow(0, projectName, commitHash, timeStamp, nop, noc, nom, loc, cc,
+      Option(andc), Option(ahh), Option(calls), Option(fanout),
+      Option(powershell_LOC), Option(regexDefMatches), Option.empty)
   }
 
   /*
