@@ -41,7 +41,7 @@ object Cmd {
     logString.trim
   }
 
-  def makeCommitStateClean(gitTopLevel: File) = {
+  def makeCommitStateClean(gitTopLevel: File): String = {
     val commitHash = Cmd.getCurrentCommitHash(gitTopLevel)
     Cmd.execCommandWithTimeout("git reset .", gitTopLevel) // Clear stash away?
     Cmd.execCommandWithTimeout("git checkout " + commitHash, gitTopLevel)
@@ -72,37 +72,6 @@ object Cmd {
     new File(res)
   }
 
-  import java.lang.reflect.Field
-
-  /*
-    private def killWinProcess(process: Process) = {
-      var exitValue = 0
-      try {
-        val f = process.getClass.getDeclaredField("handle")
-        f.setAccessible(true)
-        val hndl = f.getLong(process)
-        val kernel = Kernel32.INSTANCE
-        val handle = new Kernel32 {}
-        handle.setPointer(Pointer.createConstant(hndl))
-        val pid = kernel.GetProcessId(handle)
-        killPID("" + pid)
-        exitValue = waitForProcessDeath(process, 10000)
-      } catch {
-        case ex: Throwable =>
-          log.warning("Process refused to die after 10 seconds, and couldn't killall it")
-          ex.printStackTrace()
-          throw new RuntimeException("Process refused to die after 10 seconds, and couldn't killall it: " + ex.getMessage, ex)
-      }
-      exitValue
-    }*/
-  /**
-    * Doesn't do cd right!
-    */
-  def execCommand(command: String): String = {
-    println("> " + command)
-    return ("cmd /C " + command) !!
-  }
-
   def execCommandWithTimeout(command: String, cd: File): String = {
     println("> " + command)
 
@@ -111,13 +80,7 @@ object Cmd {
     val p = Process(command, cd,
       "JAVA_HOME" -> JAVA_HOME, // SBT works best with java 1.8
       "SBT_OPTS" -> "-Xms512M -Xmx1024M -Xss2M -XX:MaxMetaspaceSize=1024M", // SBT runs out of memory for some larger projects
-      "PATH" -> (sys.env("Path") + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => {
-      outputBuffer append str
-      if (str.contains("Project loading failed: (r)etry, (q)uit, (l)ast, or (i)gnore?")) {
-        // No use to go further
-        //p.destroy()
-      }
-    })) // start asynchronously
+      "PATH" -> (sys.env("Path") + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => outputBuffer append str)) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
       val exitValue: Int = Await.result(f, duration.Duration(1 * 60, "sec")) // 2 * 60
@@ -130,7 +93,6 @@ object Cmd {
         println("TIMEOUT!")
         //p.destroy()
         killProccesHiarchy(p)
-      //ProcessUtils.killProcess(p.)
     }
     outputBuffer.mkString("\n")
   }

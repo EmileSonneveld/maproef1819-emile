@@ -71,7 +71,7 @@ object CfgPerMethod {
     sb.toString()
   }
 
-  def numberOfLazyBinaryOperators(tree: Tree) = {
+  def numberOfLazyBinaryOperators(tree: Tree): Int = {
     var count = 0
     tree.collect {
       case t@Term.ApplyInfix(_, name, types, terms) => {

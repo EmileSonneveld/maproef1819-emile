@@ -20,8 +20,8 @@ trait ClassOrTrait extends Tree {}
 
 object MeasureProject {
 
-  def fillInPyramidTemplate(file: String, commitStats: CommitStats): String = {
-    var svg = file
+  def fillInPyramidTemplate(svgString: String, commitStats: CommitStats): String = {
+    var svg = svgString
     val nop = commitStats.nop_set.size.toDouble
     val noc = commitStats.noc_set.size.toDouble
     val nom = commitStats.nom_set.size.toDouble
@@ -136,7 +136,7 @@ object MeasureProject {
       case q: Defn.Object => q.name.toString()
       //case q: Defn.Trait => q.name // TODO: Yes/No?
     }
-    classCollection.foreach(x => commitStats.noc_set += x.toString)
+    classCollection.foreach(x => commitStats.noc_set += x)
 
 
     def descendDefOrCtor(tree: Tree, symb: Symbol): Unit = {
@@ -184,7 +184,6 @@ object MeasureProject {
         case a: Term.Apply => {
 
           var s = SemanticDB.getFromSymbolTable(a.fun, sdoc)
-          //calls += s.value
 
           try {
             if (doWeOwnThisClass(s.value)) {
@@ -231,11 +230,6 @@ object MeasureProject {
 
       for (pair <- methodMap) {
         val CC = CfgPerMethod.calculateCC(pair._2)
-        //if (CC >= 2) {
-        //  println("Big CC found: " + pair._1 + " -> " + CC)
-        //  println("\n\n" + CfgPerMethod.nodesToGraphViz(pair._2))
-        //}
-        //println(pair._1 + ": CC= " + CC)
         commitStats.cc += CC
       }
 
@@ -275,7 +269,7 @@ object MeasureProject {
             for (pair <- methodMap) {
               cc += CfgPerMethod.calculateCC(pair._2)
             }
-            val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, sdoc, false)
+            val classExternalPropsSet = externalProperties(clazz.symbol.value, clazz, semanticDB, sdoc, areParentSymbolsConcideredInternal = false)
             val classExternalProps = classExternalPropsSet.size
             val cohesion = calculateCohesion(clazz, semanticDB, sdoc)
 
@@ -284,14 +278,7 @@ object MeasureProject {
               + " classExternalPropsSet: " + classExternalPropsSet + "\n"
               + " classExternalProps: " + classExternalProps + "\n"
               + " cohesion: " + cohesion)
-            if (clazz.name.toString().contains("AbstractFigure")
-              || clazz.name.toString().contains("Geom")
-              || clazz.name.toString().contains("LineConnection")
-              || clazz.name.toString().contains("PolygonFigure")
-              || clazz.name.toString().contains("PolyLineFigure")
-            ) {
-              println(log)
-            }
+
             // Numbers come from PMD
             if (classExternalProps > 5 // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
               && cc > 45 // Very high threshold for WMC (Weighted Method Count). See: Lanza. Object-Oriented Metrics in Practice. Page 16.
@@ -305,7 +292,6 @@ object MeasureProject {
                 println("Def: " + d.name.value)
 
                 val methodExternalPropsSetAll = externalProperties(clazz.symbol.value, d, semanticDB, sdoc)
-                print("")
                 val methodExternalPropsSet = methodExternalPropsSetAll.filter(doWeOwnThisClass) // We can envy the standard library, but we can't realy do anything about it
 
                 val methodExternalProps = methodExternalPropsSet.size
@@ -326,24 +312,11 @@ object MeasureProject {
                   else methodInternalProps.toDouble / (methodExternalProps.toDouble + methodInternalProps.toDouble)
                 }
 
-                if (d.name.value == "findStart") {
-                  print("")
-                }
-                if (className.contains("StandardDrawingView")) {
-                  if (d.name.value == "insertFigures") {
-                    var test = d.symbol.value.toString
-                    var tmp = d.body.asInstanceOf[Term.Block]
-                    var tmp2 = tmp.stats(2).symbol
-                    print("")
-                  }
-                }
 
                 if (methodExternalProps > 4 // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
                   && LAA < 1.0 / 3.0
                   && methodExternalPropsClasses.size <= 4) { // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
-                  if (d.symbol.value == "org/shotdraw/util/StorageFormatManager#registerFileFilters().") {
-                    println()
-                  }
+
                   val log = ("FeatureEnvy detected! " + d.name.toString() + "\n"
                     + "    methodExternalPropsSet: " + methodExternalPropsSet + "\n"
                     + "    methodExternalProps: " + methodExternalProps + "\n"
@@ -394,7 +367,7 @@ object MeasureProject {
       !classUri.startsWith("scala/")
   }
 
-  def doStatsForProject(projectPath: File, commitStats: CommitStats) = {
+  def doStatsForProject(projectPath: File, commitStats: CommitStats): CommitStats = {
 
     LargeScaleDb.removeDetectedSmellsForCommit(commitStats.commitHash)
     //commitStats.powershell_LOC = Cmd.getPowershellLoc(new File(projectPath.getAbsolutePath + "\\src\\main\\scala"), ".scala")
@@ -518,7 +491,7 @@ object MeasureProject {
     collectedParents
   }
 
-  def traitOrClassName(tree: Tree) = {
+  def traitOrClassName(tree: Tree): String = {
     tree match {
       case value: Defn.Trait => value.name.value
       case value: Defn.Class => value.name.value
@@ -643,7 +616,7 @@ object MeasureProject {
   }
 
   // Shares many LOC with externalProperties
-  def localProperties(clazz: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument) = {
+  def localProperties(clazz: Defn.Class, d: Defn.Def, semanticDB: SemanticDB, sdoc: SemanticDocument): Set[String] = {
     val cSymbol = SemanticDB.getFromSymbolTable(clazz, sdoc)
     var collectedProperties: Set[String] = Set.empty[String]
 
@@ -681,27 +654,13 @@ object MeasureProject {
     * TCC
     */
   def calculateCohesion(clazz: Defn.Class, semanticDB: SemanticDB, sdoc: SemanticDocument): Double = {
-
     implicit val implicit_ksjndflidbfkurhgb: SemanticDocument = sdoc
-    val cSymbol = SemanticDB.getFromSymbolTable(clazz, sdoc)
 
-
-    val className = MeasureProject.traitOrClassName(clazz)
+    //val className = MeasureProject.traitOrClassName(clazz)
     var clazzSymbol = clazz.symbol
     assert(clazzSymbol.value.endsWith("#"))
     val compagnionRefString = clazzSymbol.value.substring(0, clazzSymbol.value.length - 1) + "."
     val compagnionTree = semanticDB.getClassTraitObjectTree(compagnionRefString)
-
-    if (className.contains("Bounds")) {
-      /*var symInfoOpt = semanticDB.symbolTable.info(clazzSymbol.value)
-      if (symInfoOpt.isDefined) {
-        var symInfo = symInfoOpt.get
-        val dbg = Utils.toStringRecursive(symInfo)
-        //symInfo.withProperties()
-        var comp = symInfo.companion
-      }*/
-      print("")
-    }
 
     var methods = ListBuffer.empty[MethodNodeWithUsages]
 
@@ -711,25 +670,7 @@ object MeasureProject {
         var mNode = new MethodNodeWithUsages(dSymbol.value)
 
         val methodInternalPropsSet = internalProperties(clazz.symbol.value, d, semanticDB, sdoc)
-        mNode.usesProperty = methodInternalPropsSet.toSet
-        if (clazz.toString().contains("DrawApplication")) {
-          if (d.toString().contains("def setDefaultTool")) {
-            println(d.toString())
-          }
-        }
-        /*d.body.collect({
-        case term: Term.Name => {
-          val termSymbol = semanticDB.getFromSymbolTable(term, sdoc)
-          if (!termSymbol.isLocal && !symbolInParentHiarchy(semanticDB, clazz.symbol.value, termSymbol.value)) {
-            val decodedPropName = termSymbol.value
-              .replace(cSymbol.value + "`", "")
-              .replace(cSymbol.value, "")
-              .replace("_=`().", "")
-              .replace("().", "")
-            mNode.usesProperty += decodedPropName
-          }
-        }
-      })*/
+        mNode.usesProperty = methodInternalPropsSet
         methods += mNode
       }
     }
@@ -742,18 +683,11 @@ object MeasureProject {
         case d: Defn.Def => collectDefn(d)
       })
     }
-    if (className.contains("Bounds")) {
-      println(("methods: \n" + methods.map(x => x.toString.replace("\n", "\n\t")).mkString("\n"))
-        .replace("\n", "\n\t"))
-    }
 
     val pairsWithCommon = numMethodsRelatedByAttributeAccess(methods)
     val maxPairs = methods.size * (methods.size - 1) / 2
 
     var cohesion = pairsWithCommon.toDouble / maxPairs
-    if (clazz.toString().contains("DrawApplication")) {
-      println()
-    }
 
     if (cohesion.isNaN || cohesion.isInfinite) cohesion = 0
     cohesion

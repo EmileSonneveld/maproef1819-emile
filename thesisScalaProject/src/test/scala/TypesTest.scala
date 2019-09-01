@@ -2,16 +2,16 @@ import java.io.File
 
 import MeasureProject.{externalProperties, internalProperties}
 import main.calculationsOnProjectWrap
-import org.scalatest.FunSuite
+import org.scalatest.{Assertion, FunSuite}
 import scalafix.SemanticDB
-import scalafix.v1._ // for the symbol magic
+import scalafix.v1._
 
 import scala.collection.mutable
 import scala.io.Source
 import scala.meta.{Defn, Tree}
 
 class TypesTest extends FunSuite {
-  def EmileAssert(b: Boolean) = {
+  def EmileAssert(b: Boolean): Assertion = {
     if (!b) {
       println("Oops!")
     }

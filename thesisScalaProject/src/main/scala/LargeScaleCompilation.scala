@@ -1,21 +1,11 @@
-import java.awt.Color
-import java.io.{File, IOException}
-import java.nio.file._
+import java.io.File
 import java.sql.Timestamp
-import java.util
-import java.util.{ArrayList, Date, List}
-import java.util.stream.{Collectors, Stream}
+import java.util.Date
 
-import Cmd.killProccesHiarchy
 import org.apache.commons.lang3.StringUtils
 import slickEmileProfile.Tables
 
-import scala.concurrent.{TimeoutException, duration}
-
 // Use H2Profile to connect to an H2 database
-import slick.jdbc.SQLiteProfile.api._
-
-import scala.concurrent.Await
 
 object LargeScaleCompilation {
 
@@ -29,8 +19,6 @@ object LargeScaleCompilation {
   def runPMD(): Unit = {
     var projectsTuples = LargeScaleDb.getAllGoodJavaProjects
     projectsTuples.filter(_.detectedSmells == scala.Option.empty).filter(_.loc > 500)
-
-    val test = projectsTuples.filter(_.project.contains("androidannotations"))
 
     for (p <- projectsTuples) {
       var path = new File(p.project.replace("D:\\github_java", "C:\\github_java"))
@@ -52,7 +40,6 @@ object LargeScaleCompilation {
           if (existingSmells.size == 0) {
             LargeScaleDb.removeDetectedSmellsJavaForCommit(p.commithash)
             if ((path).exists()) {
-
 
               var pmdBinPath = "C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\pmd-bin-6.16.0\\bin\\"
               Thread.sleep(1000) // Because SSD-USB connection can overheat :/

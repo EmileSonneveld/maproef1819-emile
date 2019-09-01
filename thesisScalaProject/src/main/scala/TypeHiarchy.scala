@@ -17,7 +17,7 @@ class TypeHiarchy(semanticDB: SemanticDB) {
   class TypeGraphNode(val symbol: String) {
     def name: String = symbol.toString
 
-    def addParent(parent: TypeGraphNode) = {
+    def addParent(parent: TypeGraphNode): parent.children.type = {
       parents += parent
       parent.children += this
     }
@@ -25,16 +25,12 @@ class TypeHiarchy(semanticDB: SemanticDB) {
     val parents: ArrayBuffer[TypeGraphNode] = ArrayBuffer.empty[TypeGraphNode]
     val children: ArrayBuffer[TypeGraphNode] = ArrayBuffer.empty[TypeGraphNode]
 
-    def numberOfChildren = children.length
+    def numberOfChildren: Int = children.length
 
     override def toString: String = name
   }
 
   private val symbolList = ArrayBuffer.empty[TypeGraphNode]
-
-  //def GetNodeByPath(path: String) = {
-  //  symbolList.find(_.name == path).get
-  //}
 
   def calculateANDC(): Double = {
     var sum = 0.0
@@ -127,29 +123,6 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       depthList += clusterHeight
     }
 
-    /*
-      var rootNodes = symbolList.filter(node =>
-        ConsiderClassForAHH(node.name)
-          && !node.parents.exists(parentNode => ConsiderClassForAHH(parentNode.name))
-      )
-      var depthList = List.fill(rootNodes.length)(-666).toArray
-
-
-      for (rootNodeIndex <- rootNodes.indices) {
-        var deepestDepth = -1 // no need to know what the deepest element is, only the depth
-
-        def rec(currentNode: TypeGraphNode, depth: Int): Unit = {
-          if (depth > deepestDepth)
-            deepestDepth = depth
-          for (childNode <- currentNode.children) {
-            rec(childNode, depth + 1)
-          }
-        }
-
-        rec(rootNodes(rootNodeIndex), 0)
-        depthList(rootNodeIndex) = deepestDepth
-      }
-    */
     return depthList.sum.toDouble / depthList.length
   }
 
@@ -218,30 +191,24 @@ class TypeHiarchy(semanticDB: SemanticDB) {
     implicit var implicit_sdoc: SemanticDocument = doc.sdoc
 
     val tree = doc.sdoc.tree
-    //println("START TypeHiarchy.calculate")
-
-    //val test = doc.tdoc.symbols(0)
 
     def consumeTraitOrClass(c: Tree): Unit = {
-      //if (c.name.toString() == "JoinNode" || c.name.toString() == "TestClass" || c.name.toString() == "TestParent")
-      {
-        try {
-          val s = c.symbol
-          if (!s.isLocal && !s.isNone) {
-            val node = addOrReturnSymbol(s.value.toString)
+      try {
+        val s = c.symbol
+        if (!s.isLocal && !s.isNone) {
+          val node = addOrReturnSymbol(s.value.toString)
 
-            var parents = MeasureProject.getParents(semanticDB, s.value.toString)
-            for (p <- parents) {
-              node.addParent(addOrReturnSymbol(p))
-            }
-            //println(parents)
+          var parents = MeasureProject.getParents(semanticDB, s.value.toString)
+          for (p <- parents) {
+            node.addParent(addOrReturnSymbol(p))
           }
-        } catch {
-          case _: scala.meta.internal.classpath.MissingSymbolException =>
-          // ignore
-          //case ex: Throwable =>
-          //  println("EX: " + ex)
+          //println(parents)
         }
+      } catch {
+        case _: scala.meta.internal.classpath.MissingSymbolException =>
+        // ignore
+        //case ex: Throwable =>
+        //  println("EX: " + ex)
       }
     }
 
@@ -250,11 +217,9 @@ class TypeHiarchy(semanticDB: SemanticDB) {
       case clazz: Defn.Trait => consumeTraitOrClass(clazz)
       //case q: Defn.Object => q.name
     }
-
-    //println("DONE TypeHiarchy.calculate")
   }
 
-  def getGvString() = {
+  def getGvString(): String = {
     nodesToGraphViz(symbolList)
   }
 
