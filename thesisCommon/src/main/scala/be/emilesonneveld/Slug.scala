@@ -1,3 +1,5 @@
+package be.emilesonneveld
+
 object Slug {
   def apply(input:String) = slugify(input)
 

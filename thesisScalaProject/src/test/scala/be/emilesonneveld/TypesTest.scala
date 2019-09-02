@@ -1,13 +1,12 @@
+package be.emilesonneveld
+
 import java.io.File
 
-import MeasureProject.{externalProperties, internalProperties}
-import main.calculationsOnProjectWrap
+import be.emilesonneveld.MeasureProject.{externalProperties, internalProperties}
 import org.scalatest.{Assertion, FunSuite}
 import scalafix.SemanticDB
 import scalafix.v1._
 
-import scala.collection.mutable
-import scala.io.Source
 import scala.meta.{Defn, Tree}
 
 class TypesTest extends FunSuite {

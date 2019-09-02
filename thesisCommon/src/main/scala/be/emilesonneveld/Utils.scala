@@ -1,15 +1,16 @@
-import java.io.{File, FileWriter, IOException}
+package be.emilesonneveld
+
+import java.io.{File, FileWriter}
+import java.lang.reflect.{Field, Modifier}
 import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.util
-import java.util.{ArrayList, List}
-import java.util.stream.{Collectors, Stream}
-import java.lang.reflect.{Field, Modifier}
 
 //import net.bytebuddy.dynamic.scaffold.TypeInitializer.None
 
 import scala.collection.mutable.ListBuffer
 
+class EmileException(msg: String) extends Exception(msg) {}
 
 object Utils {
 

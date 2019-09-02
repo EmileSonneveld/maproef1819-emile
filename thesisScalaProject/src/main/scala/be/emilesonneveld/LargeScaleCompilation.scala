@@ -1,11 +1,11 @@
+package be.emilesonneveld
+
 import java.io.File
 import java.sql.Timestamp
 import java.util.Date
 
 import org.apache.commons.lang3.StringUtils
 import slickEmileProfile.Tables
-
-// Use H2Profile to connect to an H2 database
 
 object LargeScaleCompilation {
 

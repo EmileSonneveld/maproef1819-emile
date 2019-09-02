@@ -1,3 +1,5 @@
+package be.emilesonneveld
+
 import slickEmileProfile.Tables
 
 import scala.collection.mutable.ListBuffer

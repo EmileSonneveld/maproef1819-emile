@@ -1,8 +1,8 @@
-import java.io.File
-import java.nio.file._
+package be.emilesonneveld
 
-import scala.language.postfixOps
+import java.io.File
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{Files, Paths}
 import java.util.concurrent.TimeUnit
 
 import scala.collection.Iterable
@@ -13,7 +13,7 @@ object main {
   def calculationsOnProject(projectPath: File): Any = {
     if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
       println("It is dangerous to alnalyse the dev folder! This tools messes with GIT and builds and stuff.")
-      //System.exit(-1)
+      System.exit(-1)
     }
 
     var gitTopLevel = Cmd.getGitTopLevel(projectPath)
@@ -23,7 +23,13 @@ object main {
     if (true) {
       // We a assume that the semanticdb files are already present in all projects
       //Cmd.makeCommitStateClean(gitTopLevel) Doesn't matter, as we calculate on the semantiddb files
-      //Cmd.execCommandWithTimeout("sbt.bat semanticdb", gitTopLevel)
+
+      val b = projectNeedsSemanticDb(projectPath)
+      println("projectNeedsSemanticDb: " + b)
+      if (b) {
+        val log = Cmd.execCommandWithTimeout("sbt.bat semanticdb", projectPath)
+        println(log)
+      }
 
       val commitStats = new CommitStats
       commitStats.projectName = projectName
@@ -99,26 +105,47 @@ object main {
     Math.max(maxModified, maxCreated) // TODO: Test. Test empty list too
   }
 
+  def touch(file: File): Unit = {
+    val timestamp = System.currentTimeMillis
+    file.setLastModified(timestamp)
+  }
+
   /**
     * When an other commit is checked out, the semanticdb files need to be regenerated.
     * This is quite a dirty function.
     */
   def projectNeedsSemanticDb(projectPath: File): Boolean = {
-
     var semanticdbFiles = Utils.recursiveGetFiles(projectPath, ".semanticdb")
+    if (semanticdbFiles.isEmpty) return true
     val latestSemanticDbDate = getNewestDate(semanticdbFiles)
 
+
+    var srcFiles = Utils.recursiveGetFiles(projectPath, ".scala")
+    srcFiles ++= Utils.recursiveGetFiles(projectPath, ".sbt")
+    var latestSrcDate = getNewestDate(srcFiles)
+
     var gitTopLevel = Cmd.getGitTopLevel(projectPath)
-
     val relevantGitFiles = List(".git/FETCH_HEAD", ".git/HEAD", ".git/index", ".git/ORIG_HEAD")
-    val gitFiles = relevantGitFiles.map(x => new File(gitTopLevel + "/" + x))
+    val gitFiles = relevantGitFiles
+      .map(x => new File(gitTopLevel + "/" + x))
+      .filter(_.exists())
 
-    val latestGitModificationDate = getNewestDate(semanticdbFiles)
+    val latestGitModificationDate = getNewestDate(gitFiles)
+    if (gitFiles.nonEmpty) latestSrcDate = Math.max(latestSrcDate, latestGitModificationDate)
 
-    latestSemanticDbDate < latestGitModificationDate
+
+    val b = latestSemanticDbDate < latestSrcDate
+    b
   }
 
   def main(args: Array[String]): Unit = {
+    if (args.length == 1) {
+      calculationsOnProjectWrap(new File(args(0)))
+      return
+    } else {
+      println("Should pass path to project as first argument")
+    }
+
     if (false) {
       var projects = LargeScaleDb.getSuccesfullProjects
         .map(x => new File(x.buildpath))

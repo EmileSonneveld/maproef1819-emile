@@ -1,14 +1,14 @@
+package be.emilesonneveld
+
 import java.text.{DecimalFormat, DecimalFormatSymbols}
 import java.util.Locale
 
-import scalafix.{DocumentTuple, SemanticDB}
 import scalafix.v1._
+import scalafix.{DocumentTuple, SemanticDB}
 
-import scala.collection.immutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.meta.{Defn, _}
 //import scala.meta.internal.semanticdb
-import scala.meta.internal.symtab.GlobalSymbolTable
 
 class TypeHiarchy(semanticDB: SemanticDB) {
 

@@ -1,17 +1,10 @@
-import java.io.File
+package be.emilesonneveld
+
 import java.sql.Timestamp
 import java.util.Date
 
-import MeasureProject.{externalProperties, internalProperties}
-import main.calculationsOnProjectWrap
+import be.emilesonneveld.slickEmileProfile.Tables
 import org.scalatest.FunSuite
-import scalafix.SemanticDB
-import scalafix.v1._
-import slickEmileProfile.Tables
-
-import scala.collection.mutable
-import scala.io.Source
-import scala.meta.{Defn, Tree}
 
 
 class RegexPyramidTest extends FunSuite {

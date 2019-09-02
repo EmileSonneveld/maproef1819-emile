@@ -1,3 +1,5 @@
+package be.emilesonneveld
+
 import java.io.{ByteArrayInputStream, StringWriter}
 
 import javax.xml.parsers.DocumentBuilderFactory
@@ -6,8 +8,6 @@ import javax.xml.transform.stream.StreamResult
 import javax.xml.transform.{TransformerException, TransformerFactory}
 import javax.xml.xpath.{XPathConstants, XPathFactory}
 import org.w3c.dom.{Document, Node, NodeList}
-
-import scala.language.postfixOps
 
 object XmlUtil {
   def parseXmlFromString(xmlString: String): Document = {

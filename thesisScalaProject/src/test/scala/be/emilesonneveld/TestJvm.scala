@@ -1,3 +1,5 @@
+package be.emilesonneveld
+
 import java.io.File
 
 import org.scalatest.FunSuite

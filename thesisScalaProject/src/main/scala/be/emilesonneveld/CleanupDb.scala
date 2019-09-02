@@ -1,3 +1,5 @@
+package be.emilesonneveld
+
 object CleanupDb {
 
   def main(args: Array[String]): Unit = {

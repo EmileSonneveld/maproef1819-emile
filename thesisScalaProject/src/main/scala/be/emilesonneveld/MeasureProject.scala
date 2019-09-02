@@ -1,30 +1,30 @@
+package be.emilesonneveld
+
 import java.io.File
 import java.text._
 
 import org.apache.commons.lang3.StringUtils
-import scalafix.v1.SemanticDocument
-import scalafix.{DocumentTuple, SemanticDB}
-import scalafix.v1._
+import scalafix.SemanticDB
+import scalafix.v1.{SemanticDocument, _}
 import slickEmileProfile.Tables
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
-import scala.meta.Term.Block
 import scala.meta._
 import scala.meta.internal.semanticdb
 import scala.meta.internal.semanticdb.SymbolInformation
-import scala.meta.transversers.SimpleTraverser
 
 
 trait ClassOrTrait extends Tree {}
 
 object MeasureProject {
 
-  def makePyramydSvg(commitStats: CommitStats):String = {
+  def makePyramydSvg(commitStats: CommitStats): String = {
     var svg = Utils.readFile("..\\svg\\pyramid.svg")
     svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
     svg
   }
+
   private def fillInPyramidTemplate(svgString: String, commitStats: CommitStats): String = {
     var svg = svgString
     val nop = commitStats.nop_set.size.toDouble
@@ -126,6 +126,17 @@ object MeasureProject {
     return XmlUtil.documentToString(doc)
   }
 
+
+  def asciiOverviewPyramid(row: Tables.PyramidStatsScalaRow): String = {
+    val df = new DecimalFormat(".##")
+    "				ANDC	" + df.format(row.andc) +
+      "				AHH	" + df.format(row.ahh) +
+      "			" + df.format(row.noc.toDouble / row.nop.toDouble) + "	NOP	" + row.nop +
+      "		" + df.format(row.nom.toDouble / row.noc.toDouble) + "	NOC		" + row.noc +
+      "	" + df.format(row.loc.toDouble / row.nom.toDouble) + "	NOM			" + row.nom + "	NOM	" + df.format(row.calls.get.toDouble / row.nom.toDouble) +
+      df.format(row.cc.toDouble / row.loc.toDouble) + "	LOC				" + row.loc + "	" + row.calls + "	CALLS	" + df.format(row.fanout.get.toDouble / row.calls.get.toDouble) +
+      "CYCLO					" + row.cc + "	" + row.fanout + "		FANOUT"
+  }
 
   private def consumeFile(commitStats: CommitStats, sdoc: SemanticDocument, semanticDB: SemanticDB): Unit = {
     implicit val implicit_sdoc_fkurhgbsdf: SemanticDocument = sdoc
@@ -294,7 +305,7 @@ object MeasureProject {
 
             clazz.collect {
               case d: Defn.Def =>
-                println("Def: " + d.name.value)
+                //println("Def: " + d.name.value)
 
                 val methodExternalPropsSetAll = externalProperties(clazz.symbol.value, d, semanticDB, sdoc)
                 val methodExternalPropsSet = methodExternalPropsSetAll.filter(doWeOwnThisClass) // We can envy the standard library, but we can't realy do anything about it

@@ -1,15 +1,13 @@
+package be.emilesonneveld
+
 import java.io.File
 
-import MeasureProject.{externalProperties, internalProperties}
-import main.calculationsOnProjectWrap
 import org.scalatest.FunSuite
 import scalafix.SemanticDB
 import scalafix.v1._
 
-import scala.collection.mutable
-import scala.io.Source
 import scala.meta.internal.semanticdb.SymbolInformation
-import scala.meta.{Defn, Term, Tree}
+import scala.meta.{Defn, Term}
 
 class CallsMetricTest extends FunSuite {
 

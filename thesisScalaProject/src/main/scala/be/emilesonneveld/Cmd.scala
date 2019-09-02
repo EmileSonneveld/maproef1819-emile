@@ -1,3 +1,5 @@
+package be.emilesonneveld
+
 import java.io._
 import java.nio.file._
 
@@ -69,6 +71,8 @@ object Cmd {
 
   def getGitTopLevel(path: File): File = {
     val res = execCommandWithTimeout("git rev-parse --show-toplevel", path).trim
+    if (res.contains("fatal:") || res.contains("not a git repository"))
+      throw new EmileException(res)
     new File(res)
   }
 

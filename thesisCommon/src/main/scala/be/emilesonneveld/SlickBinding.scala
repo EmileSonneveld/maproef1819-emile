@@ -1,7 +1,4 @@
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
-import slick.jdbc.H2Profile.api._
-import slick.jdbc.SQLiteProfile
+package be.emilesonneveld
 
 import com.typesafe.config.ConfigFactory
 
@@ -16,7 +13,7 @@ object SlickBinding {
     val profile = "slick.jdbc.SQLiteProfile"
     val jdbcDriver = applicationConfig.getString("slickEmileProfile.driver") //"org.sqlite.JDBC"
     val url = applicationConfig.getString("slickEmileProfile.url") // "jdbc:sqlite:C:\\Use...st.sqlite"
-    val pkg = "slickEmileProfile"
+    val pkg = "be.emilesonneveld.slickEmileProfile"
     val outputFolder = "src\\main\\scala"
 
     slick.codegen.SourceCodeGenerator.main(

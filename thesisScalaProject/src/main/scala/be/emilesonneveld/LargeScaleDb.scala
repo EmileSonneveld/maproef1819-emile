@@ -1,10 +1,12 @@
+package be.emilesonneveld
+
 import java.io.File
 import java.sql._
 import java.util.Date
 
 import slick.jdbc.SQLiteProfile.api._
-import slickEmileProfile.Tables
-import slickEmileProfile.Tables.{JavaIplasmaPyramidRow, SbtBuildTriesRow}
+import be.emilesonneveld.slickEmileProfile.Tables
+import be.emilesonneveld.slickEmileProfile.Tables._
 
 import scala.concurrent.{Await, duration}
 
@@ -186,6 +188,3 @@ object LargeScaleDb {
   }
 
 }
-
-
-//case class BuildTry(id: Long, buildPath: File, buildDateTime: Long, stdOutput: String, buildType: String)

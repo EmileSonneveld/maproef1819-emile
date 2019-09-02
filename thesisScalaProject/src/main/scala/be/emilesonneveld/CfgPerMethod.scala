@@ -1,10 +1,11 @@
+package be.emilesonneveld
+
 import java.text.{DecimalFormat, DecimalFormatSymbols}
 import java.util.Locale
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.meta._
-
+import scala.meta.{Defn, Term, Tree}
 
 object CfgPerMethod {
 

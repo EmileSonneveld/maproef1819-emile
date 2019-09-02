@@ -1,17 +1,12 @@
-import java.io.File
-import java.sql.Timestamp
-import java.util.Date
+package be.emilesonneveld
 
-import MeasureProject.{externalProperties, internalProperties}
-import main.calculationsOnProjectWrap
+import java.io.File
+
 import org.scalatest.FunSuite
 import scalafix.SemanticDB
 import scalafix.v1._
-import slickEmileProfile.Tables
 
-import scala.collection.mutable
-import scala.io.Source
-import scala.meta.{Defn, Tree}
+import scala.meta.Defn
 
 
 class NestingLevelTest extends FunSuite {

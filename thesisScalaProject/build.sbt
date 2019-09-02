@@ -4,6 +4,9 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 
+mainClass in (Compile, run) := Some("main")
+mainClass in (Compile, packageBin) := Some("main")
+
 //libraryDependencies += "org.scalameta" %% "scalameta" % "4.1.0"
 
 //resolvers += Resolver.bintrayRepo("zamblauskas", "maven")
