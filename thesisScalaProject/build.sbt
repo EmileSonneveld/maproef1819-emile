@@ -4,13 +4,14 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 
-mainClass in (Compile, run) := Some("main")
-mainClass in (Compile, packageBin) := Some("main")
+mainClass in(Compile, run) := Some("be.emilesonneveld.main")
+mainClass in(Compile, packageBin) := Some("be.emilesonneveld.main")
 
 //libraryDependencies += "org.scalameta" %% "scalameta" % "4.1.0"
 
 //resolvers += Resolver.bintrayRepo("zamblauskas", "maven")
 //libraryDependencies += "zamblauskas" %% "scala-csv-parser" % "0.11.4"
+libraryDependencies += "org.scala-sbt.plugins" % "sbt-onejar" % "0.8"
 
 val scalaMetaVersion = "4.1.0"
 

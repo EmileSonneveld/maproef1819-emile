@@ -28,7 +28,7 @@ object main {
       println("projectNeedsSemanticDb: " + b)
       if (b) {
         val log = Cmd.execCommandWithTimeout("sbt.bat semanticdb", projectPath)
-        println(log)
+        //println(log)
       }
 
       val commitStats = new CommitStats
@@ -49,9 +49,13 @@ object main {
               println("Exception while calculating stats:\n" + x.getMessage)
             }
           }
-          LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
+          val row = commitStats.toPyramidStats
+          println(MeasureProject.asciiOverviewPyramid(row))
+          LargeScaleDb.insertPyramidStats(row)
         }
       }
+      var smells2 = LargeScaleDb.getDetectedSmellsForCommit(commitStats.commitHash);
+      println(smells2.mkString("\n"))
     }
     else {
       // Go trough history

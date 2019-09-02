@@ -127,15 +127,37 @@ object MeasureProject {
   }
 
 
-  def asciiOverviewPyramid(row: Tables.PyramidStatsScalaRow): String = {
+  def padLeftZeros(inputString: String, length: Int): String = {
+    if (inputString.length >= length) return inputString
+    val sb = new StringBuilder
+    while ( {
+      sb.length < length - inputString.length
+    }) sb.append('0')
+    sb.append(inputString)
+    sb.toString
+  }
+
+  def format(number: Double) = {
     val df = new DecimalFormat(".##")
-    "				ANDC	" + df.format(row.andc) +
-      "				AHH	" + df.format(row.ahh) +
-      "			" + df.format(row.noc.toDouble / row.nop.toDouble) + "	NOP	" + row.nop +
-      "		" + df.format(row.nom.toDouble / row.noc.toDouble) + "	NOC		" + row.noc +
-      "	" + df.format(row.loc.toDouble / row.nom.toDouble) + "	NOM			" + row.nom + "	NOM	" + df.format(row.calls.get.toDouble / row.nom.toDouble) +
-      df.format(row.cc.toDouble / row.loc.toDouble) + "	LOC				" + row.loc + "	" + row.calls + "	CALLS	" + df.format(row.fanout.get.toDouble / row.calls.get.toDouble) +
-      "CYCLO					" + row.cc + "	" + row.fanout + "		FANOUT"
+    val tmp = df.format(number)
+    padLeftZeros(tmp, 4)
+  }
+  def format(number: Int) = {
+    //val df = new DecimalFormat(".##")
+    //val tmp = df.format(number)
+    padLeftZeros(number.toString, 4)
+  }
+
+  def asciiOverviewPyramid(row: Tables.PyramidStatsScalaRow): String = {
+    val df = new DecimalFormat("##.##")
+    // Asuming a tab takes 54
+    "				ANDC	" + format(row.andc.get) + "\n" +
+      "				AHH 	" + format(row.ahh.get) + "\n" +
+      "			" + format(row.noc.toDouble / row.nop.toDouble) + "	NOP	" + row.nop + "\n" +
+      "		" + format(row.nom.toDouble / row.noc.toDouble) + "	NOC		" + row.noc + "\n" +
+      "	" + format(row.loc.toDouble / row.nom.toDouble) + "	NOM			" + row.nom + "	NOM	" + format(row.calls.get.toDouble / row.nom.toDouble) + "\n" +
+      format(row.cc.toDouble / row.loc.toDouble) + "	LOC				" + row.loc + "	" + row.calls.get + "	CALLS	" + format(row.fanout.get.toDouble / row.calls.get.toDouble) + "\n" +
+      "CYCLO					" + row.cc + "	" + row.fanout.get + "		FANOUT"
   }
 
   private def consumeFile(commitStats: CommitStats, sdoc: SemanticDocument, semanticDB: SemanticDB): Unit = {
@@ -276,7 +298,7 @@ object MeasureProject {
           if (!className.endsWith("Test") // Naming convension for test classes
             && !clazz.symbol.isLocal
             && !clazz.symbol.isNone) { // Scala meta doesn't keep semantic information about inline classes :(
-            println("Class: " + clazz.name.value)
+            //println("Class: " + clazz.name.value)
 
             var locInClass = countLocInClass(clazz)
 
@@ -291,7 +313,7 @@ object MeasureProject {
 
             val log = (""
               + " cc: " + cc + "\n"
-              + " classExternalPropsSet: " + classExternalPropsSet + "\n"
+              //+ " classExternalPropsSet: " + classExternalPropsSet + "\n"
               + " classExternalProps: " + classExternalProps + "\n"
               + " cohesion: " + cohesion)
 
@@ -299,7 +321,7 @@ object MeasureProject {
             if (classExternalProps > 5 // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
               && cc > 45 // Very high threshold for WMC (Weighted Method Count). See: Lanza. Object-Oriented Metrics in Practice. Page 16.
               && cohesion < 1.0 / 3.0) {
-              println(log)
+              //println(log)
               LargeScaleDb.insertRow(Tables.DetectedSmellRow(0, commitStats.commitHash, clazz.symbol.value, "GodClass", log))
             }
 
@@ -334,9 +356,9 @@ object MeasureProject {
                   && methodExternalPropsClasses.size <= 4) { // Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in Practice. Page 18.
 
                   val log = ("FeatureEnvy detected! " + d.name.toString() + "\n"
-                    + "    methodExternalPropsSet: " + methodExternalPropsSet + "\n"
+                    //+ "    methodExternalPropsSet: " + methodExternalPropsSet + "\n"
                     + "    methodExternalProps: " + methodExternalProps + "\n"
-                    + "    methodInternalPropsSet: " + methodInternalPropsSet + "\n"
+                    //+ "    methodInternalPropsSet: " + methodInternalPropsSet + "\n"
                     + "    methodInternalProps: " + methodInternalProps + "\n"
                     + "    LAA: " + LAA + "\n"
                     + "    methodExternalPropsClasses.size: " + methodExternalPropsClasses.size)
@@ -408,7 +430,7 @@ object MeasureProject {
     }
 
     for (doc <- semanticDB.documents) {
-      println("\nDoc: " + doc.tdoc.uri)
+      //println("\nDoc: " + doc.tdoc.uri)
 
       consumeFile(commitStats, doc.sdoc, semanticDB)
     }
@@ -473,9 +495,6 @@ object MeasureProject {
   }
 
   def getParents(semanticDB: SemanticDB, symbolString: String): Seq[String] = {
-    if (symbolString == "io/x100/colstore/ColumnarStoreSpec#") {
-      println()
-    }
     var symInfo = semanticDB.getInfo(symbolString)
     //var symInfo = semanticDB.symbolTable.info(symbolString).get
     if (symInfo == null || !symInfo.signature.isInstanceOf[scala.meta.internal.semanticdb.ClassSignature]) return Seq.empty // Gave an error with "final case class RuntimeException"

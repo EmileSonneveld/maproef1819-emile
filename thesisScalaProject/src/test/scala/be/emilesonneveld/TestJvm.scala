@@ -20,4 +20,10 @@ class TestJvm extends FunSuite {
     var f = new File("C:/github_download/")
     assert(f.toString == "C:\\github_download")
   }
+
+  test("formating") {
+
+    //val padded = String.format("%03d", 5)
+    //System.out.println("Integer number left padded with zero : " + padded)
+  }
 }
