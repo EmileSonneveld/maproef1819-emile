@@ -20,7 +20,12 @@ trait ClassOrTrait extends Tree {}
 
 object MeasureProject {
 
-  def fillInPyramidTemplate(svgString: String, commitStats: CommitStats): String = {
+  def makePyramydSvg(commitStats: CommitStats):String = {
+    var svg = Utils.readFile("..\\svg\\pyramid.svg")
+    svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
+    svg
+  }
+  private def fillInPyramidTemplate(svgString: String, commitStats: CommitStats): String = {
     var svg = svgString
     val nop = commitStats.nop_set.size.toDouble
     val noc = commitStats.noc_set.size.toDouble

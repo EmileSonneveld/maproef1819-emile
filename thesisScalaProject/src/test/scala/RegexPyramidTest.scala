@@ -29,7 +29,7 @@ class RegexPyramidTest extends FunSuite {
   test("test1") {
     println(pyramid)
 
-    var tmp = Tables.PyramidStatsJavaRow(0, "", "", new Timestamp(new Date().getTime).toString, 0, 0, 0, 0, 0, 0, 0, 0, 0, Option(0))
+    var tmp = Tables.PyramidStatsJavaRow(0, "", "", new Timestamp(new Date().getTime).toString, 0, 0, 0, 0, 0, 0, 0, 0, 0, Option(0), Option(0))
     tmp = HandleJavaData.updatePyramidStatsJavaFromLog(tmp, pyramid)
 
     assert(tmp.andc == 0.62)

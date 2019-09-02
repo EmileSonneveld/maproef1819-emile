@@ -1,10 +1,14 @@
 import java.io.File
 import java.nio.file._
 
-
 import scala.language.postfixOps
+import java.nio.file.attribute.BasicFileAttributes
+import java.util.concurrent.TimeUnit
 
-object main extends App {
+import scala.collection.Iterable
+
+object main {
+
 
   def calculationsOnProject(projectPath: File): Any = {
     if (projectPath.toString.contains("emill\\dev") || projectPath.toString.contains("emill/dev")) {
@@ -32,12 +36,11 @@ object main extends App {
         {
           try {
             MeasureProject.doStatsForProject(projectPath, commitStats)
-            var svg = Utils.readFile("..\\svg\\pyramid.svg")
-            svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
+            val svg = MeasureProject.makePyramydSvg(commitStats)
             Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
           } catch {
             case x: Throwable => {
-              println("Exception while calculating stats:\n"+x.getMessage)
+              println("Exception while calculating stats:\n" + x.getMessage)
             }
           }
           LargeScaleDb.insertPyramidStats(commitStats.toPyramidStats)
@@ -88,27 +91,56 @@ object main extends App {
   }
 
 
-  if (false) {
-    var projects = LargeScaleDb.getSuccesfullProjects
-      .map(x => new File(x.buildpath))
-      .distinct
-      .filter(x => Utils.normalizeDirectoryPath(x.toString).count(x => x == '/') <= 4) // assume only one project per repository
-      .filter(x => new File(Utils.normalizeDirectoryPath(x.toString) + "src\\main\\scala").exists()) // Only do standard paths
+  def getNewestDate(files: Iterable[File]): Long = {
+    val maxModified = files.map(_.lastModified).max
+    val maxCreated = files.map(
+      x => Files.readAttributes(Paths.get(x.toString), classOf[BasicFileAttributes]).creationTime.to(TimeUnit.MILLISECONDS)).max
 
-    for (file <- projects) {
-      calculationsOnProjectWrap(file)
+    Math.max(maxModified, maxCreated) // TODO: Test. Test empty list too
+  }
+
+  /**
+    * When an other commit is checked out, the semanticdb files need to be regenerated.
+    * This is quite a dirty function.
+    */
+  def projectNeedsSemanticDb(projectPath: File): Boolean = {
+
+    var semanticdbFiles = Utils.recursiveGetFiles(projectPath, ".semanticdb")
+    val latestSemanticDbDate = getNewestDate(semanticdbFiles)
+
+    var gitTopLevel = Cmd.getGitTopLevel(projectPath)
+
+    val relevantGitFiles = List(".git/FETCH_HEAD", ".git/HEAD", ".git/index", ".git/ORIG_HEAD")
+    val gitFiles = relevantGitFiles.map(x => new File(gitTopLevel + "/" + x))
+
+    val latestGitModificationDate = getNewestDate(semanticdbFiles)
+
+    latestSemanticDbDate < latestGitModificationDate
+  }
+
+  def main(args: Array[String]): Unit = {
+    if (false) {
+      var projects = LargeScaleDb.getSuccesfullProjects
+        .map(x => new File(x.buildpath))
+        .distinct
+        .filter(x => Utils.normalizeDirectoryPath(x.toString).count(x => x == '/') <= 4) // assume only one project per repository
+        .filter(x => new File(Utils.normalizeDirectoryPath(x.toString) + "src\\main\\scala").exists()) // Only do standard paths
+
+      for (file <- projects) {
+        calculationsOnProjectWrap(file)
+      }
+    } else {
+
+      // Don't mess in the /dev folder!
+      //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
+      calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
+      //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
+      //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) Does not compile
+      //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
+      //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
+      //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta")) Infinite loop?4
+      //calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))
+      //calculationsOnProjectWrap(new File("C:\\github_download\\100x.io"))
     }
-  } else {
-
-    // Don't mess in the /dev folder!
-    //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
-    calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) Does not compile
-    //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta")) Infinite loop?
-    //calculationsOnProjectWrap(new File("C:\\github_download\\MoVE"))
-    //calculationsOnProjectWrap(new File("C:\\github_download\\100x.io"))
   }
 }

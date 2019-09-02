@@ -260,17 +260,17 @@ trait Tables {
    *  @param buildpath Database column buildPath SqlType(TEXT)
    *  @param stdoutput Database column stdOutput SqlType(TEXT)
    *  @param buildtype Database column buildType SqlType(TEXT) */
-  case class SbtBuildTriesRow(id: Int, builddatetime: String, buildpath: String, stdoutput: String, buildtype: Option[String])
+  case class SbtBuildTriesRow(id: Int, builddatetime: String, buildpath: String, stdoutput: String, buildtype: String)
   /** GetResult implicit for fetching SbtBuildTriesRow objects using plain SQL queries */
-  implicit def GetResultSbtBuildTriesRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[String]]): GR[SbtBuildTriesRow] = GR{
+  implicit def GetResultSbtBuildTriesRow(implicit e0: GR[Int], e1: GR[String]): GR[SbtBuildTriesRow] = GR{
     prs => import prs._
-    SbtBuildTriesRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<?[String]))
+    SbtBuildTriesRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[String]))
   }
   /** Table description of table sbt_build_tries. Objects of this class serve as prototypes for rows in queries. */
   class SbtBuildTries(_tableTag: Tag) extends profile.api.Table[SbtBuildTriesRow](_tableTag, "sbt_build_tries") {
     def * = (id, builddatetime, buildpath, stdoutput, buildtype) <> (SbtBuildTriesRow.tupled, SbtBuildTriesRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(id), Rep.Some(builddatetime), Rep.Some(buildpath), Rep.Some(stdoutput), buildtype)).shaped.<>({r=>import r._; _1.map(_=> SbtBuildTriesRow.tupled((_1.get, _2.get, _3.get, _4.get, _5)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(id), Rep.Some(builddatetime), Rep.Some(buildpath), Rep.Some(stdoutput), Rep.Some(buildtype))).shaped.<>({r=>import r._; _1.map(_=> SbtBuildTriesRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(INTEGER), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -281,7 +281,7 @@ trait Tables {
     /** Database column stdOutput SqlType(TEXT) */
     val stdoutput: Rep[String] = column[String]("stdOutput")
     /** Database column buildType SqlType(TEXT) */
-    val buildtype: Rep[Option[String]] = column[Option[String]]("buildType")
+    val buildtype: Rep[String] = column[String]("buildType")
   }
   /** Collection-like TableQuery object for table SbtBuildTries */
   lazy val SbtBuildTries = new TableQuery(tag => new SbtBuildTries(tag))

@@ -68,7 +68,7 @@ object LargeScaleDb {
     var query = pyramid_stats_java.filter(_.nom > 0).filter(_.cc > 0)
     var f = db.run(query.result)
     var tmp = Await.result(f, duration.Duration(10, "sec"))
-    tmp.filter(_.andc != Option.empty)
+    tmp.filter(_.andc != 0)
   }
 
   def getPyramidStatJava(projectPath: String): Seq[Tables.PyramidStatsJavaRow] = {

@@ -11,7 +11,6 @@ import scala.io.Source
 import scala.meta.{Defn, Tree}
 
 
-class Wrapper(val underlying: CommitStats) extends AnyVal
 class Harness extends FunSuite {
   test("MeasureProject.propGetOwnerClass") {
     assert(MeasureProject.propGetOwnerClass("org/shotdraw/util/VersionControlStrategy#assertCompatibleVersion().")
@@ -23,10 +22,13 @@ class Harness extends FunSuite {
 
     class CoStWrap extends CommitStats
     val c = new CoStWrap()
-    c.noc_set += "a"
-    c.noc_set += "b"
-    c.noc_set += "c"
+    c.noc_set += "aaaaaaa"
+    c.noc_set += "bbbbbbb"
+    c.noc_set += "ccccccc"
 
-    println(Utils.toStringRecursive(c))
+    val output = Utils.toStringRecursive(c)
+    assert(output.contains("aaaaaaa"))
+    assert(output.contains("bbbbbbb"))
+    println(output)
   }
 }

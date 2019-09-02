@@ -83,7 +83,7 @@ class SemanticDB(val projectPath: File) {
         var test = main_doc.sdoc.tree // Try this, and don't add document if it throws
         documents += reload(main_doc.tdoc.uri)
       } catch {
-        case _ =>
+        case _: Throwable =>
           println("Ignored document that throws when parsed: " + main_doc.path)
       }
     }
