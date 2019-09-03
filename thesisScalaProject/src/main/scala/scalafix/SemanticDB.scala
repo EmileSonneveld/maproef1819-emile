@@ -1,14 +1,15 @@
 package scalafix // We must develop in this package to acces some private variables.
 
 import java.io.File
-import java.net.URLClassLoader
+import java.net.{URLClassLoader, URLDecoder}
 import java.nio.file.Path
+import java.nio.charset.StandardCharsets
 
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.{DirectoryFileFilter, TrueFileFilter}
 import scalafix.internal.v1.InternalSemanticDoc
 import scalafix.v1.{SemanticDocument, Symbol, SyntacticDocument}
-import scalafix.v1._ // for the symbol magic
+import scalafix.v1._
 
 import scala.collection.mutable.ListBuffer
 import scala.meta.{Defn, Tree}
@@ -16,6 +17,7 @@ import scala.meta.inputs.Input
 import scala.meta.internal.semanticdb.{Locator, SymbolInformation, TextDocument}
 import scala.meta.internal.symtab.GlobalSymbolTable
 import scala.meta.io.{AbsolutePath, Classpath}
+import scala.util.matching.Regex
 
 case class DocumentTuple(path: Path, tdoc: TextDocument, sdoc: SemanticDocument)
 
@@ -33,8 +35,18 @@ class SemanticDB(val projectPath: File) {
       .map(f => Classpath(f.getAbsolutePath))
       .reduceOption(_ ++ _)
 
-    val classPath = ClassLoader.getSystemClassLoader.asInstanceOf[URLClassLoader].getURLs
-      .map(url => Classpath(url.getFile.replace("/C:/", "C:/").replace("%20", " "))) // Maybe more url-decoding is needed here
+    val urls = ClassLoader.getSystemClassLoader.asInstanceOf[URLClassLoader].getURLs
+
+    val classPath = urls
+      .map(url => {
+        var tmp = url.getFile
+        if (tmp(0) == '/'
+          && tmp(2) == ':'
+          && tmp(3) == '/')
+          tmp = tmp.substring(1) // For wrong "/C:/" syntax
+        val decoded = URLDecoder.decode(tmp, StandardCharsets.UTF_8.name)
+        Classpath(decoded)
+      }) // Maybe more url-decoding is needed here
       .reduceOption(_ ++ _)
 
     (jars ++ classes ++ classPath).reduceOption(_ ++ _).getOrElse(Classpath(""))

@@ -11,7 +11,7 @@ mainClass in(Compile, packageBin) := Some("be.emilesonneveld.main")
 
 //resolvers += Resolver.bintrayRepo("zamblauskas", "maven")
 //libraryDependencies += "zamblauskas" %% "scala-csv-parser" % "0.11.4"
-libraryDependencies += "org.scala-sbt.plugins" % "sbt-onejar" % "0.8"
+//libraryDependencies += "org.scala-sbt.plugins" % "sbt-onejar" % "0.8"
 
 val scalaMetaVersion = "4.1.0"
 
