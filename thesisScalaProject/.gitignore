@@ -1,5 +1,5 @@
 logs
-*.iml
+#*.iml .idea/modules/thesisScalaProject.iml was missing
 target
 #.idea
 #.idea_modules
