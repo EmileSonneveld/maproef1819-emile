@@ -164,9 +164,9 @@ object main {
 
       // Don't mess in the /dev folder!
       //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
-      calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
+      //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
-      //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) Does not compile
+      calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) //Does not compile
       //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta")) Infinite loop?4

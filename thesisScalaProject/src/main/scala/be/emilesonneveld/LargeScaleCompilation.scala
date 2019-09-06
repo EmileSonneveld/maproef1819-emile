@@ -5,7 +5,7 @@ import java.sql.Timestamp
 import java.util.Date
 
 import org.apache.commons.lang3.StringUtils
-import slickEmileProfile.Tables
+import be.emilesonneveld.slickEmileProfile.Tables
 
 object LargeScaleCompilation {
 

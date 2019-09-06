@@ -6,7 +6,7 @@ import java.text._
 import org.apache.commons.lang3.StringUtils
 import scalafix.SemanticDB
 import scalafix.v1.{SemanticDocument, _}
-import slickEmileProfile.Tables
+import be.emilesonneveld.slickEmileProfile.Tables
 
 import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
