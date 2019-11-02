@@ -27,8 +27,8 @@ object main {
       val b = projectNeedsSemanticDb(projectPath)
       println("projectNeedsSemanticDb: " + b)
       if (b) {
-        val log = Cmd.execCommandWithTimeout("sbt.bat semanticdb", projectPath)
-        //println(log)
+        val log = Cmd.execSbtSemanticDB(projectPath)
+        println(log)
       }
 
       val commitStats = new CommitStats
@@ -73,7 +73,7 @@ object main {
           try {
             Cmd.gitForceCheckout(hash, gitTopLevel)
 
-            var returnString = Cmd.execCommandWithTimeout("sbt.bat semanticdb", gitTopLevel)
+            var returnString = Cmd.execSbtSemanticDB(gitTopLevel)
             if (!returnString.contains("[success]")) {
               println("Could not make semanticdb for commit")
             }
@@ -163,10 +163,10 @@ object main {
     } else {
 
       // Don't mess in the /dev folder!
-      //calculationsOnProjectWrap(new File("C:\\Users\\emill\\dev\\SHotDraw\\SHotDraw"))
+      calculationsOnProjectWrap(new File("C:\\Users\\Emile\\dev\\SHotDraw\\SHotDraw"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
-      calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) //Does not compile
+      //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) //Does not compile
       //calculationsOnProjectWrap(new File("C:\\github_download\\Leo-III"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\CTT-editor"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\scalameta")) Infinite loop?4

@@ -15,4 +15,4 @@ libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "3.3.1"
 
 
 //libraryDependencies += "com.h2database" % "h2" % "1.4.199"
-unmanagedJars in Compile += file("C:\\Users\\emill\\dev\\maproef1819-emile\\jars\\sqlite-jdbc-3.27.2.1.jar")
+unmanagedJars in Compile += file("..\\jars\\sqlite-jdbc-3.27.2.1.jar")

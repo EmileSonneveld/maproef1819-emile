@@ -76,7 +76,12 @@ object Cmd {
     new File(res)
   }
 
+  def execSbtSemanticDB(cd: File): String ={
+    execCommandWithTimeout("java -jar C:\\Users\\Emile\\.IntelliJIdea2019.2\\config\\plugins\\Scala\\launcher\\sbt-launch.jar semanticdb", cd)
+  }
+
   def execCommandWithTimeout(command: String, cd: File): String = {
+    println("> cd /d " + cd)
     println("> " + command)
 
     val outputBuffer = ListBuffer[String]()
