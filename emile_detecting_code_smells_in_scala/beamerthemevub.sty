@@ -1,0 +1,44 @@
+\mode<presentation>
+
+\newif\if@coloredTitles
+\@coloredTitlesfalse
+\DeclareOption{coloredtitles}{\@coloredTitlestrue}
+
+\newif\if@sectionOnAllSlides
+\@sectionOnAllSlidesfalse
+\DeclareOption{showsection}{\@sectionOnAllSlidestrue}
+
+% department options
+\newif\if@etro
+\@etrofalse
+\DeclareOption{dept=etro}{\@etrotrue}
+
+\newif\if@brubotics
+\@bruboticsfalse
+\DeclareOption{dept=brubotics}{\@bruboticstrue}
+
+\newif\if@soft
+\@softfalse
+\DeclareOption{dept=soft}{\@softtrue}
+% end department options
+
+\ProcessOptions
+
+% Requirement
+\RequirePackage{tikz}
+\RequirePackage{varwidth}
+
+\RequirePackage{vubprivate}
+
+% Settings
+\def\@merkbeeld{1cm}
+
+\usecolortheme{vub}
+\useinnertheme{vub}
+\useoutertheme{vub}
+\usefonttheme{vub}
+
+%\setbeamertemplate{navigation symbols}{}
+%\setbeamertemplate{blocks}[rounded][shadow=true]
+
+\mode<all>

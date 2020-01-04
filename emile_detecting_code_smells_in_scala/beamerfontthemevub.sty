@@ -1,0 +1,31 @@
+\mode<all>
+
+\RequirePackage{ifxetex}
+
+\ifxetex
+\usepackage{fontspec}
+\newfontfamily{\modernFontLight}{Roboto Light}
+\newfontfamily{\modernFontNormal}{Roboto}
+\newfontfamily{\modernFontBold}{Roboto Medium}
+\newfontfamily{\modernFontExtraBold}{Roboto Black}
+\setmainfont[Ligatures=TeX]{Roboto Light}
+\setsansfont[Ligatures=TeX]{Roboto Light}
+\else
+\usepackage[sfdefault,light]{roboto}
+\usepackage[T1]{fontenc}
+\fi
+
+\setbeamerfont{part name}{size=\LARGE}
+\setbeamerfont{section name}{size=\Large}
+\setbeamerfont{subsection name}{size=\large}
+
+\ifxetex
+  \setbeamerfont{part name}{family=\tgadventor}
+  \setbeamerfont{section name}{family=\tgadventor}
+  \setbeamerfont{subsection name}{family=\tgadventor}
+  \setbeamerfont{description item}{family=\modernFontBold}
+\else
+  \setbeamerfont{part name}{family=\fontfamily{qag}}
+  \setbeamerfont{section name}{family=\fontfamily{qag}}
+  \setbeamerfont{subsection name}{family=\fontfamily{qag}}
+\fi

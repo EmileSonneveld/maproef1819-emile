@@ -1,0 +1,87 @@
+\mode<presentation>
+
+% Frame title
+\defbeamertemplate*{frametitle}{texsx}[1][]
+{
+  % Always common styles
+  \tikzset{
+    vub section head/.style={
+      anchor=south west,
+      font=\tiny,
+    },
+    vub frame title/.style={
+      anchor=north west,
+      execute at begin node={%
+        \begin{varwidth}{\the\framewidth}%
+      },
+      execute at end node={\end{varwidth}},
+      font=\large,
+    },
+    vub frame subtitle/.style={
+      anchor=north west,
+      font=\footnotesize,
+      yshift=-1pt,
+    },
+  }
+  %
+  \if@coloredTitles
+    \tikzset{
+      vub section head/.append style={
+        white,
+        fill=black,
+      },
+      vub frame title/.append style={
+        white,
+        fill=vuboranje,
+      },
+      vub frame subtitle/.append style={
+        white,
+        fill=vubbleu,
+      },
+    }
+  \else
+    \tikzset{
+      vub section head/.append style={
+        black,
+        xshift=-3mm,
+      },
+      vub frame title/.append style={
+        black,
+        xshift=-3mm,
+      },
+      vub frame subtitle/.append style={
+        black,
+        xshift=-3mm,
+      },
+    }
+  \fi
+  %
+  \begin{beamercolorbox}[wd=\paperwidth]{frametitle}
+    \begin{tikzpicture}
+      % Bounding box: 3mm below lowest marker (clear for content)
+      % 6mm above when section is displayed
+      \useasboundingbox(0,-13mm) rectangle(\the\paperwidth,\if@sectionOnAllSlides{6mm}\else{0}\fi);
+      \ifx\insertsection\@empty%
+      \else%
+        \if@sectionOnAllSlides
+          {\node[vub section head] at (\@merkbeeld, -3mm){\vubfont{\insertsectionhead}};}%
+        \fi
+      \fi%
+      \if@coloredTitles
+        \node[vub frame title] (vubframetitle) at (\@merkbeeld, -3mm){\vubfont{\uppercase\insertframetitle}};%
+      \else
+        \node[vub frame title] (vubframetitle) at (\@merkbeeld, -3mm){\vubfont{\insertframetitle}};%
+      \fi
+      \ifx\insertframesubtitle\@empty%
+      \else%
+        \if@coloredTitles
+          {\node[vub frame subtitle] at (vubframetitle.south west) {\vubfont{\uppercase\insertframesubtitle}};}%
+        \else
+          {\node[vub frame subtitle] at (vubframetitle.south west) {\vubfont{\insertframesubtitle}};}%
+        \fi
+      \fi
+    \end{tikzpicture}
+  \end{beamercolorbox}
+}
+
+\mode<all>

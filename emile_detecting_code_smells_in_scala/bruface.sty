@@ -1,0 +1,154 @@
+\ProvidesPackage{bruface}
+\RequirePackage{color}
+\RequirePackage{ifxetex}
+\RequirePackage{tikz}
+\RequirePackage{adjustbox}
+% VUB is in Belgium, we use A4
+% Additionally, we use `geometry` to play with margins on the title page
+\RequirePackage[a4paper]{geometry}
+%\RequirePackage[T1]{fontenc}
+
+\ifxetex
+\else
+\usepackage{epstopdf}%needed for the ULB logo
+\fi
+
+\RequirePackage{kvoptions}
+\DeclareBoolOption[false]{spotcolors}
+\DeclareComplementaryOption{nospotcolors}{spotcolors}
+\ProcessKeyvalOptions*{}
+
+\ifbruface@spotcolors
+\RequirePackage[spotcolors]{vubprivate}
+\else
+\RequirePackage{vubprivate}
+\fi
+
+\newcommand\@faculty{Set a faculty using \textbackslash faculty\{\textit{Engineering Sciences}\}}
+
+\newcommand\pretitle[1]{%
+  \makeatletter%
+  \newcommand\@pretitle{#1}%
+  \makeatother%
+}
+
+\@ifundefined{faculty}{%
+    \newcommand{\faculty}[1]{%
+        \makeatletter%
+        \renewcommand\@faculty{#1}%
+        \makeatother%
+    }%
+}
+
+\@ifundefined{subtitle}{%
+    \newcommand{\subtitle}[1]{%
+        \makeatletter%
+        \newcommand\@subtitle{#1}%
+        \makeatother%
+    }%
+}
+
+\@ifundefined{supervisor}{%
+  \newcommand{\supervisor}[1]{%
+    \makeatletter%
+    \newcommand\@supervisor{#1}%
+    \makeatother%
+  }%
+}
+
+\@ifundefined{cosupervisor}{%
+  \newcommand{\cosupervisor}[1]{%
+    \makeatletter%
+    \newcommand\@cosupervisor{#1}%
+    \makeatother%
+  }%
+}
+
+\@ifundefined{programme}{%
+  \newcommand{\programme}[1]{%
+    \makeatletter%
+    \newcommand\@programme{#1}%
+    \makeatother%
+  }%
+}
+
+\renewcommand\maketitle{
+\begin{titlepage}
+    \newgeometry{left=18mm,top=20mm,right=18mm}
+    \begin{minipage}{\dimexpr\textwidth}
+      \includegraphics[height=1.75cm]{ulb_logo_3lp.eps}%
+      \hfill%
+      \includegraphics[height=1.75cm]{bruface.png}%
+      \hfill%
+      \includegraphics[height=1.75cm]{vub_logo_cmyk}%
+    \end{minipage}
+
+    \vfill
+    \sffamily
+
+    \hspace{25mm}\begin{minipage}{\dimexpr\textwidth-58mm}
+      \ifdefined\@pretitle%
+          \small\@pretitle
+          \vspace{5mm}
+      \fi
+
+      {\Huge {\color{ulbblue}\flushleft{\textbf\@title}}}
+
+      \ifdefined\@subtitle
+        \vspace{5mm}
+
+        {\LARGE {\color{ulbblue}\@subtitle}}
+      \fi
+
+      \vspace{1.5cm}
+
+      {\LARGE \@author}
+
+      \ifdefined\@programme%
+      \else
+        \vspace{5mm}
+
+        {\large \@date}
+      \fi
+    \end{minipage}
+
+    \vfill
+
+    \ifdefined\@programme%
+      \hfill%
+      \begin{minipage}{.6\textwidth}
+        {\color{ulbblue}\large Master thesis submitted under the supervision of}\newline
+        \@supervisor
+      \end{minipage}
+
+      \vspace{3mm}
+
+      \ifdefined\@cosupervisor%
+        \hfill%
+        \begin{minipage}{.6\textwidth}
+          {\color{ulbblue}\large The co-supervision of}\newline
+          \@cosupervisor
+        \end{minipage}
+      \fi
+
+      \vspace{3mm}
+
+      \hspace{20mm}\begin{minipage}{.15\textwidth}
+        {\color{ulbblue}\large Academic year}\newline
+        \@date
+      \end{minipage}
+      \hfill%
+      \begin{minipage}{.6\textwidth}
+        {\color{ulbblue}\large In order to be awarded the Master’s programme in}\newline
+        \@programme
+      \end{minipage}
+    \else
+      \hspace{25mm}\begin{minipage}{\dimexpr\textwidth-58mm}
+        {\textbf{\@faculty}}
+      \end{minipage}
+    \fi
+    \restoregeometry
+\end{titlepage}
+}
+
+\endinput

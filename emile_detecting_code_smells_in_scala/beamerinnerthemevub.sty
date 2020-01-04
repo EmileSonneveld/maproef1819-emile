@@ -1,0 +1,158 @@
+% Requirement
+\RequirePackage{tikz}
+\RequirePackage{eso-pic}
+\RequirePackage{graphicx}
+
+\if@brubotics
+\def\@woordmerk{dept/vub-brubotics-cmyk}
+\def\@woordmerktrim{.75cm}
+\def\@woordmerktrimleft{.35cm}
+\else
+\if@etro
+\def\@woordmerk{dept/vub-etro-cmyk}
+\def\@woordmerktrim{.75cm}
+\def\@woordmerktrimleft{.35cm}
+\else
+\if@soft
+\def\@woordmerk{dept/vub-soft}
+\def\@woordmerktrim{.86cm}
+\def\@woordmerktrimleft{.10cm}
+\else
+\def\@woordmerk{vub_logo_cmyk}
+\def\@woordmerktrim{0pt}
+\def\@woordmerktrimleft{0pt}
+\fi
+\fi
+\fi
+
+\def\@insertwoordmerk{%
+  \node[anchor=south west] at (\@merkbeeld, \@merkbeeld/2) {%
+    \includegraphics[
+      height=\@merkbeeld,
+      trim={\@woordmerktrimleft{} \@woordmerktrim{} 0pt \@woordmerktrim{}},
+      clip
+    ]{\@woordmerk}%
+  };%
+}
+
+\setbeamertemplate{background}{
+  \begin{tikzpicture}%
+    \useasboundingbox (0,0) rectangle(\the\paperwidth,\the\paperheight);%
+  \end{tikzpicture}%
+}
+
+\setbeamertemplate{navigation symbols}{
+  \hspace{1em}%
+  \scriptsize\color{vubbleu}\insertframenumber%
+}
+
+\newcommand{\@inserttriangle}{%
+  \fill [fill=vuboranje] (\the\paperwidth, \the\paperheight-\triangleH/2-5mm) -- (\the\paperwidth, \the\paperheight-5mm)%
+      -- (\the\paperwidth-5mm, \the\paperheight-5mm) -- cycle;%
+}
+
+% Title page
+\defbeamertemplate*{title page}{texsx}[1][]
+{
+    \AddToShipoutPictureFG*{%
+      \begin{tikzpicture}%
+        \useasboundingbox (0,0) rectangle(\the\paperwidth,\the\paperheight);%
+        \@insertwoordmerk
+        \@inserttriangle
+      \end{tikzpicture}
+    }%
+    \vfill%
+    \begin{beamercolorbox}[wd=\the\paperwidth,sep=8pt,#1]{title page header}
+        {\centering\vubfontbf{\LARGE\inserttitle}\par}%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[]{subtitle page header}
+        \ifx\insertsubtitle\@empty
+        \else
+         \vskip0.1cm
+         {\centering\insertsubtitle\par}
+        \fi
+    \end{beamercolorbox}
+    \vskip0.75cm%
+    \begin{beamercolorbox}[wd=\the\paperwidth,#1]{author}
+        \centering\vubfont{\insertauthor}%
+    \end{beamercolorbox}
+    \vskip0.2cm%
+    \begin{beamercolorbox}[wd=\the\paperwidth,#1]{date}
+        \centering\vubfont{\insertdate}%
+    \end{beamercolorbox}
+    \vfill
+}
+
+% Part page
+\setbeamertemplate{part page}
+{
+    \AddToShipoutPictureFG*{%
+      \begin{tikzpicture}%
+        \useasboundingbox (0,0) rectangle(\the\paperwidth,\the\paperheight);%
+        \@insertwoordmerk
+        \@inserttriangle
+      \end{tikzpicture}
+    }%
+    \begin{beamercolorbox}[center]{part title}
+      \usebeamerfont{part name}{\insertpart}\par
+    \end{beamercolorbox}
+}
+
+% Section page
+\setbeamertemplate{section page}
+{
+    \AddToShipoutPictureFG*{%
+      \begin{tikzpicture}%
+        \useasboundingbox (0,0) rectangle(\the\paperwidth,\the\paperheight);%
+        \@insertwoordmerk
+        \@inserttriangle
+      \end{tikzpicture}
+    }%
+    \ifx\insertpart\@empty
+    \else
+      \begin{beamercolorbox}[center]{part title}
+        \usebeamerfont{part name}{\insertpart}\par
+      \end{beamercolorbox}
+    \fi
+    \begin{beamercolorbox}[center]{section title}
+        \usebeamerfont{section name}{\insertsection}\par
+    \end{beamercolorbox}
+}
+
+% Subsection page
+\setbeamertemplate{subsection page}
+{
+    \AddToShipoutPictureFG*{%
+      \begin{tikzpicture}%
+        \useasboundingbox (0,0) rectangle(\the\paperwidth,\the\paperheight);%
+        \@insertwoordmerk
+        \@inserttriangle
+      \end{tikzpicture}
+    }%
+    \begin{beamercolorbox}[center]{part title}
+      \ifx\insertpart\@empty
+      \else
+      \usebeamerfont{part name}{\insertpart}\par
+      \fi
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[center]{section title}
+      \usebeamerfont{section name}{\insertsection}\par
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[center]{subsection title}
+      \usebeamerfont{subsection name}{\insertsubsection}\par
+    \end{beamercolorbox}
+}
+
+\setbeamertemplate{section in toc}%
+{
+    \hskip1ex\relax\inserttocsectionnumber.\enspace\inserttocsection
+}
+
+\setbeamertemplate{subsection in toc}%
+{
+    \hskip4ex\relax\inserttocsubsectionnumber.\enspace\inserttocsubsection
+
+}
+
+\mode
+<all>
