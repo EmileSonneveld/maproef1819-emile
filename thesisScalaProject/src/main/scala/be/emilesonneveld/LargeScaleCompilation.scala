@@ -5,7 +5,7 @@ import java.sql.Timestamp
 import java.util.Date
 
 import org.apache.commons.lang3.StringUtils
-import slickEmileProfile.Tables
+import be.emilesonneveld.slickEmileProfile.Tables
 
 object LargeScaleCompilation {
 
@@ -128,7 +128,7 @@ object LargeScaleCompilation {
         //Cmd.execCommand("cd " + p )//+ " && java -jar \"C:/Program Files (x86)/sbt/bin/sbt-launch.jar\"")
         //var gitTopLevel = Cmd.getGitTopLevel(p)
         //Cmd.gitSoftClean(gitTopLevel)
-        var returnString = Cmd.execCommandWithTimeout("sbt.bat semanticdb", p)
+        var returnString = Cmd.execSbtSemanticDB(p)
 
         LargeScaleDb.insertBuildTry(p, returnString, "fixedANDC and perhaps CALLS")
         //Cmd.execCommandWithTimeout("simple_console.exe", new File(p))

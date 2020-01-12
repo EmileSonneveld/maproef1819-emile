@@ -1,6 +1,6 @@
 package be.emilesonneveld
 
-import slickEmileProfile.Tables
+import be.emilesonneveld.slickEmileProfile.Tables
 
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex

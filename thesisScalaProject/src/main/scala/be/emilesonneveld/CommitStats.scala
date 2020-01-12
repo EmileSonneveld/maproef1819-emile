@@ -3,8 +3,8 @@ package be.emilesonneveld
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import slickEmileProfile.Tables
-import slickEmileProfile.Tables.PyramidStatsScalaRow
+import be.emilesonneveld.slickEmileProfile.Tables
+import be.emilesonneveld.slickEmileProfile.Tables.PyramidStatsScalaRow
 
 import scala.collection.mutable.ListBuffer
 
