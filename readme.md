@@ -10,3 +10,5 @@ In main.scala `def main`m you can choose what project should be analysed. The re
 The depandency `thesisCommon` should already have a good .jar commited.
 
 Any questions -> contact@emilesonneveld.be
+
+Slides online: https://emilesonneveld.be/dropbox_proxy/slimmerWorden/2018-2019-Semester2/THESIS/slides_metrics-on-massive-scale-for-scala-3/index.html
