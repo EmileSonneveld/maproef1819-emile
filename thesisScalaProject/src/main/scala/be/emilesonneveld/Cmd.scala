@@ -18,26 +18,8 @@ import org.openqa.selenium.os._
   */
 object Cmd {
 
-
-  def getRelativePathToProject(path: Path): String = {
-    var tmp = path.toString
-    tmp = tmp.replace("C:\\Users\\emill\\dev\\", "")
-    tmp = tmp.replace("E:\\github_download\\", "")
-    tmp = tmp.replace("D:\\github_download\\", "")
-    tmp = tmp.replace("C:\\github_download\\", "")
-    tmp = tmp.replace("E:\\github_java\\", "")
-    tmp = tmp.replace("D:\\github_java\\", "")
-    tmp = tmp.replace("C:\\github_java\\", "")
-    tmp = tmp.replace("C:\\Users\\emill\\Desktop\\github_download\\", "")
-    tmp = tmp.replace("D:\\dev\\", "")
-    tmp
-  }
-
   def getProjectName(path: Path): String = {
-    val tmp = getRelativePathToProject(path)
-    var firstSlah = Math.max(tmp.indexOf('\\'), tmp.indexOf('/'))
-    if (firstSlah == -1) return tmp
-    else return tmp.substring(0, firstSlah)
+    path.getFileName.toString
   }
 
   def getCurrentCommitHash(gitTopLevel: File): String = {
@@ -78,8 +60,8 @@ object Cmd {
     new File(res)
   }
 
-  def execSbtSemanticDB(cd: File): String ={
-    execCommandWithTimeout("java -jar C:\\Users\\Emile\\.IntelliJIdea2019.2\\config\\plugins\\Scala\\launcher\\sbt-launch.jar semanticdb", cd)
+  def execSbtSemanticDB(cd: File): String = {
+    execCommandWithTimeout("java -jar " + PathsConfig.sbtLaunchJarPath + " semanticdb", cd)
   }
 
   def execCommandWithTimeout(command: String, cd: File): String = {
@@ -87,11 +69,11 @@ object Cmd {
     println("> " + command)
 
     val outputBuffer = ListBuffer[String]()
-    val JAVA_HOME = "C:\\Program Files\\Java\\jdk1.8.0_191" // C:\\Program Files\\Java\\jdk1.8.0_131"
+    val JAVA_HOME = sys.env("JAVA_HOME")
     val p = Process(command, cd,
       "JAVA_HOME" -> JAVA_HOME, // SBT works best with java 1.8
       "SBT_OPTS" -> "-Xms512M -Xmx1024M -Xss2M -XX:MaxMetaspaceSize=1024M", // SBT runs out of memory for some larger projects
-      "PATH" -> (sys.env("Path") + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => outputBuffer append str)) // start asynchronously
+      "PATH" -> (sys.env("PATH") + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => outputBuffer append str)) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
       val exitValue: Int = Await.result(f, duration.Duration(1 * 60, "sec")) // 2 * 60
