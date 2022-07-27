@@ -2,12 +2,12 @@ package be.emilesonneveld
 
 import java.io.File
 import java.text._
-
 import org.apache.commons.lang3.StringUtils
 import scalafix.SemanticDB
 import scalafix.v1.{SemanticDocument, _}
 import be.emilesonneveld.slickEmileProfile.Tables
 
+import java.nio.file.{Files, Paths}
 import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.meta._
@@ -20,7 +20,7 @@ trait ClassOrTrait extends Tree {}
 object MeasureProject {
 
   def makePyramydSvg(commitStats: CommitStats): String = {
-    var svg = Utils.readFile("..\\svg\\pyramid.svg")
+    var svg = Utils.readFile("../svg/pyramid.svg")
     svg = MeasureProject.fillInPyramidTemplate(svg, commitStats)
     svg
   }
@@ -109,7 +109,7 @@ object MeasureProject {
     colorGrade("//rect[@label=\"bg_LocPerNom\"]/@style", loc / nom, 4.71, 16.79, 10.75)
     colorGrade("//rect[@label=\"bg_CycloPerLoc\"]/@style", cc / loc, 0.1, 0.38, 0.24)
     colorGrade("//rect[@label=\"bg_CallsPerNom\"]/@style", calls / nom, 1.15, 2.42, 1.78)
-    colorGrade("//rect[@label=\"bg_FanoutPerCalls\"]/@style", fanout / calls, 1.02, 3.06, 2.04)
+    colorGrade("//rect[@label=\"bg_FanoutPerCalls\"]/@style", 0.404, 1.02, 3.06, 2.04)
     colorGrade("//rect[@label=\"bg_Andc\"]/@style", andc, 0.63, 1.77, 1.2)
     colorGrade("//rect[@label=\"bg_Ahh\"]/@style", ahh, 0.1, 0.25, 0.17)
 
@@ -281,7 +281,6 @@ object MeasureProject {
           val className = MeasureProject.traitOrClassName(clazz)
           if (className.contains("Drawing")) {
             var clazzSymbol = clazz.symbol
-            var symInfo = semanticDB.symbolTable.info(clazzSymbol.value).get
             print("")
           }
         }
@@ -289,7 +288,6 @@ object MeasureProject {
           val className = MeasureProject.traitOrClassName(clazz)
           if (className.contains("PolygonFigure")) {
             var clazzSymbol = clazz.symbol
-            var symInfo = semanticDB.symbolTable.info(clazzSymbol.value).get
             print("")
           }
         }
@@ -423,7 +421,8 @@ object MeasureProject {
       for (doc <- semanticDB.documents) {
         th.absorb(doc)
       }
-      Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\gv\\types_" + commitStats.projectName + ".gv", th.getGvString())
+      Files.createDirectories(Paths.get("out/gv"))
+      Utils.writeFile("out/gv/types_" + commitStats.projectName + ".gv", th.getGvString())
 
       commitStats.andc = th.calculateANDC()
       commitStats.ahh = th.calculateAHH()

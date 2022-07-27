@@ -42,11 +42,12 @@ object main {
         {
           try {
             MeasureProject.doStatsForProject(projectPath, commitStats)
+            Files.createDirectories(Paths.get("out/svg_pyramid"))
             val svg = MeasureProject.makePyramydSvg(commitStats)
-            Utils.writeFile("C:\\Users\\emill\\Dropbox\\slimmerWorden\\2018-2019-Semester2\\THESIS\\out\\svg_pyramid\\" + projectName + ".svg", svg)
+            Utils.writeFile("out/svg_pyramid/" + projectName + ".svg", svg)
           } catch {
             case x: Throwable => {
-              println("Exception while calculating stats:\n" + x.getMessage)
+              println("Exception while calculating stats:\n" + x)
             }
           }
           val row = commitStats.toPyramidStats
@@ -163,7 +164,7 @@ object main {
     } else {
 
       // Don't mess in the /dev folder!
-      calculationsOnProjectWrap(new File("C:\\Users\\Emile\\dev\\SHotDraw\\SHotDraw"))
+      calculationsOnProjectWrap(new File(PathsConfig.AnalyzedProjectPath))
       //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) //Does not compile
