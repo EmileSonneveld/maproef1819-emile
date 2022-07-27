@@ -76,7 +76,7 @@ object Cmd {
       "PATH" -> (sys.env("PATH") + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => outputBuffer append str)) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
-      val exitValue: Int = Await.result(f, duration.Duration(1 * 60, "sec")) // 2 * 60
+      val exitValue: Int = Await.result(f, duration.Duration(1 * 150, "sec")) // 2 * 60
       if (exitValue != 0)
         println("exitValue: " + exitValue)
 

@@ -13,15 +13,9 @@ mainClass in(Compile, packageBin) := Some("be.emilesonneveld.main")
 //libraryDependencies += "zamblauskas" %% "scala-csv-parser" % "0.11.4"
 //libraryDependencies += "org.scala-sbt.plugins" % "sbt-onejar" % "0.8"
 
-val scalaMetaVersion = "4.1.0"
+libraryDependencies += "org.scalameta" %% "scalameta" % "4.5.10" withSources()
 
-libraryDependencies += "org.scalameta" %% "scalameta" % scalaMetaVersion withSources()
-libraryDependencies += "org.scalameta" %% "symtab" % scalaMetaVersion withSources()
-libraryDependencies += "org.scalameta" %% "contrib" % scalaMetaVersion withSources()
-libraryDependencies += "org.scalameta" %% "semanticdb" % scalaMetaVersion withSources()
-libraryDependencies += "org.scalameta" % "interactive_2.12.7" % scalaMetaVersion withSources()
-
-libraryDependencies += "ch.epfl.scala" %% "scalafix-core" % "0.9.1"
+libraryDependencies += "ch.epfl.scala" %% "scalafix-core" % "0.10.1"
 
 libraryDependencies += "commons-io" % "commons-io" % "2.6"
 
@@ -42,5 +36,5 @@ libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.1"
 libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "3.3.1"
 
 //libraryDependencies += "com.h2database" % "h2" % "1.4.199"
-unmanagedJars in Compile += file("..\\jars\\sqlite-jdbc-3.27.2.1.jar")
-unmanagedJars in Compile += file("..\\thesisCommon\\target\\scala-2.12\\thesiscommon_2.12-0.1.jar")
+unmanagedJars in Compile += file("../jars/sqlite-jdbc-3.27.2.1.jar")
+unmanagedJars in Compile += file("../thesisCommon/target/scala-2.12/thesiscommon_2.12-0.1.jar")

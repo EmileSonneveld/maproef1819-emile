@@ -13,7 +13,7 @@ class NestingLevelTest extends FunSuite {
 
   test("testNesting") {
 
-    val semanticDB = new SemanticDB(new File("..\\testScala"))
+    val semanticDB = new SemanticDB(new File("../testScala"))
     for (doc <- semanticDB.documents) {
       implicit val implicit_sdoc_fkurhgbsdf: SemanticDocument = doc.sdoc
       println("\nDoc: " + doc.tdoc.uri)
