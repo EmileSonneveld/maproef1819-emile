@@ -7,6 +7,8 @@ scalaVersion := "2.12.8"
 mainClass in(Compile, run) := Some("be.emilesonneveld.main")
 mainClass in(Compile, packageBin) := Some("be.emilesonneveld.main")
 
+lazy val core = RootProject(file("../thesisCommon"))
+
 //libraryDependencies += "org.scalameta" %% "scalameta" % "4.1.0"
 
 //resolvers += Resolver.bintrayRepo("zamblauskas", "maven")

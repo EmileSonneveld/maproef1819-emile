@@ -164,7 +164,7 @@ object main {
     } else {
 
       // Don't mess in the /dev folder!
-      calculationsOnProjectWrap(new File(PathsConfig.AnalyzedProjectPath))
+      calculationsOnProjectWrap(new File(PathsConfig.analyzedProjectPath))
       //calculationsOnProjectWrap(new File("C:\\github_download\\SHotDraw\\SHotDraw"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\testScala"))
       //calculationsOnProjectWrap(new File("C:\\github_download\\maproef1819-emile\\thesisScalaProject")) //Does not compile

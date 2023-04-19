@@ -70,15 +70,21 @@ object Cmd {
 
     val outputBuffer = ListBuffer[String]()
     val JAVA_HOME = sys.env("JAVA_HOME")
+    val PATH = if (sys.env.contains("PATH")) sys.env("PATH") else ""
     val p = Process(command, cd,
       "JAVA_HOME" -> JAVA_HOME, // SBT works best with java 1.8
       "SBT_OPTS" -> "-Xms512M -Xmx1024M -Xss2M -XX:MaxMetaspaceSize=1024M", // SBT runs out of memory for some larger projects
-      "PATH" -> (sys.env("PATH") + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => outputBuffer append str)) // start asynchronously
+      "PATH" -> (PATH + ";" + JAVA_HOME + "\\bin")).run(ProcessLogger(str => outputBuffer append str)) // start asynchronously
     val f = Future(blocking(p.exitValue())) // wrap in Future
     try {
       val exitValue: Int = Await.result(f, duration.Duration(1 * 150, "sec")) // 2 * 60
-      if (exitValue != 0)
+      if (exitValue != 0) {
         println("exitValue: " + exitValue)
+        val output = outputBuffer.mkString("\n")
+        if (output.contains("Error")) {
+          throw new Exception("Procces error: " + output)
+        }
+      }
 
     } catch {
       case _: TimeoutException =>
